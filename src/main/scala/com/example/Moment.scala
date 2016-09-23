@@ -77,4 +77,12 @@ class Moment extends js.Any {
 
 }
 
+class RichMoment(val moment: Moment) extends AnyVal{
 
+  def hoursAndMinutes = f"${moment.hours()}%d:${moment.minutes()}%02d"
+
+}
+
+object RichMoment{
+  implicit def toRichMoment(moment: Moment) = new RichMoment(moment)
+}

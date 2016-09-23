@@ -11,6 +11,7 @@ import org.scalajs.dom
 import scala.collection.immutable
 import scala.scalajs.js
 import scala.util.Try
+import scala.util.matching.Regex
 
 object Parser{
 
@@ -32,52 +33,65 @@ object Parser{
     }
   }
 
-  private def parseTime(s: String, prevTime: Moment, maxHourDelta: Int) = s match {
-    case TimeRegexp(hs, ms) =>
+  final case class Time(h: Int, m: Int){
+    private def timeString = s"$h:$m"
+    def toMoment(prevTime: Moment, maxHourDelta: Int) = {
       if(!prevTime.isValid()){
         sys.error("invalid prevTime: "+prevTime)
       }
       val result = moment(prevTime)
-      result.hours(hs.toInt)
-      result.minutes(ms.toInt)
+      result.hours(h)
+      result.minutes(m)
       if(result isBefore prevTime){
         result.date(result.date + 1)
       }
       if(!result.isValid()){
-        sys.error("invalid date: "+s)
+        sys.error(s"invalid date: $timeString")
       }
       strictCheck{
         if((result.toDate().getTime() - prevTime.toDate().getTime()) > (maxHourDelta*3600*1000)){
-          sys.error(s"following time specification overreaches time delta $maxHourDelta hours ($prevTime -> $result): $s")
+          throw new MaxHourDeltaExceededException(maxHourDelta, prevTime, result)//) sys.error(s"following time specification overreaches time delta $maxHourDelta hours ($prevTime -> $result): $timeString")
         }
       }
       result
-  }
+    }
 
-  private def guard[T](data: Any)(f: => T) = try{
+    def toTimeInterval = TimeInterval(h*60 + m)
+
+  }
+  object Time{
+    def unapply(s: String): Option[Time] = s match{
+      case TimeRegexp(hs, ms) => Some(Time(hs.toInt, ms.toInt))
+      case _ => None
+    }
+  }
+  
+  private def guard[T](data: Seq[String])(f: => T) = try{
     f
   }catch{
-    case e: Throwable => throw new RuntimeException(s"Bad format near $data", e)
+    case e: Throwable => throw CellsParsingException(data, e)
   }
+
+  private val Empty = """^(?:x|X|)$""".r
 
   private def parseTimeInfo(data: Seq[String], prevTimeOption: Option[Moment], maxHourDelta: Int): Option[PartTimeInfo] = guard(data){
     data match {
-      case Seq("X"|"x"|"", "X"|"x"|"", "X"|"x"|"") => None
-      case Seq(startTimeString, "X"|"x"|"", "X"|"x"|"") =>
+      case Seq(Empty(), Empty(), Empty()) => None
+      case Seq(Time(startTime), Empty(), Empty()) =>
         val prevTime = prevTimeOption.get
-        val startTime = parseTime(startTimeString, prevTime, maxHourDelta)
-        Some(PartTimeInfo.Unfinished(startTime))
-      case Seq(startTimeString, intervalTimeString, endTimeString) =>
-        val prevTime = prevTimeOption.get
-        val startTime = parseTime(startTimeString, prevTime, maxHourDelta)
-        val endTime = parseTime(endTimeString, startTime, maxHourDelta)
-        val intervalTime = TimeInterval.parse(intervalTimeString)
-        assert( (endTime.toDate.getTime - startTime.toDate.getTime) == (intervalTime.totalMinutes*60*1000) )
+        Some(PartTimeInfo.Unfinished(startTime.toMoment(prevTime, maxHourDelta)))
+      case Seq(Time(startTime), Time(interval), Time(endTime)) =>
+        val prevMoment = prevTimeOption.get
+        val startMoment = startTime.toMoment(prevMoment, maxHourDelta)
+        val endMoment = endTime.toMoment(startMoment, maxHourDelta)
+        val intervalTime = interval.toTimeInterval
+        assert( (endMoment.toDate.getTime - startMoment.toDate.getTime) == (intervalTime.totalMinutes*60*1000) )
         Some(PartTimeInfo.Finished(
-          startTime = startTime,
-          endTime = endTime,
+          startTime = startMoment,
+          endTime = endMoment,
           intervalTime = intervalTime
         ))
+      case _=> throw BadTimeInfoFormatException()
     }
   }
 
@@ -89,11 +103,8 @@ object Parser{
       case 2016 => (1, 0)
     }
     val dataTable = dataWithTail.drop(headLength).dropRight(tailLength)
-    dom.console.log("dataTable", dataTable.toString())
     if(tailLength == 2){
       val Seq(footer1, footer2) = dataWithTail.takeRight(2)
-      dom.console.log("footer1", footer1.toString())
-      dom.console.log("footer2", footer2.toString())
       assertEmpty(footer1.take(5).toSet -- Set(""))
       assertEmpty(footer2.toSet.filterNot(_.forall(_.isDigit)) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
@@ -112,14 +123,13 @@ object Parser{
       }.get
     }
     val (parsedDataSuccessfulTries, parsedDataFailedTries) = parsedDataTries.partition(_.isLeft)
-    /*if(parsedDataFailedTries.nonEmpty){
+    if(parsedDataFailedTries.nonEmpty){
       dom.console.error(s"parsing some data failed (${parsedDataFailedTries.size}):")
       parsedDataFailedTries foreach { case Right((data, e)) =>
         dom.console.error("following row is not successfuly parsed:", js.Array(data : _*))
         e.printStackTrace()
       }
-      sys.error("some data failed to parse")
-    }*/
+    }
     (parts, parsedDataSuccessfulTries.map{case Left(p) => p}, parsedDataFailedTries.map{case Right((row, e)) => (row, e)})
   }
 

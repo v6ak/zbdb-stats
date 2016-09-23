@@ -13,6 +13,7 @@ import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all._
+import com.example.RichMoment.toRichMoment
 
 object IdGenerator{
 
@@ -476,7 +477,14 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
 
   private def causeStream(e: Throwable): Stream[Throwable] = Stream.cons(e, Option(e.getCause).fold(Stream.empty[Throwable])(causeStream))
 
-  private def showThrowable(rootThrowable: Throwable) = ul(causeStream(rootThrowable).map(e => li(i(e.getClass.getName), ": ", e.getMessage)))
+  private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))
+
+  private def showThrowable(rootThrowable: Throwable) = ul(causeStream(rootThrowable).map {
+    case CellsParsingException(data, _) => li("K chybě došlo při zpracování následujících buňek: ", showCells(data))
+    case BadTimeInfoFormatException() => li("Očekáváné varianty: a) nevyplněno, b) pouze čas startu, c) všechny tři časy (start, doba, cíl). Pokud je některý čas nevyplněn, očekává se prázdné políčko nebo \"X\".")
+    case MaxHourDeltaExceededException(maxHourDelta, prevTime, currentTime) => li(f"Od ${prevTime.hoursAndMinutes} do ${currentTime.hoursAndMinutes} to trvá více než $maxHourDelta hodin, což je nějaké divné, asi to bude chyba.")
+    case e => li(i(e.getClass.getName), ": ", e.getMessage)
+  })
 
   private def initialize() = {
     showBar = false
@@ -487,7 +495,7 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
           ul(
             errors.map{case (row, e) =>
               li(
-                div(addSeparators[Frag](", ")(row.map(s => code(s)))),
+                div(showCells(row)),
                 div(showThrowable(e))
               )
             }
