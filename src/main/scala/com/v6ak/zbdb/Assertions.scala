@@ -2,7 +2,7 @@ package com.v6ak.zbdb
 
 object Assertions{
 
-  def assertEmpty(set: Set[Any]) = if(!set.isEmpty){
+  def assertEmpty(set: Set[_]) = if(set.nonEmpty){
     sys.error("Following set is not empty: "+set)
   }
 

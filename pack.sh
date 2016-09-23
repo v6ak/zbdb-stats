@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # safety settings
-set -u # Not strictly needed, but it is safer
-set -e # NEEDED for safety and security!
-set -o pipefail # Not strictly needed, but it is safer
+set -u
+set -e
+set -o pipefail
 
-YEARS=( 2015 )
+YEARS=( 2015 2016 )
 
 #printf "%s.html\n" "${YEARS[@]}"
 

@@ -16,6 +16,7 @@ object App extends JSApp {
     dom.window.onload = { _: Any =>
       val fileName = dom.window.document.body.getAttribute("data-file")
       val maxHourDelta = dom.window.document.body.getAttribute("data-max-hour-delta").toInt
+      val formatVersion = dom.window.document.body.getAttribute("data-format-version").toInt
       val startTime = moment.tz(dom.window.document.body.getAttribute("data-start-time"), dom.window.document.body.getAttribute("data-timezone"))
       val endTime = moment.tz(dom.window.document.body.getAttribute("data-end-time"), dom.window.document.body.getAttribute("data-timezone"))
       if(!startTime.isValid()) sys.error("startTime is invalid")
@@ -28,11 +29,12 @@ object App extends JSApp {
           dom.alert("Failed to load data")
         case Success(xhr) =>
           try{
-            val result @ (parts, data) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta)
+            val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
-            Renderer.initialize(parts, data, content, startTime)
+            Renderer.initialize(parts, data, errors, content, startTime)
           } catch {
             case e: Throwable =>
+              dom.console.error("Error when parsing: ", e.getMessage)
               e.printStackTrace()
               dom.alert("Nepodařilo se zpracovat data")
           }

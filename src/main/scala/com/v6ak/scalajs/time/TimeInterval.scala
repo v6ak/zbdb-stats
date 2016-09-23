@@ -13,4 +13,12 @@ object TimeInterval{
     case TimeIntervalRegex(hs, ms) => TimeInterval(hs.toInt*60 + ms.toInt)
   }
 
+  def fromMilliseconds(millis: Long) = {
+    val minutes = (millis / 1000 / 60).toInt
+    if(minutes*60*1000 != millis){
+      sys.error("precision loss")
+    }
+    TimeInterval(minutes)
+  }
+
 }

@@ -26,8 +26,8 @@ object IdGenerator{
 }
 
 object Renderer{
-  def initialize(parts: Seq[Part], data: Seq[Participant], content: Node, startTime: Moment) = {
-    val r = new Renderer(parts, data, content, startTime)
+  def initialize(parts: Seq[Part], data: Seq[Participant], errors: Seq[(Seq[String], Throwable)], content: Node, startTime: Moment) = {
+    val r = new Renderer(parts, data, errors, content, startTime)
     r.initialize()
     r
   }
@@ -46,7 +46,7 @@ object Renderer{
 
 final case class ParticipantPlotGenerator(nameGenitive: String, nameAccusative: String, glyphiconName: String, generator: Seq[Participant] => PlotData)
 
-final class Renderer private(parts: Seq[Part], data: Seq[Participant], content: Node, startTime: Moment) {
+final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: Seq[(Seq[String], Throwable)], content: Node, startTime: Moment) {
 
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
@@ -472,8 +472,29 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], content: 
     )
   )
 
+  private def addSeparators[T](separator: T)(s: Seq[T]): Seq[T] = (Stream.continually(separator), s).zipped.flatMap{(x, y) => Seq(x, y)}.drop(1)
+
+  private def causeStream(e: Throwable): Stream[Throwable] = Stream.cons(e, Option(e.getCause).fold(Stream.empty[Throwable])(causeStream))
+
+  private def showThrowable(rootThrowable: Throwable) = ul(causeStream(rootThrowable).map(e => li(i(e.getClass.getName), ": ", e.getMessage)))
+
   private def initialize() = {
     showBar = false
+    if(errors.nonEmpty){
+      content.appendChild(
+        div(cls:="alert alert-danger")(
+          s"Některé řádky (celkem ${errors.size}) se nepodařilo zpracovat",
+          ul(
+            errors.map{case (row, e) =>
+              li(
+                div(addSeparators[Frag](", ")(row.map(s => code(s)))),
+                div(showThrowable(e))
+              )
+            }
+          )
+        ).render
+      )
+    }
     content.appendChild(globalStats)
     content.appendChild(tableElement)
     content.appendChild(barElement)
