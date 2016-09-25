@@ -65,7 +65,7 @@ object Parser{
       case _ => None
     }
   }
-  
+
   private def guard[T](data: Seq[String])(f: => T) = try{
     f
   }catch{
@@ -123,7 +123,7 @@ object Parser{
       }.get
     }
     val (parsedDataSuccessfulTries, parsedDataFailedTries) = parsedDataTries.partition(_.isLeft)
-    if(parsedDataFailedTries.nonEmpty){
+    if(false && parsedDataFailedTries.nonEmpty){
       dom.console.error(s"parsing some data failed (${parsedDataFailedTries.size}):")
       parsedDataFailedTries foreach { case Right((data, e)) =>
         dom.console.error("following row is not successfuly parsed:", js.Array(data : _*))
