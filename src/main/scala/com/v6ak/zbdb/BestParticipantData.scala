@@ -5,7 +5,7 @@ import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 
 object BestParticipantData{
-  val Empty = BestParticipantData(None, None)
+  val Empty = BestParticipantData(None, None, None)
   private def minTimeOption(a: Option[Moment], b: Option[Moment]): Option[Moment] = a match { // minimize garbage
     case None => b // (None, b) --> b
     case Some(firstTime) => b match {
@@ -23,10 +23,10 @@ object BestParticipantData{
 }
 
 
-final case class BestParticipantData(endTimeOption: Option[Moment], durationOption: Option[Int]) {
+final case class BestParticipantData(private val endTimeOption: Option[Moment], private val durationOption: Option[Int], private val startTimeOption: Option[Moment]) {
   def hasBestDuration(pti: Finished): Boolean = pti.durationOption == this.durationOption
-
   def hasBestEndTime(partTimeInfoOption: PartTimeInfo): Boolean = partTimeInfoOption.endTimeOption.map(_.unix()) == endTimeOption.map(_.unix())
+  def hasBestStartTime(partTimeInfoOption: PartTimeInfo): Boolean = startTimeOption.exists(bestStartTime => bestStartTime.unix() == partTimeInfoOption.startTime.unix())
 
   import BestParticipantData._
 
@@ -35,6 +35,7 @@ final case class BestParticipantData(endTimeOption: Option[Moment], durationOpti
     case Some(partTimeInfo) =>
       BestParticipantData(
         endTimeOption = minTimeOption(partTimeInfo.endTimeOption, endTimeOption),
+        startTimeOption = minTimeOption(Some(partTimeInfo.startTime), startTimeOption),
         durationOption = minDurationOption(partTimeInfo.durationOption, durationOption)
       )
   }

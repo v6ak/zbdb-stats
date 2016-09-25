@@ -166,7 +166,7 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
     ))(className = "participant-header")
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
-    val first = try{
+    val best = try{
       firsts(i)
     }catch{
       case e: ArrayIndexOutOfBoundsException =>
@@ -175,14 +175,19 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
     }
     val firstCell = if(i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
-      Column(firstCell, TableHeadCell("|=>"))((r: Participant) => partData(r).fold[Frag]("–")(_.startTime.timeOnly))(className = "col-start"),
+      Column(firstCell, TableHeadCell("|=>"))((r: Participant) =>
+        partData(r).fold[Frag]("–")(pti => Seq(
+          pti.startTime.timeOnlyDiv,
+          if(best.hasBestStartTime(pti)) FirstBadge else EmptyHtml
+        ))
+      )(className = "col-start"),
       Column(
         TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
         TableHeadCell(s"čas")
       )((r: Participant) =>
         partData(r).collect{case f: Finished => f}.fold[Frag]("–")(pti => Seq[Frag](
           div(pti.intervalTime.toString),
-          if(first.hasBestDuration(pti)) FirstBadge else EmptyHtml
+          if(best.hasBestDuration(pti)) FirstBadge else EmptyHtml
         ))
       )(className = "col-time"),
       Column(
@@ -191,7 +196,7 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
       ){(r: Participant) =>
         partData(r).collect { case f: Finished => f }.fold("–": Frag){pti => Seq(
           pti.endTime.timeOnlyDiv,
-          if (first.hasBestEndTime(pti)) FirstBadge else EmptyHtml
+          if(best.hasBestEndTime(pti)) FirstBadge else EmptyHtml
         )}
       }(className = "col-end")
     )
