@@ -1,5 +1,6 @@
 package com.v6ak.zbdb
 
+import com.example.RichMoment.toRichMoment
 import com.example.moment._
 import com.v6ak.scalajs.tables.{Column, TableHeadCell, TableRenderer}
 import com.v6ak.zbdb.PartTimeInfo.Finished
@@ -13,8 +14,6 @@ import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all._
-import com.example.RichMoment.toRichMoment
-import com.example.Moment.MomentOrdering
 
 object IdGenerator{
 
@@ -76,20 +75,21 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
 
   private final val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
 
-  private def expandSeq[T](s: Seq[Option[T]], size: Int) = s ++ Seq.fill(size - s.size)(None)
+  private def expandSeq[T](s: Seq[T], empty: T, size: Int) = s ++ Seq.fill(size - s.size)(empty)
 
-  private def longZip[T, U, R](a: Seq[Option[T]], b: Seq[Option[U]]) = {
+  private def longZip[T, U](a: Seq[T], emptyA: T)(b: Seq[U], emptyB: U) = {
     val maxSize = a.size max b.size
-    val ea = expandSeq(a, maxSize)
-    val eb = expandSeq(b, maxSize)
+    val ea = expandSeq(a, emptyA, maxSize)
+    val eb = expandSeq(b, emptyB, maxSize)
     (ea, eb).zipped
   }
 
-  private val firsts = data.foldLeft(Seq[Moment]()){(fastestSoFar, participant) =>
-    longZip(
-      fastestSoFar.map(Some(_)),
-      participant.partTimes.map(pti => pti.endTimeOption)
-    ).map{(m1, m2) => Seq(m1, m2).flatten.min}
+  private val firsts = data.foldLeft(Seq.empty[BestParticipantData]){ (fastestSoFar, participant) =>
+    longZip[BestParticipantData, Option[PartTimeInfo]](
+      fastestSoFar, BestParticipantData.Empty
+    )(
+      participant.partTimes.map(Some(_)), None
+    ).map{(fastestParticipantSoFar, current) => fastestParticipantSoFar.merge(current)}
   }
 
   /*DurationRenderer.asInstanceOf[js.Dynamic].prototype.createTicks = (((th: js.Dynamic, plot: js.Dynamic) => {
@@ -141,6 +141,7 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
   }
 
   private val FirstBadge = div(cls := "label label-success")("1.")
+  val EmptyHtml: Frag = ""
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
@@ -165,20 +166,34 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
     ))(className = "participant-header")
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
-    val first = firsts.lift(i)
+    val first = try{
+      firsts(i)
+    }catch{
+      case e: ArrayIndexOutOfBoundsException =>
+        dom.console.warn(s"It seems that nobody has reached part #$i")
+        BestParticipantData.Empty
+    }
     val firstCell = if(i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
       Column(firstCell, TableHeadCell("|=>"))((r: Participant) => partData(r).fold[Frag]("–")(_.startTime.timeOnly))(className = "col-start"),
-      Column(TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))), TableHeadCell(s"čas"))((r: Participant) => partData(r).collect{case f: Finished => f}.fold("–")(_.intervalTime.toString))(className = "col-time"),
+      Column(
+        TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
+        TableHeadCell(s"čas")
+      )((r: Participant) =>
+        partData(r).collect{case f: Finished => f}.fold[Frag]("–")(pti => Seq[Frag](
+          div(pti.intervalTime.toString),
+          if(first.hasBestDuration(pti)) FirstBadge else EmptyHtml
+        ))
+      )(className = "col-time"),
       Column(
         TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
         TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i+1} – ${part.place}", "=>|"))
-      )((r: Participant) =>
-        Seq(
-          partData(r).collect{case f: Finished => f}.fold("–": Frag)(_.endTime.timeOnlyDiv),
-          if(first.map(_.unix()) == partData(r).flatMap(_.endTimeOption).map(_.unix())) FirstBadge else ("":Frag)
-        )
-      )(className = "col-end")
+      ){(r: Participant) =>
+        partData(r).collect { case f: Finished => f }.fold("–": Frag){pti => Seq(
+          pti.endTime.timeOnlyDiv,
+          if (first.hasBestEndTime(pti)) FirstBadge else EmptyHtml
+        )}
+      }(className = "col-end")
     )
   })
 
@@ -353,7 +368,6 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
   }
 
   private def generateSpeedPlotData(rows: Seq[Participant]) = {
-    import com.example.moment._
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points = js.Array(
         (p.partTimes, parts).zipped.flatMap((partTime, part) => partTime.durationOption.map { duration =>
@@ -386,7 +400,6 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
   }
 
   private def generatePausesPlotData(rows: Seq[Participant]) = {
-    import com.example.moment._
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points = js.Array((p.pauses, parts).zipped.map((pause, part) => js.Array(part.cumulativeTrackLength.toDouble, pause/1000/60)): _*))
     }
