@@ -21,4 +21,6 @@ object TimeInterval{
     TimeInterval(minutes)
   }
 
+  implicit val TimeIntervalOrdering: Ordering[TimeInterval] = Ordering.by(_.totalMinutes)
+
 }

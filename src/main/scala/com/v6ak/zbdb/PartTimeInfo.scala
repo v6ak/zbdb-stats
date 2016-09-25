@@ -7,6 +7,7 @@ abstract sealed class PartTimeInfo{
   def endTimeOption: Option[Moment]
   def startTime: Moment
   def durationOption = endTimeOption.map(_ - startTime)
+  def lastTime: Moment
 }
 
 object PartTimeInfo{
@@ -14,8 +15,12 @@ object PartTimeInfo{
     def crosses(other: Finished) = ((this.startTime >= other.startTime) && (this.endTime <= other.endTime)) || ((this.startTime <= other.startTime) && (this.endTime >= other.endTime))
 
     override def endTimeOption: Option[Moment] = Some(endTime)
+
+    override def lastTime: Moment = endTime
   }
   final case class Unfinished(startTime: Moment) extends PartTimeInfo {
     override def endTimeOption: Option[Moment] = None
+
+    override def lastTime: Moment = startTime
   }
 }

@@ -27,8 +27,8 @@ object IdGenerator{
 }
 
 object Renderer{
-  def initialize(parts: Seq[Part], data: Seq[Participant], errors: Seq[(Seq[String], Throwable)], content: Node, startTime: Moment) = {
-    val r = new Renderer(parts, data, errors, content, startTime)
+  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node) = {
+    val r = new Renderer(participantTable, errors, content)
     r.initialize()
     r
   }
@@ -47,7 +47,10 @@ object Renderer{
 
 final case class ParticipantPlotGenerator(nameGenitive: String, nameAccusative: String, glyphiconName: String, generator: Seq[Participant] => PlotData)
 
-final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: Seq[(Seq[String], Throwable)], content: Node, startTime: Moment) {
+final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node) {
+
+  import ParticipantTable._
+  import participantTable._
 
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
@@ -101,7 +104,6 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
   private final implicit class RichParticipant(row: Participant){
     def checkboxId = s"part-${row.id}-checkbox"
     def trId = s"part-${row.id}-tr"
-    def hasFinished = (row.partTimes.size == parts.size) && row.partTimes.forall(_.isInstanceOf[PartTimeInfo.Finished])
   }
 
   private val Genders = Map[Gender, String](Gender.Male -> "♂", Gender.Female -> "♀")
@@ -160,7 +162,8 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
           //dom.console.log("checkbox changed", el.checked, tableRow)
         }),
         " ",
-        r.id + ": " + r.fullNameWithNick + " " + Genders(r.gender)
+        r.id + ": " + r.fullNameWithNick + " " + Genders(r.gender)+" ",
+        r.orderOption.fold(span(cls:="label label-danger")("DNF"))(order => span(cls:="label label-success")(s"$order."))
       ),
       div(`class` := "actions")(chartButtons(r))
     ))(className = "participant-header")

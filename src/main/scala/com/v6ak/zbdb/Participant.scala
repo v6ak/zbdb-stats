@@ -1,5 +1,6 @@
 package com.v6ak.zbdb
 
+import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
 
@@ -13,6 +14,11 @@ final case class Participant(
   last3: Seq[String], // TODO: parse
   partTimes: Seq[PartTimeInfo]
 ) {
+
+  def totalTime: TimeInterval = partTimes.headOption.fold(TimeInterval(0))(head=>
+    TimeInterval.fromMilliseconds(partTimes.last.lastTime - head.startTime)
+  )
+
   def startTime = partTimes.head.startTime
 
   def finishedPartTimes = partTimes.takeWhile(_.isInstanceOf[Finished]).map(_.asInstanceOf[Finished])

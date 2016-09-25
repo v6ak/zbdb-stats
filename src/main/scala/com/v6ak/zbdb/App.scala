@@ -31,7 +31,8 @@ object App extends JSApp {
           try{
             val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
-            Renderer.initialize(parts, data, errors, content, startTime)
+            val participantTable = ParticipantTable(startTime, parts, data)
+            Renderer.initialize(participantTable, errors, content)
             Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
               loadingIndicator.parentNode.removeChild(loadingIndicator)
             }
