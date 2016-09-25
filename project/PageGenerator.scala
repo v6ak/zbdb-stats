@@ -38,8 +38,8 @@ object PageGenerator{
     <html>
       <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href="main.css" />
-        <script type="text/javascript" src="main.js"></script>
+        <link rel="stylesheet" type="text/css" href="main.min.css" />
+        <script type="text/javascript" src="main.min.js"></script>
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
       </head>
       <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>

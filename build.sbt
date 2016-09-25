@@ -23,9 +23,9 @@ lazy val server = (project in file("server")).settings(
   pipelineStages in Assets := Seq(scalaJSPipeline),
   pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip),
   includeFilter in digest := "*",
-  excludeFilter in digest := "*.html",
+  excludeFilter in digest := "*.html" || "*.csv",
   includeFilter in filter := "*.less" || "*.note" || "*.source" || "*.css" || "*.js",
-  excludeFilter in filter := "main.js" || "main.css",
+  excludeFilter in filter := "main.js" || "main.min.js" || "main.css" || "main.min.css",
   resourceGenerators in Assets += Def.task {
     for(year <- PageGenerator.Years) yield {
       val file = (resourceManaged in Assets).value / "assets" / s"${year.year}.html"
@@ -44,9 +44,10 @@ lazy val server = (project in file("server")).settings(
   // triggers scalaJSPipeline when using compile or continuous compilation
   compile in Compile <<= (compile in Compile) dependsOn scalaJSPipeline,
   Concat.groups := Seq(
-    "main.js" -> group(Seq("zbdb-stats-client-jsdeps.min.js", "zbdb-stats-client-opt.js", "zbdb-stats-client-launcher.js"))
+    "main.min.js" -> group(Seq("zbdb-stats-client-jsdeps.min.js", "zbdb-stats-client-opt.js", "zbdb-stats-client-launcher.js"))
   ),
   LessKeys.cleancss := true,
+  LessKeys.compress := true,
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % "1.0.0",
     bootstrap,
