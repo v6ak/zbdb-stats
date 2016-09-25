@@ -4,4 +4,16 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 
 ## Běh lokálně
 
-Některé prohlížeče (ehm, Chrome) mohou z bezpečnostních důvodů omezovat či zakazovat XMLHttpRequest na file:///. Pokud jde o omezení (jako ve Firefoxu), vadit to nejspíš nebude, protože CSV je ve stejném adresáři. Pokud jde o zákaz, je možné spustit jednoduchý HTTP server, například `python -m SimpleHTTPServer 8080`, a vyvíjet na něm.
+1. Nainstaluj si [Activator](https://www.lightbend.com/activator/download) (popř. lze použít SBT)
+2. activator ~run
+3. Otevři http://localhost:9000/2016.html (případně jiný rok)
+
+## Přidání ročníku
+
+1. Uprav project/PageGenerator.scala
+2. Pokud běží Activator, restartuj ho nebo použij příkaz reload.
+
+## Export na web
+
+a. Pouze pro Linux/MacOS: `./pack.sh` vygeneruje pack.zip
+b. Kdekoliv: `activator stage` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.

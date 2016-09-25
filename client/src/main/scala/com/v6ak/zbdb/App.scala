@@ -26,7 +26,7 @@ object App extends JSApp {
       dom.console.log("fileName", fileName)
       Ajax.get(fileName, responseType = "text") onComplete {
         case Failure(e) =>
-          dom.alert("Failed to load data")
+          dom.window.alert("Failed to load data")
         case Success(xhr) =>
           try{
             val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
@@ -40,7 +40,7 @@ object App extends JSApp {
             case e: Throwable =>
               dom.console.error("Error when parsing: ", e.getMessage)
               e.printStackTrace()
-              dom.alert("Nepodařilo se zpracovat data")
+              dom.window.alert("Nepodařilo se zpracovat data")
           }
       }
     }

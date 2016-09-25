@@ -1,7 +1,31 @@
+// Comment to get more information during initialization
+logLevel := Level.Warn
+
+// Resolvers
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+
+resolvers += Resolver.url("heroku-sbt-plugin-releases",
+  url("https://dl.bintray.com/heroku/sbt-plugins/"))(Resolver.ivyStylePatterns)
+
+// Sbt plugins
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.6")
+
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
+
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.12")
 
-//resolvers += "spray repo" at "https://repo.spray.io"
+addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.0.1")
 
-//resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")
 
-//addSbtPlugin("com.lihaoyi" % "workbench" % "0.2.3")
+addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.1")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.1.0")
+
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
+
+addSbtPlugin("net.ground5hark.sbt" % "sbt-concat" % "0.1.9")
+
+addSbtPlugin("com.slidingautonomy.sbt" % "sbt-filter" % "1.0.1")
+
+addSbtPlugin("org.neolin.sbt" % "sbt-simple-url-update" % "1.0.0")
