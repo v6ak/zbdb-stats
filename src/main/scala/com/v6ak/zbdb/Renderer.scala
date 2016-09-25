@@ -14,6 +14,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all._
 import com.example.RichMoment.toRichMoment
+import com.example.Moment.MomentOrdering
 
 object IdGenerator{
 
@@ -75,6 +76,22 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
 
   private final val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
 
+  private def expandSeq[T](s: Seq[Option[T]], size: Int) = s ++ Seq.fill(size - s.size)(None)
+
+  private def longZip[T, U, R](a: Seq[Option[T]], b: Seq[Option[U]]) = {
+    val maxSize = a.size max b.size
+    val ea = expandSeq(a, maxSize)
+    val eb = expandSeq(b, maxSize)
+    (ea, eb).zipped
+  }
+
+  private val firsts = data.foldLeft(Seq[Moment]()){(fastestSoFar, participant) =>
+    longZip(
+      fastestSoFar.map(Some(_)),
+      participant.partTimes.map(pti => pti.endTimeOption)
+    ).map{(m1, m2) => Seq(m1, m2).flatten.min}
+  }
+
   /*DurationRenderer.asInstanceOf[js.Dynamic].prototype.createTicks = (((th: js.Dynamic, plot: js.Dynamic) => {
     th._ticks
     dom.alert("plot: "+plot)
@@ -123,6 +140,7 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
 
   }
 
+  private val FirstBadge = div(cls := "label label-success")("1.")
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
@@ -147,11 +165,20 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
     ))(className = "participant-header")
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
+    val first = firsts.lift(i)
     val firstCell = if(i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
       Column(firstCell, TableHeadCell("|=>"))((r: Participant) => partData(r).fold[Frag]("–")(_.startTime.timeOnly))(className = "col-start"),
       Column(TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))), TableHeadCell(s"čas"))((r: Participant) => partData(r).collect{case f: Finished => f}.fold("–")(_.intervalTime.toString))(className = "col-time"),
-      Column(TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2), TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i+1} – ${part.place}", "=>|")))((r: Participant) => partData(r).collect{case f: Finished => f}.fold("–": Frag)(_.endTime.timeOnly))(className = "col-end")
+      Column(
+        TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
+        TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i+1} – ${part.place}", "=>|"))
+      )((r: Participant) =>
+        Seq(
+          partData(r).collect{case f: Finished => f}.fold("–": Frag)(_.endTime.timeOnlyDiv),
+          if(first.map(_.unix()) == partData(r).flatMap(_.endTimeOption).map(_.unix())) FirstBadge else ("":Frag)
+        )
+      )(className = "col-end")
     )
   })
 
@@ -203,7 +230,9 @@ final class Renderer private(parts: Seq[Part], data: Seq[Participant], errors: S
   }
 
   implicit private class RichTime(moment: Moment){
+    @deprecated
     def timeOnly = span(title:=moment.toString)(f"${moment.hours()}:${moment.minutes}%02d")
+    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes}%02d")
   }
 
   private def previousPartCummulativeLengths = Seq(BigDecimal(0)) ++ parts.map(_.cumulativeTrackLength)

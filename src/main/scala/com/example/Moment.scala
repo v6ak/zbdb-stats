@@ -72,9 +72,15 @@ class Moment extends js.Any {
     def isSame(other: Moment): Boolean = js.native
     //def clone(): Moment = js.native
 
+    //def milliseconds(): Int = js.native
+    def unix(): Int = js.native
 
   }
 
+}
+
+object Moment {
+  implicit val MomentOrdering: Ordering[Moment] = Ordering.by(_.unix())
 }
 
 class RichMoment(val moment: Moment) extends AnyVal{
