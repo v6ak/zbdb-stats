@@ -11,6 +11,7 @@ object PageGenerator{
   final case class GoogleSpreadsheetDataSource(key: String) extends DataSource with CorsAnywhereDataSource{
     override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=0&single=true&output=csv"
     override def originalLink: String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml"
+    //override def csvAjaxUrl: String = s"https://zbdb.v6ak.com/spreadsheets/$key"
   }
   final case class FileDataSource(file: String, originalLink: String) extends DataSource{
     override def csvAjaxUrl: String = file
@@ -40,6 +41,7 @@ object PageGenerator{
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="main.min.css" />
         <script type="text/javascript" src="main.min.js"></script>
+        <link rel="prefetch" href={year.dataSource.csvAjaxUrl} />
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
       </head>
       <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
