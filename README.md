@@ -17,3 +17,7 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 
 a. Pouze pro Linux/MacOS: `./pack.sh` vygeneruje pack.zip
 b. Kdekoliv: `activator stage` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.
+
+## Verze formátu
+
+Pokud je potřeba data z různých ročkíků zpracovávat různě, použije se jiná verze formátu. Verze formátu odpovídá ročkíku, od kterého se používá. Pokud uvidíme verze 2045, určitě se použila pro ročník 2045, ale možná i v dalších letech.
