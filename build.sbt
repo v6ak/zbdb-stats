@@ -23,7 +23,9 @@ lazy val server = (project in file("server")).settings(
   pipelineStages in Assets := Seq(scalaJSPipeline),
   pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip),
   includeFilter in digest := "*",
-  excludeFilter in digest := "*.html" || "*.csv",
+  excludeFilter in digest := "*.html" || "*.csv" ||
+    // When sbt-simple-url-update updates path for glyphicons-halflings-regular.woff, it garbles the path for glyphicons-halflings-regular.woff2.
+    "glyphicons-halflings-regular.woff",
   includeFilter in filter := "*.less" || "*.note" || "*.source" || "*.css" || "*.js",
   excludeFilter in filter := "main.js" || "main.min.js" || "main.css" || "main.min.css",
   resourceGenerators in Assets += Def.task {
