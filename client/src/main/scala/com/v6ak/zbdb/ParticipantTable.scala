@@ -6,7 +6,7 @@ import com.v6ak.scalajs.time.TimeInterval.TimeIntervalOrdering
 object ParticipantTable {
 }
 
-final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Seq[Participant]) {
+final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Seq[Participant], formatVersion: FormatVersion) {
   import ParticipantTable._
 
   val participantMap = {

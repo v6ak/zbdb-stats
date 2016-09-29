@@ -10,7 +10,7 @@ final case class Participant(
   lastName: String,
   nickOption: Option[String],
   gender: Gender,
-  //age: String,
+  age: String,
   last3: Seq[String], // TODO: parse
   partTimes: Seq[PartTimeInfo]
 ) {

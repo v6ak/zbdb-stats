@@ -167,7 +167,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       ),
       div(`class` := "actions")(chartButtons(r))
     ))(className = "participant-header")
-  ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
+  ) ++ Seq[Option[Column[Participant]]](
+    if(participantTable.formatVersion.hasAgeCategory) Some(Column[Participant]("Věk")(_.age))
+    else None
+  ).flatten ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
     val best = try{
       firsts(i)

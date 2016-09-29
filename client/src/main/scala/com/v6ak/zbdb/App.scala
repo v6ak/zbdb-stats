@@ -16,7 +16,7 @@ object App extends JSApp {
     dom.window.onload = { _: Any =>
       val fileName = dom.window.document.body.getAttribute("data-file")
       val maxHourDelta = dom.window.document.body.getAttribute("data-max-hour-delta").toInt
-      val formatVersion = dom.window.document.body.getAttribute("data-format-version").toInt
+      val formatVersionNumber = dom.window.document.body.getAttribute("data-format-version").toInt
       val startTime = moment.tz(dom.window.document.body.getAttribute("data-start-time"), dom.window.document.body.getAttribute("data-timezone"))
       val endTime = moment.tz(dom.window.document.body.getAttribute("data-end-time"), dom.window.document.body.getAttribute("data-timezone"))
       if(!startTime.isValid()) sys.error("startTime is invalid")
@@ -29,9 +29,10 @@ object App extends JSApp {
           dom.window.alert("Failed to load data")
         case Success(xhr) =>
           try{
+            val formatVersion = FormatVersion.Versions(formatVersionNumber)
             val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
-            val participantTable = ParticipantTable(startTime, parts, data)
+            val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
             Renderer.initialize(participantTable, errors, content)
             Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
               loadingIndicator.parentNode.removeChild(loadingIndicator)

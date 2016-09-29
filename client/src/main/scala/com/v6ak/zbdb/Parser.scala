@@ -95,15 +95,11 @@ object Parser{
     }
   }
 
-  def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: Int) = {
+  def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
     val fullDataTable = new CSVReader(new StringReader(csvData.trim)).toIndexedSeq.map(_.toIndexedSeq)
     val Seq(title, header1, header2, header3, dataWithTail @ _*) = fullDataTable
-    val (headLength, tailLength) = formatVersion match {
-      case 2015 => (0, 2)
-      case 2016 => (1, 0)
-    }
-    val dataTable = dataWithTail.drop(headLength).dropRight(tailLength)
-    if(tailLength == 2){
+    val dataTable = dataWithTail.drop(formatVersion.headLength).dropRight(formatVersion.tailLength)
+    if(formatVersion.tailLength == 2){
       val Seq(footer1, footer2) = dataWithTail.takeRight(2)
       assertEmpty(footer1.take(5).toSet -- Set(""))
       assertEmpty(footer2.toSet.filterNot(_.forall(_.isDigit)) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
@@ -133,9 +129,9 @@ object Parser{
     (parts, parsedDataSuccessfulTries.map{case Left(p) => p}, parsedDataFailedTries.map{case Right((row, e)) => (row, e)})
   }
 
-  private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: Int): Participant = {
+  private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
     val Seq(num, lastName, firstName, nick, genderString, ageString, other@_*) = participantData
-    if ((formatVersion <= 2015) && (ageString != "")) {
+    if ((!formatVersion.hasAgeCategory) && (ageString != "")) {
       sys.error("You seem to have left some data in age column. Clean it first, please.")
     }
     val timesUnparsed = other.dropRight(4).grouped(3).toIndexedSeq
@@ -160,7 +156,7 @@ object Parser{
         case "m" => Gender.Male
         case "ž" => Gender.Female
       },
-      //age = ageString,
+      age = ageString,
       last3 = last3,
       partTimes = times
     )
