@@ -4,9 +4,11 @@ object PageGenerator{
     def csvAjaxUrl: String
     def csvDownloadUrl: String
     def originalLink: String
+    def prefetchAjax: Boolean
   }
   trait CorsAnywhereDataSource extends DataSource {
     override def csvAjaxUrl: String = s"https://cors-anywhere.herokuapp.com/$csvDownloadUrl"
+    override def prefetchAjax: Boolean = false
   }
   final case class GoogleSpreadsheetDataSource(key: String) extends DataSource with CorsAnywhereDataSource{
     override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=0&single=true&output=csv"
@@ -16,6 +18,7 @@ object PageGenerator{
   final case class FileDataSource(file: String, originalLink: String) extends DataSource{
     override def csvAjaxUrl: String = file
     override def csvDownloadUrl: String = file
+    override def prefetchAjax: Boolean = true
   }
 
   case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String)
@@ -41,7 +44,7 @@ object PageGenerator{
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="main.min.css" />
         <script type="text/javascript" src="main.min.js"></script>
-        <link rel="prefetch" href={year.dataSource.csvAjaxUrl} />
+        {if(year.dataSource.prefetchAjax) <link rel="prefetch" href={year.dataSource.csvAjaxUrl} /> else ""}
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
       </head>
       <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
