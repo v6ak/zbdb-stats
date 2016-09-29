@@ -179,9 +179,9 @@
 						base.setPositionValues();
 					} else if (base.isSticky) {
 						base.$originalHeader.css('position', 'static');
+						base.resetWidth($('td,th', base.$clonedHeader), $('td,th', base.$originalHeader));
 						base.hideClonedHeader();
 						base.isSticky = false;
-						base.resetWidth($('td,th', base.$clonedHeader), $('td,th', base.$originalHeader));
 						$this.trigger('disabledStickiness.' + name);
 					}
 				});
@@ -278,10 +278,10 @@
 				var els = $origHeaders.eq(index)[0].style;
 				els.minWidth = $this.css('min-width');
 				els.maxWidth = $this.css('max-width');
-				$origHeaders.eq(index).css({
+				/*$origHeaders.eq(index).css({
 					'min-width': $this.css('min-width'),
 					'max-width': $this.css('max-width')
-				});
+				});*/
 			});
 		};
 
