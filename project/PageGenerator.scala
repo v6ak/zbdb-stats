@@ -44,6 +44,7 @@ object PageGenerator{
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href="main.min.css" />
         <script type="text/javascript" src="main.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {if(year.dataSource.prefetchAjax) <link rel="prefetch" href={year.dataSource.csvAjaxUrl} /> else ""}
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
       </head>
