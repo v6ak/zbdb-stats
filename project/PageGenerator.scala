@@ -33,7 +33,7 @@ object PageGenerator{
     ),
     Year(
       year = 2016, formatVersion = 2016,
-      startTime = "2016-09-16 17:30", endTime="2016-09-17 19:00",
+      startTime = "2016-09-16 17:30", endTime="2016-09-17 20:00",
       dataSource = GoogleSpreadsheetDataSource("1eyNWmTn83l46VucS4DHoMlUxP6zAG8AuMHFzbFBrvpM")
     )
   )
