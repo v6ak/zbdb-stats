@@ -79,23 +79,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   private final val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
 
-  private def expandSeq[T](s: Seq[T], empty: T, size: Int) = s ++ Seq.fill(size - s.size)(empty)
-
-  private def longZip[T, U](a: Seq[T], emptyA: T)(b: Seq[U], emptyB: U) = {
-    val maxSize = a.size max b.size
-    val ea = expandSeq(a, emptyA, maxSize)
-    val eb = expandSeq(b, emptyB, maxSize)
-    (ea, eb).zipped
-  }
-
-  private val firsts = data.foldLeft(Seq.empty[BestParticipantData]){ (fastestSoFar, participant) =>
-    longZip[BestParticipantData, Option[PartTimeInfo]](
-      fastestSoFar, BestParticipantData.Empty
-    )(
-      participant.partTimes.map(Some(_)), None
-    ).map{(fastestParticipantSoFar, current) => fastestParticipantSoFar.merge(current)}
-  }
-
   /*DurationRenderer.asInstanceOf[js.Dynamic].prototype.createTicks = (((th: js.Dynamic, plot: js.Dynamic) => {
     th._ticks
     dom.alert("plot: "+plot)
