@@ -50,7 +50,6 @@ final case class ParticipantPlotGenerator(nameGenitive: String, nameAccusative: 
 
 final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, enableHorizontalStickyness: Boolean) {
 
-  import ParticipantTable._
   import participantTable._
 
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
@@ -63,13 +62,11 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   private val DurationRenderer: js.ThisFunction = (th: js.Dynamic) => {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer.call(th)
-    dom.console.log("tickRenderer: ", th.tickRenderer)
   }
   DurationRenderer.asInstanceOf[js.Dynamic].prototype = new DateAxisRenderer()
   DurationRenderer.asInstanceOf[js.Dynamic].prototype.init = ((th: js.Dynamic) => {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer.prototype.init.call(th)
     th.tickOptions.formatter = ((format: String, value: Moment) => {
-      dom.console.log("value", value)
       val diff = value - zeroMoment
       val hours = diff/1000/60/60
       val minutes = diff/1000/60 - hours*60
@@ -78,12 +75,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   }): js.ThisFunction
 
   private final val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
-
-  /*DurationRenderer.asInstanceOf[js.Dynamic].prototype.createTicks = (((th: js.Dynamic, plot: js.Dynamic) => {
-    th._ticks
-    dom.alert("plot: "+plot)
-    ()
-  }): js.ThisFunction)*/
 
   private final implicit class RichParticipant(row: Participant){
     def checkboxId = s"part-${row.id}-checkbox"
@@ -133,18 +124,15 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
-    //Column("#")(_.id.toString),
     Column(TableHeadCell("id, jméno", rowCount = 2))((r: Participant) => Seq(
       label(`for` := r.checkboxId, cls := "participant-header-label")(
         r.orderOption.fold(span(cls:="label label-danger label-result")("DNF"))(order => span(cls:="label label-success label-result")(s"$order.")),
         input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
           val el = e.currentTarget.asInstanceOf[HTMLInputElement]
-          //val tableRow = findParent(el, "tr").asInstanceOf[HTMLTableRowElement]
           el.checked match {
             case true => selection.addRow(r)
             case false => selection.removeRow(r)
           }
-          //dom.console.log("checkbox changed", el.checked, tableRow)
         }),
         " ",
         r.id + ": " + r.fullNameWithNick
@@ -216,7 +204,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     dropdownGroup("Porovnat vybrané účastníky…", cls:="btn btn-primary dropdown-toggle")(
       for(plot <- Plots) yield chartButton(s"Porovnat ${plot.nameAccusative}", selection().toSeq, plot.generator, s"Porovnat ${plot.nameAccusative}")
     )(cls := "btn-group dropup"),
-    //chartButton("Porovnat vybrané účastníky", selection().toSeq, generateWalkPlotData, "Porovnat vybrané účastníky")(`class` := "btn btn-primary"),
     selectedParticipantsElement
   ).render
 
@@ -278,21 +265,16 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   private def globalStatsPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
     val finishers = rowsLoader.groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
-    // .map(p => (p.startTime, p.partTimes.last.endTimeOption.get - p.startTime, p)
     import com.example.moment._
     val plotParams = js.Dictionary(
       "title" -> "Porovnání startu a času chůze",
       "seriesDefaults" -> js.Dictionary(
-        //"linePattern" -> "none",
-        //"showMarker" -> true,
-        //"markerOptions" -> Dictionary("style" -> "diamond"),
         "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.BubbleRenderer,
         "rendererOptions" -> js.Dictionary(
           "bubbleGradients" -> true
         ),
         "shadow" -> true
       ),
-      //"series" -> series,
       /*"highlighter" -> js.Dictionary(
         "show" -> true,
         "showTooltip" -> true,
@@ -314,20 +296,12 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
             "formatString" -> "aaa %#H:%M",
             "formatter" -> ((format: String, value: Moment) => value.toString)
           ),
-          //"min" -> moment(startTime).minutes(0).toString,
           "tickInterval" -> "30 minutes"
-          //"max" -> parts.last.cumulativeTrackLength.toDouble,
         )
       )
     )
-    //dom.console.log(zeroMoment.toString)
     val plotPoints = js.Array(js.Array(finishers.map{case ((moment, time), participants) => js.Array(moment/*.hours()*60+moment.minutes()*/, zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString, math.sqrt(participants.size.toDouble), participants.map(_.fullName).mkString(", ") + " ("+participants.size+")")}.toSeq: _*))
-    dom.console.log("plotPoints", plotPoints)
-    //dom.alert(finishers.mkString("\n"))
-
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
-
-
   }
 
   private val DateAxisRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer
@@ -379,8 +353,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points = js.Array(
         (p.partTimes, parts).zipped.flatMap((partTime, part) => partTime.durationOption.map { duration =>
-          dom.console.log("part.trackLength, (duration.toDouble/1000/3600)", part.trackLength.toDouble, (duration.toDouble/1000/3600))
-          dom.console.log("part.trackLength / (duration.toDouble / 1000 / 3600)", (part.trackLength / (duration.toDouble / 1000 / 3600)).toString)
           js.Array(part.cumulativeTrackLength.toDouble, part.trackLength.toDouble / (duration.toDouble / 1000 / 3600))
         }): _*)
       )
@@ -425,40 +397,16 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
             "barWidth" -> 10
           ),
           "pointLabels" -> true,
-          //"linePattern" -> "dashed",
           "showMarker" -> true
-          //"markerOptions" -> Dictionary("style" -> "diamond"),
-          //"shadow" -> false
         ),
         "series" -> series,
-        /*"highlighter" -> js.Dictionary(
-          "show" -> true,
-          "showTooltip" -> true,
-          "formatString" -> "%s|%s|%s|%s",
-          "bringSeriesToFront" -> true
-        ),*/
         "height" -> 500,
-        "legend" -> Dictionary("show" -> true),
-        "axes" -> Dictionary(
-          /*"yaxis" -> Dictionary(
-            //"renderer" -> DateAxisRenderer,
-            //"tickOptions" -> Dictionary("formatString" -> "%#H:%M"),
-            "min" -> 0
-            //"tickInterval" -> "1 hours"
-          ),
-          "xaxis" -> Dictionary(
-            "min" -> 0,
-            "max" -> parts.last.cumulativeTrackLength.toDouble,
-            "tickInterval" -> 10
-          )*/
-        )
+        "legend" -> Dictionary("show" -> true)
       )
     )
   }
 
   private def initializePlot(modalBodyId: String, data: PlotData): Unit ={
-    //dom.console.log("times", js.Array(processTimes(row)))
-    //dom.console.log("plotParams", plotParams)
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, data.plotPoints, data.plotParams)
     dom.window.asInstanceOf[js.Dynamic].$("#"+modalBodyId).on("jqplotDataClick", {(ev: js.Any, seriesIndex: js.Any, pointIndex: js.Any, data: js.Any) =>
       dom.console.log("click", ev, seriesIndex, pointIndex, data)
@@ -472,7 +420,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     var modalFooter = div(`class`:="modal-footer")
     var modalDialog = div(`class`:="modal-dialog modal-xxl")(div(`class`:="modal-content")(modalHeader, modalBody, modalFooter))
     var dialog = div(`class`:="modal fade")(modalDialog).render
-
     val jqModal = dom.window.asInstanceOf[js.Dynamic].$(dialog)
     jqModal.on("hidden.bs.modal", {() => dialog.parentNode.removeChild(dialog)})
     (dialog, jqModal, modalBodyId)
@@ -491,7 +438,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     div(cls:="dropdown-menu")(buttons : _*)
   )
 
-
   private def chartButtons(row: Participant) = Seq[Frag](
     for(plot <- Plots) yield     chartButton(
       s"Graf ${plot.nameGenitive} pro ${row.fullNameWithNick}",
@@ -499,16 +445,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       plot.generator,
       Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", "aria-hidden".attr := "true"))
     ),
-    /*chartButton(
-      s"Graf chůze pro ${row.fullNameWithNick}",
-      Seq(row), generateWalkPlotData,
-      Seq(span(`class`:="glyphicon glyphicon-user", "aria-hidden".attr := "true"))
-    ),
-    chartButton(
-      s"Graf pauz pro ${row.fullNameWithNick}",
-      Seq(row), generatePausesPlotData,
-      Seq(span(`class`:="glyphicon glyphicon-pause", "aria-hidden".attr := "true"))
-    ),*/
     dropdownGroup(cls:="btn btn-xs btn-normal dropdown-toggle", "…")(
       chartButton(
         s"Graf pro ${row.fullNameWithNick} a všechny, které potkal(a) na cestě",
@@ -557,9 +493,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     content.appendChild(globalStats)
     content.appendChild(tableElement)
     content.appendChild(barElement)
-    //updateHeadHeight()
     dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
-    //dom.window.asInstanceOf[js.Dynamic].$(tableElement).sticky()// Dictionary("columnCount" -> 4) )
     if (enableHorizontalStickyness) {
       addHorizontalStickyness()
     }
@@ -592,10 +526,5 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       horizontalScrollPositionGuard.update(dom.document.documentElement.scrollLeft)
     })
   }
-
-  /*private def updateHeadHeight(): Unit ={
-    val theadElement = tableElement.getElementsByTagName("thead").item(0).asInstanceOf[HTMLElement]
-    theadElement.style.minHeight = tableElement.offsetHeight+"px"
-  }*/
 
 }

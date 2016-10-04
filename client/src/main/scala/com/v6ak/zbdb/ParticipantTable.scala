@@ -7,7 +7,6 @@ object ParticipantTable {
 }
 
 final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Seq[Participant], formatVersion: FormatVersion) {
-  import ParticipantTable._
 
   val participantMap = {
     def processOrderGroup(order: Int, members: Seq[Participant]): Seq[ParticipantInContext.Successful] = members.map(participant => ParticipantInContext.Successful(participant, order))
