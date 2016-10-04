@@ -290,8 +290,8 @@
 
 		base.resetWidth = function ($clonedHeaders, $origHeaders) {
 			$clonedHeaders.each(function (index) {
+				var $this = $(this);
 				queue(function(){
-					var $this = $(this);
 					var els = $origHeaders.eq(index)[0].style;
 					els.minWidth = $this.css('min-width');
 					els.maxWidth = $this.css('max-width');
