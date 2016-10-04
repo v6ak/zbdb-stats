@@ -23,7 +23,7 @@ object BestParticipantData{
 }
 
 
-final case class BestParticipantData(private val endTimeOption: Option[Moment], private val durationOption: Option[Int], private val startTimeOption: Option[Moment]) {
+final case class BestParticipantData(private val endTimeOption: Option[Moment], durationOption: Option[Int], private val startTimeOption: Option[Moment]) {
   def hasBestDuration(pti: Finished): Boolean = pti.durationOption == this.durationOption
   def hasBestEndTime(partTimeInfoOption: PartTimeInfo): Boolean = partTimeInfoOption.endTimeOption.map(_.unix()) == endTimeOption.map(_.unix())
   def hasBestStartTime(partTimeInfoOption: PartTimeInfo): Boolean = startTimeOption.exists(bestStartTime => bestStartTime.unix() == partTimeInfoOption.startTime.unix())

@@ -3,6 +3,7 @@ package com.v6ak.scalajs.time
 case class TimeInterval(totalMinutes: Int) extends AnyVal{
   def hours = totalMinutes/60
   def minutes = totalMinutes%60
+  def -(other: TimeInterval) = TimeInterval(this.totalMinutes - other.totalMinutes)
   override def toString: String = f"$hours:$minutes%02d"
 }
 

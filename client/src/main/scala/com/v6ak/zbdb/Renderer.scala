@@ -191,7 +191,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
         TableHeadCell(s"čas")
       )((r: Participant) =>
         partData(r).collect{case f: Finished => f}.fold[Frag]("–")(pti => Seq[Frag](
-          div(pti.intervalTime.toString),
+          div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
+            val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
+            "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:"+(pti.intervalTime - bestDuration)
+          }),
           if(best.hasBestDuration(pti)) FirstBadge else EmptyHtml
         ))
       )(className = "col-time"),
