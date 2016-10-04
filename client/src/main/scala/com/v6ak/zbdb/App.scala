@@ -24,6 +24,12 @@ object App extends JSApp {
       dom.console.log("startTime", startTime.toString)
       dom.console.log("endTime", endTime.toString)
       dom.console.log("fileName", fileName)
+      val params = dom.window.location.search.substring(1).split("&").map{paramString =>
+        paramString.split("=", 2) match {
+          case Array(name, value) => (name, value)
+          case Array(name) => (name, "")
+        }
+      }.toMap
       Ajax.get(fileName, responseType = "text") onComplete {
         case Failure(e) =>
           dom.window.alert("Failed to load data")
@@ -33,7 +39,7 @@ object App extends JSApp {
             val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
-            Renderer.initialize(participantTable, errors, content)
+            Renderer.initialize(participantTable, errors, content, params.contains("horizontalStickyness"))
             Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
               loadingIndicator.parentNode.removeChild(loadingIndicator)
             }

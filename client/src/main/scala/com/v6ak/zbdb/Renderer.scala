@@ -27,8 +27,8 @@ object IdGenerator{
 }
 
 object Renderer{
-  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node) = {
-    val r = new Renderer(participantTable, errors, content)
+  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, enableHorizontalStickyness: Boolean) = {
+    val r = new Renderer(participantTable, errors, content, enableHorizontalStickyness)
     r.initialize()
     r
   }
@@ -47,7 +47,7 @@ object Renderer{
 
 final case class ParticipantPlotGenerator(nameGenitive: String, nameAccusative: String, glyphiconName: String, generator: Seq[Participant] => PlotData)
 
-final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node) {
+final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, enableHorizontalStickyness: Boolean) {
 
   import ParticipantTable._
   import participantTable._
@@ -540,7 +540,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     case e => li(i(e.getClass.getName), ": ", e.getMessage)
   })
 
-  private def initialize() = {
+  private def initialize(): Unit = {
     showBar = false
     if(errors.nonEmpty){
       content.appendChild(
@@ -563,6 +563,37 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     //updateHeadHeight()
     dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
     //dom.window.asInstanceOf[js.Dynamic].$(tableElement).sticky()// Dictionary("columnCount" -> 4) )
+    if (enableHorizontalStickyness) {
+      addHorizontalStickyness()
+    }
+  }
+
+  def addHorizontalStickyness(): Unit = {
+    val participantHeaders = dom.window.asInstanceOf[js.Dynamic].Array.prototype.slice.call(tableElement.querySelectorAll(".participant-header")).asInstanceOf[js.Array[HTMLElement]]
+    for(h <- participantHeaders){
+      h.style.position = "relative"
+    }
+    val horizontalScrollClassGuard = ValueGuard(false){ (_, scrolledHorizontally) =>
+      if(scrolledHorizontally){
+        for(t <- participantHeaders){
+          t.classList.add("scrolled-horizontally")
+        }
+      }else{
+        for(t <- participantHeaders){
+          t.classList.remove("scrolled-horizontally")
+        }
+      }
+    }
+    val horizontalScrollPositionGuard = ValueGuard(0.0){(_, scrollLeft) =>
+      val left = s"${scrollLeft}px"
+      for(t <- participantHeaders){
+        t.style.left = left
+      }
+      horizontalScrollClassGuard.update(scrollLeft != 0)
+    }
+    dom.document.addEventListener("scroll", (_: Event) => {
+      horizontalScrollPositionGuard.update(dom.document.documentElement.scrollLeft)
+    })
   }
 
   /*private def updateHeadHeight(): Unit ={
