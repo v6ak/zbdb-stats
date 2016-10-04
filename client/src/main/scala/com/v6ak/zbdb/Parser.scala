@@ -98,11 +98,9 @@ object Parser{
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
     val fullDataTable = new CSVReader(new StringReader(csvData.trim)).toIndexedSeq.map(_.toIndexedSeq)
     val Seq(title, header1, header2, header3, dataWithTail @ _*) = fullDataTable
-    val dataTable = dataWithTail.drop(formatVersion.headLength).dropRight(formatVersion.tailLength)
-    if(formatVersion.tailLength == 2){
-      val Seq(footer1, footer2) = dataWithTail.takeRight(2)
-      assertEmpty(footer1.take(5).toSet -- Set(""))
-      assertEmpty(footer2.toSet.filterNot(_.forall(_.isDigit)) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
+    val (dataTable, footer) = formatVersion.tail.split(dataWithTail.drop(formatVersion.headLength).toIndexedSeq)
+    footer.foreach{fl =>
+      assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
     val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(6).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
       Part(

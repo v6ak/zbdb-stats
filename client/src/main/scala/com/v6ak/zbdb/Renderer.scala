@@ -28,8 +28,8 @@ object IdGenerator{
 }
 
 object Renderer{
-  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, enableHorizontalStickyness: Boolean) = {
-    val r = new Renderer(participantTable, errors, content, enableHorizontalStickyness)
+  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean) = {
+    val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness)
     r.initialize()
     r
   }
@@ -48,7 +48,7 @@ object Renderer{
 
 final case class ParticipantPlotGenerator(nameGenitive: String, nameAccusative: String, glyphiconName: String, generator: Seq[Participant] => PlotData)
 
-final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, enableHorizontalStickyness: Boolean) {
+final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean) {
 
   import participantTable._
 
@@ -214,7 +214,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       dom.document.body.appendChild(dialog)
       jqModal.modal(js.Dictionary("keyboard" -> true))
 
-    })
+    }),
+    plots.map{case (name, url) =>
+      a(href:=url, cls:="btn btn-default", target := "_blank")(name)
+    }
   ).render
 
   @tailrec

@@ -4,21 +4,23 @@ import com.example.moment._
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 
-import scala.scalajs.js.JSApp
+import scala.scalajs.js.{JSApp, JSON}
 import scala.scalajs.js.annotation.JSExport
 import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.scalajs.js
 
 object App extends JSApp {
 
   @JSExport
   override def main(): Unit = {
     dom.window.onload = { _: Any =>
-      val fileName = dom.window.document.body.getAttribute("data-file")
-      val maxHourDelta = dom.window.document.body.getAttribute("data-max-hour-delta").toInt
-      val formatVersionNumber = dom.window.document.body.getAttribute("data-format-version").toInt
-      val startTime = moment.tz(dom.window.document.body.getAttribute("data-start-time"), dom.window.document.body.getAttribute("data-timezone"))
-      val endTime = moment.tz(dom.window.document.body.getAttribute("data-end-time"), dom.window.document.body.getAttribute("data-timezone"))
+      val body = dom.window.document.body
+      val fileName = body.getAttribute("data-file")
+      val maxHourDelta = body.getAttribute("data-max-hour-delta").toInt
+      val formatVersionNumber = body.getAttribute("data-format-version").toInt
+      val startTime = moment.tz(body.getAttribute("data-start-time"), body.getAttribute("data-timezone"))
+      val endTime = moment.tz(body.getAttribute("data-end-time"), body.getAttribute("data-timezone"))
       if(!startTime.isValid()) sys.error("startTime is invalid")
       if(!endTime.isValid()) sys.error("endTime is invalid")
       dom.console.log("startTime", startTime.toString)
@@ -39,7 +41,8 @@ object App extends JSApp {
             val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
-            Renderer.initialize(participantTable, errors, content, params.contains("horizontalStickyness"))
+            val plots = JSON.parse(body.getAttribute("data-plots")).asInstanceOf[js.Array[js.Array[String]]].toIndexedSeq.map{a => (a(0), a(1))}
+            Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"))
             Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
               loadingIndicator.parentNode.removeChild(loadingIndicator)
             }

@@ -1,3 +1,5 @@
+import spray.json.{CompactPrinter, JsArray, JsString, JsonPrinter}
+
 object PageGenerator{
 
   sealed abstract class DataSource{
@@ -5,25 +7,27 @@ object PageGenerator{
     def csvDownloadUrl: String
     def originalLink: String
     def prefetchAjax: Boolean
+    def plots: Seq[(String, String)]
   }
   trait CorsAnywhereDataSource extends DataSource {
     override def csvAjaxUrl: String = s"https://cors-anywhere.herokuapp.com/$csvDownloadUrl"
     override def prefetchAjax: Boolean = false
   }
-  final case class GoogleSpreadsheetDataSource(key: String) extends DataSource with CorsAnywhereDataSource{
-    override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=0&single=true&output=csv"
-    override def originalLink: String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml"
+  final case class GoogleSpreadsheetDataSource(key: String, gid: Int = 0, plotIds: Seq[(String, Int)]) extends DataSource with CorsAnywhereDataSource{
+    private def pubhtml(sheetId: Int): String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml?gid=$sheetId"
+    override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=$gid&single=true&output=csv"
+    override def originalLink: String = pubhtml(gid)
     //override def csvAjaxUrl: String = s"https://zbdb.v6ak.com/spreadsheets/$key"
+    override def plots: Seq[(String, String)] = plotIds.map{case (name, sheetId) => (name, pubhtml(sheetId))}
   }
   final case class FileDataSource(file: String, originalLink: String) extends DataSource{
     override def csvAjaxUrl: String = file
     override def csvDownloadUrl: String = file
     override def prefetchAjax: Boolean = true
+    override def plots: Seq[(String, String)] = Seq()
   }
 
   case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String)
-
-
 
   val Years = Seq(
     Year(
@@ -34,12 +38,23 @@ object PageGenerator{
     Year(
       year = 2016, formatVersion = 2016,
       startTime = "2016-09-16 17:30", endTime="2016-09-17 20:00",
-      dataSource = GoogleSpreadsheetDataSource("1eyNWmTn83l46VucS4DHoMlUxP6zAG8AuMHFzbFBrvpM")
+      dataSource = GoogleSpreadsheetDataSource(
+        key = "11g7db0Ael5BNC7Y7vDaEhod4qyb-0lMt2x4mnJw0lxM",
+        gid = 769056270,
+        plotIds = Seq(
+          "Genderová struktura" -> 1030807690,
+          "Věková struktura" -> 237386558,
+          "Počet lidí" -> 1215865940,
+          "Počet lidí v %" -> 384816554,
+          "Časy stanovišť" -> 240092119
+        )
+      )
     )
   )
 
   def forYear(year: Year) = {
     val title = s"Výsledky Z Brna do Brna ${year.year}"
+    val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
     "<!DOCTYPE html>"+
     <html>
       <head>
@@ -51,7 +66,7 @@ object PageGenerator{
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
         <title>{title}</title>
       </head>
-      <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
+      <body data-plots={plots} data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
         <div class="container">
           <h1>{title}</h1>
           <p class="hidden-print">Alternativní podoby: <a href={year.dataSource.originalLink}>Tabulka Google</a>, <a href={year.dataSource.csvDownloadUrl}>CSV</a></p>
