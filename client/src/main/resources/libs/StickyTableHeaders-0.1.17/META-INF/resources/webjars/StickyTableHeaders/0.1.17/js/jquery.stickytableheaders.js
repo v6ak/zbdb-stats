@@ -41,6 +41,17 @@
 		base.leftOffset = null;
 		base.topOffset = null;
 
+		var isGecko = navigator.userAgent.indexOf("Gecko/") != -1;
+		var isTrident = navigator.userAgent.indexOf("Trident/") != -1;
+		var async = isGecko || isTrident; // Those two engines have hiccups with sync approach when scrolling above the table top.
+		if(window.console){
+			console.log("isGecko: ", isGecko);
+			console.log("isTrident: ", isTrident);
+			console.log("async: ", async);
+		}
+
+		var queue = async ? function(f){setTimeout(f, 0);} : function(f){f();};
+
 		base.init = function () {
 			base.setOptions(options);
 
@@ -155,38 +166,43 @@
 						};
 
 					if (scrolledPastTop && notScrolledPastBottom()) {
-						newLeft = offset.left - scrollLeft + base.options.leftOffset;
-						/*var baseStyle = base.$originalHeader[0].style;
-						baseStyle.position = 'fixed';
-						baseStyle.marginTop = base.options.marginTop + 50;
-						baseStyle.left = newLeft;
-						baseStyle.zIndex = 3; // #18: opacity bug*/
-						base.$originalHeader.css({
-							'position': 'fixed',
-							'margin-top': base.options.marginTop,
-							'left': newLeft,
-							'z-index': 3 // #18: opacity bug
-						});
-						base.leftOffset = newLeft;
-						base.topOffset = newTopOffset;
-						base.showClonedHeader();
-						if (!base.isSticky) {
+						// It should be done at once, in order to prevent ugly effects
+						queue(function () {
+							newLeft = offset.left - scrollLeft + base.options.leftOffset;
+							/*var baseStyle = base.$originalHeader[0].style;
+							baseStyle.position = 'fixed';
+							baseStyle.marginTop = base.options.marginTop + 50;
+							baseStyle.left = newLeft;
+							baseStyle.zIndex = 3; // #18: opacity bug*/
+							base.$originalHeader.css({
+								'position': 'fixed',
+								'margin-top': base.options.marginTop,
+								'left': newLeft,
+								'z-index': 3 // #18: opacity bug
+							});
+							base.leftOffset = newLeft;
+							base.topOffset = newTopOffset;
+							var oldIsSticky = base.isSticky;
 							base.isSticky = true;
-							// make sure the width is correct: the user might have resized the browser while in static mode
-							base.updateWidth();
-							$this.trigger('enabledStickiness.' + name);
-						}
-						base.setPositionValues();
+							base.showClonedHeader();
+							if (!oldIsSticky) {
+								// make sure the width is correct: the user might have resized the browser while in static mode
+								base.updateWidth();
+								$this.trigger('enabledStickiness.' + name);
+							}
+							base.setPositionValues();
+						});
 					} else if (base.isSticky) {
 						base.$originalHeader.css('position', 'static');
-						base.resetWidth($('td,th', base.$clonedHeader), $('td,th', base.$originalHeader));
 						base.hideClonedHeader();
+						base.resetWidth($('td,th', base.$clonedHeader), $('td,th', base.$originalHeader));
 						base.isSticky = false;
 						$this.trigger('disabledStickiness.' + name);
 					}
 				});
 			}
 		};
+		
 
 		base.setPositionValues = function () {
 			var winScrollTop = base.$window.scrollTop(),
@@ -274,14 +290,16 @@
 
 		base.resetWidth = function ($clonedHeaders, $origHeaders) {
 			$clonedHeaders.each(function (index) {
-				var $this = $(this);
-				var els = $origHeaders.eq(index)[0].style;
-				els.minWidth = $this.css('min-width');
-				els.maxWidth = $this.css('max-width');
-				/*$origHeaders.eq(index).css({
-					'min-width': $this.css('min-width'),
-					'max-width': $this.css('max-width')
-				});*/
+				queue(function(){
+					var $this = $(this);
+					var els = $origHeaders.eq(index)[0].style;
+					els.minWidth = $this.css('min-width');
+					els.maxWidth = $this.css('max-width');
+					/*$origHeaders.eq(index).css({
+					 'min-width': $this.css('min-width'),
+					 'max-width': $this.css('max-width')
+					 });*/
+				});
 			});
 		};
 
