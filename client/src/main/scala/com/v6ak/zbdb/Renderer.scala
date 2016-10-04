@@ -536,6 +536,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     case CellsParsingException(data, _) => li("K chybě došlo při zpracování následujících buňek: ", showCells(data))
     case BadTimeInfoFormatException() => li("Očekáváné varianty: a) nevyplněno, b) pouze čas startu, c) všechny tři časy (start, doba, cíl). Pokud je některý čas nevyplněn, očekává se prázdné políčko nebo \"X\".")
     case MaxHourDeltaExceededException(maxHourDelta, prevTime, currentTime) => li(f"Od ${prevTime.hoursAndMinutes} do ${currentTime.hoursAndMinutes} to trvá více než $maxHourDelta hodin, což je nějaké divné, asi to bude chyba.")
+    case e: DeadlineExceededException => li("Tento účastník došel až po konci pochodu.")
     case e => li(i(e.getClass.getName), ": ", e.getMessage)
   })
 

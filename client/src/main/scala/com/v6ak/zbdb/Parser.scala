@@ -141,7 +141,9 @@ object Parser{
       parseTimeInfo(data, previous.collect { case i: Finished => i.endTime }, maxHourDelta)
     }
     strictCheck{
-      assertEquals(timeOptions.filter(_.exists{ti => (ti.startTime isAfter totalEndTime) || ti.endTimeOption.exists(endTime => endTime isAfter totalEndTime)}), Seq())
+      if(timeOptions.exists(_.exists{ti => (ti.startTime isAfter totalEndTime) || ti.endTimeOption.exists(endTime => endTime isAfter totalEndTime)})){
+        throw new DeadlineExceededException()
+      }
     }
     assertEquals(parts.size, timeOptions.size)
     val (timeSomes, supposedlyEmptys) = timeOptions.span(_.isDefined)
