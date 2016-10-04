@@ -139,7 +139,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       ),
       div(`class` := "actions hidden-print")(chartButtons(r))
     ))(className = "participant-header"),
-    Column[Participant]("Kat.")(p => Seq(Genders(p.gender), " ", p.age))
+    Column[Participant]("Kat.")(p => Seq[Frag](Genders(p.gender), br, p.age))
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
     val best = try{
