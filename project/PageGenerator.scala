@@ -38,7 +38,9 @@ object PageGenerator{
     )
   )
 
-  def forYear(year: Year) = "<!DOCTYPE html>"+
+  def forYear(year: Year) = {
+    val title = s"Výsledky Z Brna do Brna ${year.year}"
+    "<!DOCTYPE html>"+
     <html>
       <head>
         <meta charset="utf-8" />
@@ -47,10 +49,11 @@ object PageGenerator{
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {if(year.dataSource.prefetchAjax) <link rel="prefetch" href={year.dataSource.csvAjaxUrl} /> else ""}
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
+        <title>{title}</title>
       </head>
       <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
         <div class="container">
-          <h1>Výsledky Z Brna do Brna {year.year}</h1>
+          <h1>{title}</h1>
           <p>Alternativní podoby: <a href={year.dataSource.originalLink}>Tabulka Google</a>, <a href={year.dataSource.csvDownloadUrl}>CSV</a></p>
         </div>
         <div id="content"><div id="loading-indicator">Načítám výsledky…</div></div>
@@ -67,4 +70,5 @@ object PageGenerator{
         </div>
       </body>
     </html>
+  }
 }
