@@ -151,7 +151,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   )(Seq[Column[Participant]](
     //Column("#")(_.id.toString),
     Column(TableHeadCell("id, jméno", rowCount = 2))((r: Participant) => Seq(
-      label(`for` := r.checkboxId)(
+      label(`for` := r.checkboxId, cls := "participant-header-label")(
+        r.orderOption.fold(span(cls:="label label-danger label-result")("DNF"))(order => span(cls:="label label-success label-result")(s"$order.")),
         input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
           val el = e.currentTarget.asInstanceOf[HTMLInputElement]
           //val tableRow = findParent(el, "tr").asInstanceOf[HTMLTableRowElement]
@@ -162,15 +163,12 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
           //dom.console.log("checkbox changed", el.checked, tableRow)
         }),
         " ",
-        r.id + ": " + r.fullNameWithNick + " " + Genders(r.gender)+" ",
-        r.orderOption.fold(span(cls:="label label-danger")("DNF"))(order => span(cls:="label label-success")(s"$order."))
+        r.id + ": " + r.fullNameWithNick
       ),
       div(`class` := "actions hidden-print")(chartButtons(r))
-    ))(className = "participant-header")
-  ) ++ Seq[Option[Column[Participant]]](
-    if(participantTable.formatVersion.hasAgeCategory) Some(Column[Participant]("Věk")(_.age))
-    else None
-  ).flatten ++ parts.zipWithIndex.flatMap{case (part, i) =>
+    ))(className = "participant-header"),
+    Column[Participant]("Kat.")(p => Seq(Genders(p.gender), " ", p.age))
+  ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
     val best = try{
       firsts(i)
