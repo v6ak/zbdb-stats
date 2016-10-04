@@ -54,10 +54,10 @@ object PageGenerator{
       <body data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
         <div class="container">
           <h1>{title}</h1>
-          <p>Alternativní podoby: <a href={year.dataSource.originalLink}>Tabulka Google</a>, <a href={year.dataSource.csvDownloadUrl}>CSV</a></p>
+          <p class="hidden-print">Alternativní podoby: <a href={year.dataSource.originalLink}>Tabulka Google</a>, <a href={year.dataSource.csvDownloadUrl}>CSV</a></p>
         </div>
         <div id="content"><div id="loading-indicator">Načítám výsledky…</div></div>
-        <div class="container">
+        <div class="container hidden-print">
           <h2>Když něco nefunguje…</h2>
           <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč. Nepodporuju ale:</p>
           <ul>

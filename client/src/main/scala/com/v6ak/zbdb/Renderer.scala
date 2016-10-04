@@ -152,7 +152,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     //Column("#")(_.id.toString),
     Column(TableHeadCell("id, jméno", rowCount = 2))((r: Participant) => Seq(
       label(`for` := r.checkboxId)(
-        input(`type` := "checkbox", `class` := "participant-checkbox", id := r.checkboxId, onchange := { e: Event =>
+        input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
           val el = e.currentTarget.asInstanceOf[HTMLInputElement]
           //val tableRow = findParent(el, "tr").asInstanceOf[HTMLTableRowElement]
           el.checked match {
@@ -165,7 +165,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
         r.id + ": " + r.fullNameWithNick + " " + Genders(r.gender)+" ",
         r.orderOption.fold(span(cls:="label label-danger")("DNF"))(order => span(cls:="label label-success")(s"$order."))
       ),
-      div(`class` := "actions")(chartButtons(r))
+      div(`class` := "actions hidden-print")(chartButtons(r))
     ))(className = "participant-header")
   ) ++ Seq[Option[Column[Participant]]](
     if(participantTable.formatVersion.hasAgeCategory) Some(Column[Participant]("Věk")(_.age))
@@ -224,7 +224,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   ).render
 
   private val globalStats = div(id := "global-stats")(
-    button("Porovnání startu a času")(onclick := {e: Event =>
+    button("Porovnání startu a času")(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
       val (dialog, jqModal, modalBodyId) = modal("Porovnání startu a času")
       jqModal.on("shown.bs.modal", {() => globalStatsPlot(modalBodyId, data.filter(p => p.hasFinished))})
       dom.document.body.appendChild(dialog)
