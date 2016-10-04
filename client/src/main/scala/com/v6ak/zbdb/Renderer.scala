@@ -439,12 +439,15 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   )
 
   private def chartButtons(row: Participant) = Seq[Frag](
-    for(plot <- Plots) yield     chartButton(
-      s"Graf ${plot.nameGenitive} pro ${row.fullNameWithNick}",
+    for{
+      plot <- Plots
+      name = s"Graf ${plot.nameGenitive} pro ${row.fullNameWithNick}"
+    } yield chartButton(
+      name,
       Seq(row),
       plot.generator,
       Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", "aria-hidden".attr := "true"))
-    ),
+    )(title := name),
     dropdownGroup(cls:="btn btn-xs btn-normal dropdown-toggle", "…")(
       chartButton(
         s"Graf pro ${row.fullNameWithNick} a všechny, které potkal(a) na cestě",
