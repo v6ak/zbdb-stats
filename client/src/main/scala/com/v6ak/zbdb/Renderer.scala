@@ -3,6 +3,7 @@ package com.v6ak.zbdb
 import com.example.RichMoment.toRichMoment
 import com.example.moment._
 import com.v6ak.scalajs.tables.{Column, TableHeadCell, TableRenderer}
+import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import com.v6ak.zbdb.`$`.jqplot.DateAxisRenderer
 import org.scalajs.dom
@@ -204,7 +205,19 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
         )}
       }(className = "col-end")
     )
-  })
+  } ++ Seq[Column[Participant]](
+    Column(
+      TableHeadCell.Empty,
+      TableHeadCell(span(title := "Celkový čas")("Celk."))
+    ){(p: Participant) =>
+      if(p.hasFinished) p.totalTime.toString else ""
+    }(),
+    Column(
+      "Čistý čas chůze"
+    ){(p: Participant) =>
+      TimeInterval.fromMilliseconds(p.partTimes.flatMap(_.durationOption).sum).toString
+    }
+  ))
 
   private def formatLength(length: BigDecimal, space: String = " ") = length.toString().replace('.', ',') + space + "km"
 
