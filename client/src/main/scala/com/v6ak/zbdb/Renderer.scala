@@ -4,18 +4,22 @@ import com.example.RichMoment.toRichMoment
 import com.example.moment._
 import com.v6ak.scalajs.tables.{Column, TableHeadCell, TableRenderer}
 import com.v6ak.scalajs.time.TimeInterval
+import com.v6ak.zbdb.CollectionUtils._
 import com.v6ak.zbdb.PartTimeInfo.Finished
+import com.v6ak.zbdb.TextUtils._
 import org.scalajs.dom
 import org.scalajs.dom.Node
 import org.scalajs.dom.raw._
+import HtmlUtils._
 
 import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all.{i => iTag, name => _, _}
 
-
 object Renderer{
+  private val FirstBadge = div(cls := "label label-success")("1.")
+  
   def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean) = {
     val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness)
     r.initialize()
@@ -27,8 +31,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   private val plotRenderer = new PlotRenderer(participantTable)
 
+  import Renderer._
   import participantTable._
-
   import plotRenderer._
 
   private final implicit class RichParticipant(row: Participant){
@@ -36,7 +40,9 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     def trId = s"part-${row.id}-tr"
   }
 
-  private val Genders = Map[Gender, String](Gender.Male -> "♂", Gender.Female -> "♀")
+  implicit private class RichTime(moment: Moment){
+    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
+  }
 
   private object selection {
     private val selectedParticipants = mutable.Set[Participant]()
@@ -69,11 +75,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
         selectedParticipantsElement.appendChild((s"K porovnání (${selectedParticipants.size}): "+selectedNames.toSeq.sorted.mkString(", ")).render)
       }
     }
-
   }
 
-  private val FirstBadge = div(cls := "label label-success")("1.")
-  val EmptyHtml: Frag = ""
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
@@ -147,8 +150,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
   ))
 
-  private def formatLength(length: BigDecimal, space: String = " ") = length.toString().replace('.', ',') + space + "km"
-
   private val tableElement = renderer.renderTable(data)
 
   private val selectedParticipantsElement = span(`class` := "selected-participants")("–").render
@@ -180,37 +181,12 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     barElement.style.visibility = if(shown) "" else "hidden"
   }
 
-  implicit private class RichTime(moment: Moment){
-    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
-  }
-
-  private def getMates(row: Participant): Seq[Participant] = data.filter{other =>
-    (other != row) && (row.finishedPartTimes, other.finishedPartTimes).zipped.exists((myTime, otherTime) => myTime crosses otherTime)
-  }
-
-  private def modal(title: Frag) = {
-    val modalBodyId = IdGenerator.newId()
-    val modalHeader = div(`class`:="modal-header")(button(`type`:="button", `class`:="close", "data-dismiss".attr := "modal")(span("aria-hidden".attr := "true")("×")))(h4(`class`:="modal-title")(title))
-    val modalBody = div(`class`:="modal-body", id := modalBodyId)
-    val modalFooter = div(`class`:="modal-footer")
-    val modalDialog = div(`class`:="modal-dialog modal-xxl")(div(`class`:="modal-content")(modalHeader, modalBody, modalFooter))
-    val dialog = div(`class`:="modal fade")(modalDialog).render
-    val jqModal = dom.window.asInstanceOf[js.Dynamic].$(dialog)
-    jqModal.on("hidden.bs.modal", {() => dialog.parentNode.removeChild(dialog)})
-    (dialog, jqModal, modalBodyId)
-  }
-
   private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) = button(`class` := "btn btn-default btn-xs")(description)(onclick := {_:Any =>
     val (dialog, jqModal, modalBodyId) = modal(title)
     jqModal.on("shown.bs.modal", {() => initializePlot(modalBodyId, plotDataGenerator(rowsLoader))})
     dom.document.body.appendChild(dialog)
     jqModal.modal(js.Dictionary("keyboard" -> true))
   })
-
-  private def dropdownGroup(mods: Modifier*)(buttons: Frag*) = div(cls:="btn-group")(
-    button(cls:="btn btn-normal dropdown-toggle", "data-toggle".attr := "dropdown", "aria-haspopup".attr := "true", "aria-expanded".attr := "false")(mods: _*),
-    div(cls:="dropdown-menu")(buttons : _*)
-  )
 
   private def chartButtons(row: Participant) = Seq[Frag](
     for{
@@ -235,10 +211,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       )
     )
   )
-
-  private def addSeparators[T](separator: T)(s: Seq[T]): Seq[T] = (Stream.continually(separator), s).zipped.flatMap{(x, y) => Seq(x, y)}.drop(1)
-
-  private def causeStream(e: Throwable): Stream[Throwable] = Stream.cons(e, Option(e.getCause).fold(Stream.empty[Throwable])(causeStream))
 
   private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))
 

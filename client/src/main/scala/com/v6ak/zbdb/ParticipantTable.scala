@@ -37,6 +37,10 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
     (ea, eb).zipped
   }
 
+  def getMates(row: Participant): Seq[Participant] = data.filter{other =>
+    (other != row) && (row.finishedPartTimes, other.finishedPartTimes).zipped.exists((myTime, otherTime) => myTime crosses otherTime)
+  }
+
   val firsts = data.foldLeft(Seq.empty[BestParticipantData]){ (fastestSoFar, participant) =>
     longZip[BestParticipantData, Option[PartTimeInfo]](
       fastestSoFar, BestParticipantData.Empty
