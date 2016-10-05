@@ -98,7 +98,7 @@ object Parser{
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
     val fullDataTable = new CSVReader(new StringReader(csvData.trim)).toIndexedSeq.map(_.toIndexedSeq)
     val Seq(title, header1, header2, header3, dataWithTail @ _*) = fullDataTable
-    val (dataTable, footer) = formatVersion.tail.split(dataWithTail.drop(formatVersion.headLength).toIndexedSeq)
+    val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
