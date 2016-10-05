@@ -29,7 +29,7 @@ object PageGenerator{
     override def plots: Seq[(String, String)] = Seq()
   }
 
-  case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String, additionalAlternativeLinks: Seq[(String, String)] = Seq()){
+  case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String, additionalAlternativeLinks: Seq[(String, String)] = Seq(), maxHoursDelta: Int = 6){
     def alternativeLinks = Seq("Tabulka Google" -> dataSource.originalLink, "CSV" -> dataSource.csvDownloadUrl) ++ additionalAlternativeLinks
   }
 
@@ -73,7 +73,15 @@ object PageGenerator{
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
         <title>{title}</title>
       </head>
-      <body data-plots={plots} data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
+      <body
+        data-plots={plots}
+        data-file={year.dataSource.csvAjaxUrl}
+        data-start-time={year.startTime}
+        data-end-time={year.endTime}
+        data-timezone="Europe/Prague"
+        data-max-hour-delta={year.maxHoursDelta.toString}
+        data-format-version={year.formatVersion.toString}
+      >
         <div class="container">
           <h1>{title}</h1>
           <p class="hidden-print">Alternativní podoby: {year.alternativeLinks.flatMap{case(name, link) =>
