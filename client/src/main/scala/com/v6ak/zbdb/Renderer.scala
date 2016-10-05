@@ -234,8 +234,6 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   }
 
   implicit private class RichTime(moment: Moment){
-    @deprecated
-    def timeOnly = span(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
     def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
   }
 
