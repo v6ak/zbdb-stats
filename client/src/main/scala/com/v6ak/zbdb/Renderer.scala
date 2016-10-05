@@ -272,36 +272,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     content.appendChild(barElement)
     dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
     if (enableHorizontalStickyness) {
-      addHorizontalStickyness()
+      HorizontalStickiness.addHorizontalStickiness(tableElement)
     }
-  }
-
-  def addHorizontalStickyness(): Unit = {
-    val participantHeaders = dom.window.asInstanceOf[js.Dynamic].Array.prototype.slice.call(tableElement.querySelectorAll(".participant-header")).asInstanceOf[js.Array[HTMLElement]]
-    for(h <- participantHeaders){
-      h.style.position = "relative"
-    }
-    val horizontalScrollClassGuard = ValueGuard(false){ (_, scrolledHorizontally) =>
-      if(scrolledHorizontally){
-        for(t <- participantHeaders){
-          t.classList.add("scrolled-horizontally")
-        }
-      }else{
-        for(t <- participantHeaders){
-          t.classList.remove("scrolled-horizontally")
-        }
-      }
-    }
-    val horizontalScrollPositionGuard = ValueGuard(0.0){(_, scrollLeft) =>
-      val left = s"${scrollLeft}px"
-      for(t <- participantHeaders){
-        t.style.left = left
-      }
-      horizontalScrollClassGuard.update(scrollLeft != 0)
-    }
-    dom.document.addEventListener("scroll", (_: Event) => {
-      horizontalScrollPositionGuard.update(dom.document.documentElement.scrollLeft)
-    })
   }
 
 }
