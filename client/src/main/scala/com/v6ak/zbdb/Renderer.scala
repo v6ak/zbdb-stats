@@ -10,11 +10,10 @@ import org.scalajs.dom
 import org.scalajs.dom.Node
 import org.scalajs.dom.raw._
 
-import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scalatags.JsDom.all.{i => iTag, _}
+import scalatags.JsDom.all.{i => iTag, name => _, _}
 
 object IdGenerator{
 
@@ -74,7 +73,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }): js.Function
   }): js.ThisFunction
 
-  private final val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
+  private val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
 
   private final implicit class RichParticipant(row: Participant){
     def checkboxId = s"part-${row.id}-checkbox"
@@ -219,17 +218,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
   ).render
 
-  @tailrec
-  private def findParent(el: Node, nodeName: String): Node = el.parentNode match{
-    case null => sys.error("Node not found")
-    case parent if parent.nodeName.toLowerCase == nodeName.toLowerCase => parent
-    case parent => findParent(parent, nodeName)
-  }
-
   private def showBar(implicit x: Nothing): Nothing = ???
 
   private def showBar_=(shown: Boolean): Unit ={
-    barElement.style.visibility = if(shown) "" else "hidden";
+    barElement.style.visibility = if(shown) "" else "hidden"
   }
 
   final private case class PlotLine(row: Participant, label: String, points: js.Array[js.Array[_]]) {
@@ -243,8 +235,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   implicit private class RichTime(moment: Moment){
     @deprecated
-    def timeOnly = span(title:=moment.toString)(f"${moment.hours()}:${moment.minutes}%02d")
-    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes}%02d")
+    def timeOnly = span(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
+    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
   }
 
   private def previousPartCummulativeLengths = Seq(BigDecimal(0)) ++ parts.map(_.cumulativeTrackLength)
@@ -418,10 +410,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   private def modal(title: Frag) = {
     val modalBodyId = IdGenerator.newId()
     val modalHeader = div(`class`:="modal-header")(button(`type`:="button", `class`:="close", "data-dismiss".attr := "modal")(span("aria-hidden".attr := "true")("×")))(h4(`class`:="modal-title")(title))
-    var modalBody = div(`class`:="modal-body", id := modalBodyId)
-    var modalFooter = div(`class`:="modal-footer")
-    var modalDialog = div(`class`:="modal-dialog modal-xxl")(div(`class`:="modal-content")(modalHeader, modalBody, modalFooter))
-    var dialog = div(`class`:="modal fade")(modalDialog).render
+    val modalBody = div(`class`:="modal-body", id := modalBodyId)
+    val modalFooter = div(`class`:="modal-footer")
+    val modalDialog = div(`class`:="modal-dialog modal-xxl")(div(`class`:="modal-content")(modalHeader, modalBody, modalFooter))
+    val dialog = div(`class`:="modal fade")(modalDialog).render
     val jqModal = dom.window.asInstanceOf[js.Dynamic].$(dialog)
     jqModal.on("hidden.bs.modal", {() => dialog.parentNode.removeChild(dialog)})
     (dialog, jqModal, modalBodyId)
@@ -471,7 +463,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))
 
   private def showThrowable(rootThrowable: Throwable) = ul(causeStream(rootThrowable).map {
-    case CellsParsingException(data, _) => li("K chybě došlo při zpracování následujících buňek: ", showCells(data))
+    case CellsParsingException(cells, _) => li("K chybě došlo při zpracování následujících buňek: ", showCells(cells))
     case BadTimeInfoFormatException() => li("Očekáváné varianty: a) nevyplněno, b) pouze čas startu, c) všechny tři časy (start, doba, cíl). Pokud je některý čas nevyplněn, očekává se prázdné políčko nebo \"X\".")
     case MaxHourDeltaExceededException(maxHourDelta, prevTime, currentTime) => li(f"Od ${prevTime.hoursAndMinutes} do ${currentTime.hoursAndMinutes} to trvá více než $maxHourDelta hodin, což je nějaké divné, asi to bude chyba.")
     case e: DeadlineExceededException => li("Tento účastník došel až po konci pochodu.")
