@@ -24,6 +24,8 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
 
   implicit def toParticipantInContext(participant: Participant): ParticipantInContext = participantMap(participant)
 
+  def previousPartCummulativeLengths = Seq(BigDecimal(0)) ++ parts.map(_.cumulativeTrackLength)
+
   private def hasFinished(row: Participant) = (row.partTimes.size == parts.size) && row.partTimes.forall(_.isInstanceOf[PartTimeInfo.Finished])
 
   private def expandSeq[T](s: Seq[T], empty: T, size: Int) = s ++ Seq.fill(size - s.size)(empty)
