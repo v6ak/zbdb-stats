@@ -142,10 +142,9 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     Column[Participant]("Kat.")(p => Seq[Frag](Genders(p.gender), br, p.age))
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     def partData(row: Participant) = row.partTimes.lift(i)
-    val best = try{
+    val best = if(firsts.length > i)
       firsts(i)
-    }catch{
-      case e: ArrayIndexOutOfBoundsException =>
+    else {
         dom.console.warn(s"It seems that nobody has reached part #$i")
         BestParticipantData.Empty
     }
