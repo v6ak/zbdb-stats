@@ -19,7 +19,7 @@ import scalatags.JsDom.all.{i => iTag, name => _, _}
 
 object Renderer{
   private val FirstBadge = div(cls := "label label-success")("1.")
-  
+
   def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean) = {
     val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness)
     r.initialize()
@@ -82,60 +82,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
-    Column(TableHeadCell("id, jméno", rowCount = 2))((r: Participant) => Seq(
-      label(`for` := r.checkboxId, cls := "participant-header-label")(
-        r.orderOption.fold(span(cls:="label label-danger label-result")("DNF"))(order => span(cls:="label label-success label-result")(s"$order.")),
-        input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
-          val el = e.currentTarget.asInstanceOf[HTMLInputElement]
-          el.checked match {
-            case true => selection.addRow(r)
-            case false => selection.removeRow(r)
-          }
-        }),
-        " ",
-        r.id + ": " + r.fullNameWithNick
-      ),
-      div(`class` := "actions hidden-print")(chartButtons(r))
-    ))(className = "participant-header"),
+    Column(TableHeadCell("id, jméno", rowCount = 2))(renderParticipantColumn)(className = "participant-header"),
     Column[Participant]("Kat.")(p => Seq[Frag](Genders(p.gender), br, p.age))
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
-    def partData(row: Participant) = row.partTimes.lift(i)
-    val best = if(firsts.length > i)
-      firsts(i)
-    else {
-        dom.console.warn(s"It seems that nobody has reached part #$i")
-        BestParticipantData.Empty
-    }
-    val firstCell = if(i == 0) TableHeadCell("Start") else TableHeadCell.Empty
-    Seq[Column[Participant]](
-      Column(firstCell, TableHeadCell("|=>"))((r: Participant) =>
-        partData(r).fold[Frag]("–")(pti => Seq(
-          pti.startTime.timeOnlyDiv,
-          if(best.hasBestStartTime(pti)) FirstBadge else EmptyHtml
-        ))
-      )(className = "col-start"),
-      Column(
-        TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
-        TableHeadCell(s"čas")
-      )((r: Participant) =>
-        partData(r).collect{case f: Finished => f}.fold[Frag]("–")(pti => Seq[Frag](
-          div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
-            val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
-            "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:"+(pti.intervalTime - bestDuration)
-          }),
-          if(best.hasBestDuration(pti)) FirstBadge else EmptyHtml
-        ))
-      )(className = "col-time"),
-      Column(
-        TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
-        TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i+1} – ${part.place}", "=>|"))
-      ){(r: Participant) =>
-        partData(r).collect { case f: Finished => f }.fold("–": Frag){pti => Seq(
-          pti.endTime.timeOnlyDiv,
-          if(best.hasBestEndTime(pti)) FirstBadge else EmptyHtml
-        )}
-      }(className = "col-end")
-    )
+    createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
     Column(
       TableHeadCell.Empty,
@@ -149,6 +99,63 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       TimeInterval.fromMilliseconds(p.partTimes.flatMap(_.durationOption).sum).toString
     }
   ))
+
+  def createTrackPartColumns(part: Part, i: Int): Seq[Column[Participant]] = {
+    def partData(row: Participant) = row.partTimes.lift(i)
+    val best = if (firsts.length > i)
+      firsts(i)
+    else {
+      dom.console.warn(s"It seems that nobody has reached part #$i")
+      BestParticipantData.Empty
+    }
+    val firstCell = if (i == 0) TableHeadCell("Start") else TableHeadCell.Empty
+    Seq[Column[Participant]](
+      Column(firstCell, TableHeadCell("|=>"))((r: Participant) =>
+        partData(r).fold[Frag]("–")(pti => Seq(
+          pti.startTime.timeOnlyDiv,
+          if (best.hasBestStartTime(pti)) FirstBadge else EmptyHtml
+        ))
+      )(className = "col-start"),
+      Column(
+        TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
+        TableHeadCell(s"čas")
+      )((r: Participant) =>
+        partData(r).collect { case f: Finished => f }.fold[Frag]("–")(pti => Seq[Frag](
+          div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
+            val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
+            "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:" + (pti.intervalTime - bestDuration)
+          }),
+          if (best.hasBestDuration(pti)) FirstBadge else EmptyHtml
+        ))
+      )(className = "col-time"),
+      Column(
+        TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
+        TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i + 1} – ${part.place}", "=>|"))
+      ) { (r: Participant) =>
+        partData(r).collect { case f: Finished => f }.fold("–": Frag) { pti => Seq(
+          pti.endTime.timeOnlyDiv,
+          if (best.hasBestEndTime(pti)) FirstBadge else EmptyHtml
+        )
+        }
+      }(className = "col-end")
+    )
+  }
+
+  def renderParticipantColumn(r: Participant): Frag = Seq(
+    label(`for` := r.checkboxId, cls := "participant-header-label")(
+      r.orderOption.fold(span(cls := "label label-danger label-result")("DNF"))(order => span(cls := "label label-success label-result")(s"$order.")),
+      input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
+        val el = e.currentTarget.asInstanceOf[HTMLInputElement]
+        el.checked match {
+          case true => selection.addRow(r)
+          case false => selection.removeRow(r)
+        }
+      }),
+      " ",
+      r.id + ": " + r.fullNameWithNick
+    ),
+    div(`class` := "actions hidden-print")(chartButtons(r))
+  )
 
   private val tableElement = renderer.renderTable(data)
 
