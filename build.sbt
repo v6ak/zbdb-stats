@@ -15,6 +15,11 @@ val removeLibs = taskKey[Pipeline.Stage]("Removes libraries")
 
 val removeUnversionedAssets = taskKey[Pipeline.Stage]("Removes unversioned assets")
 
+val explicitlyExcludedLibFiles = Set(
+  "lib/bootstrap/fonts/glyphicons-halflings-regular.eot", "lib/bootstrap/fonts/glyphicons-halflings-regular.svg",
+  "lib/bootstrap/fonts/glyphicons-halflings-regular.ttf", "lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
+)
+
 lazy val server = (project in file("server")).settings(
   version := appVersion,
   name := "zbdb-stats-server",
@@ -37,7 +42,7 @@ lazy val server = (project in file("server")).settings(
     }
   }.taskValue,
   removeUnversionedAssets := { mappings: Seq[PathMapping] =>
-    mappings.filter{case (file, name) => !name.startsWith("main.")}
+    mappings.filter{case (file, name) => !(name.startsWith("main.") || explicitlyExcludedLibFiles.contains(name))}
   },
   removeLibs := { mappings: Seq[PathMapping] => // Most of libs are already included in a CSS/JS file, so skip them
     mappings.filter{case (file, name) => (!name.startsWith("lib/")) || name.startsWith("lib/bootstrap/fonts")}
