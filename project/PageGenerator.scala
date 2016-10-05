@@ -1,5 +1,7 @@
 import spray.json.{CompactPrinter, JsArray, JsString, JsonPrinter}
 
+import scala.xml.Text
+
 object PageGenerator{
 
   sealed abstract class DataSource{
@@ -27,7 +29,9 @@ object PageGenerator{
     override def plots: Seq[(String, String)] = Seq()
   }
 
-  case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String)
+  case class Year(year: Int, formatVersion: Int, dataSource: DataSource, startTime: String, endTime: String, additionalAlternativeLinks: Seq[(String, String)] = Seq()){
+    def alternativeLinks = Seq("Tabulka Google" -> dataSource.originalLink, "CSV" -> dataSource.csvDownloadUrl) ++ additionalAlternativeLinks
+  }
 
   val Years = Seq(
     Year(
@@ -48,6 +52,9 @@ object PageGenerator{
           "Počet lidí v %" -> 384816554,
           "Časy stanovišť" -> 240092119
         )
+      ),
+      additionalAlternativeLinks = Seq(
+        "PDF" -> "https://drive.google.com/file/d/0B-ovUvdMop8mdmlJb2szazllbE0/view?usp=sharing"
       )
     )
   )
@@ -69,7 +76,9 @@ object PageGenerator{
       <body data-plots={plots} data-file={year.dataSource.csvAjaxUrl} data-start-time={year.startTime} data-end-time={year.endTime} data-timezone="Europe/Prague" data-max-hour-delta="6" data-format-version={year.formatVersion.toString}>
         <div class="container">
           <h1>{title}</h1>
-          <p class="hidden-print">Alternativní podoby: <a href={year.dataSource.originalLink}>Tabulka Google</a>, <a href={year.dataSource.csvDownloadUrl}>CSV</a></p>
+          <p class="hidden-print">Alternativní podoby: {year.alternativeLinks.flatMap{case(name, link) =>
+            Seq(Text(", "), <a href={link}>{name}</a>)
+          }.tail}</p>
         </div>
         <div id="content"><div id="loading-indicator">Načítám výsledky…</div></div>
         <div class="container hidden-print">
