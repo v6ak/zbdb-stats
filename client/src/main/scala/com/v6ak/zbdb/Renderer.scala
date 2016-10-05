@@ -5,12 +5,12 @@ import com.example.moment._
 import com.v6ak.scalajs.tables.{Column, TableHeadCell, TableRenderer}
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.CollectionUtils._
+import com.v6ak.zbdb.HtmlUtils._
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import com.v6ak.zbdb.TextUtils._
 import org.scalajs.dom
 import org.scalajs.dom.Node
 import org.scalajs.dom.raw._
-import HtmlUtils._
 
 import scala.collection.mutable
 import scala.scalajs.js
