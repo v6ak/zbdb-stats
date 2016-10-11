@@ -88,7 +88,11 @@ object PageGenerator{
             Seq(Text(", "), <a href={link}>{name}</a>)
           }.tail}</p>
         </div>
-        <div id="content"><div id="loading-indicator">Načítám výsledky…</div></div>
+        <div id="content"><div id="loading-indicator">
+          <div class="progress progress-striped active">
+            <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Načítám výsledky…</div>
+          </div>
+        </div></div>
         <div class="container hidden-print">
           <h2>Když něco nefunguje…</h2>
           <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč. Nepodporuju ale:</p>
