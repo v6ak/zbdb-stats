@@ -43,14 +43,15 @@ object App extends JSApp {
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
             val plots = JSON.parse(body.getAttribute("data-plots")).asInstanceOf[js.Array[js.Array[String]]].toIndexedSeq.map{a => (a(0), a(1))}
             Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"))
-            Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
-              loadingIndicator.parentNode.removeChild(loadingIndicator)
-            }
           } catch {
             case e: Throwable =>
               dom.console.error("Error when parsing: ", e.getMessage)
               e.printStackTrace()
               dom.window.alert("Nepodařilo se zpracovat data")
+          } finally {
+            Option(dom.document.getElementById("loading-indicator")).foreach{loadingIndicator =>
+              loadingIndicator.parentNode.removeChild(loadingIndicator)
+            }
           }
       }
     }
