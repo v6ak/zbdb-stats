@@ -85,6 +85,11 @@ lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
   persistLauncher := true,
   persistLauncher in Test := false,
+  scalaJSSemantics ~= (_.withRuntimeClassName { linkedClass =>
+    val fullName = linkedClass.fullName
+    if (fullName.endsWith("Exception")) fullName
+    else ""
+  }),
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.1",
     "com.lihaoyi" %%% "scalatags" % "0.5.2",
