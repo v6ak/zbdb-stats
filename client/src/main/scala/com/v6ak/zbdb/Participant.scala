@@ -11,6 +11,7 @@ final case class Participant(
   nickOption: Option[String],
   gender: Gender,
   age: String,
+  birthYear: Option[Int],
   last3: Seq[String], // TODO: parse
   partTimes: Seq[PartTimeInfo]
 ) {

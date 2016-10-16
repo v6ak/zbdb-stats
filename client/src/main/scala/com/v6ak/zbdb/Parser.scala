@@ -129,7 +129,7 @@ object Parser{
 
   private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
     val Seq(num, lastName, firstName, nick, genderString, ageString, other@_*) = participantData
-    if ((!formatVersion.hasAgeCategory) && (ageString != "")) {
+    if ((formatVersion.ageType == AgeType.No) && (ageString != "")) {
       sys.error("You seem to have left some data in age column. Clean it first, please.")
     }
     val timesUnparsed = other.dropRight(4).grouped(3).toIndexedSeq
@@ -156,7 +156,8 @@ object Parser{
         case "m" => Gender.Male
         case "ž" => Gender.Female
       },
-      age = ageString,
+      age = if(formatVersion.ageType == AgeType.Category) ageString else "",
+      birthYear = if(formatVersion.ageType == AgeType.BirthYear) Some(ageString.toInt) else None,
       last3 = last3,
       partTimes = times
     )
