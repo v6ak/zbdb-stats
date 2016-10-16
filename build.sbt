@@ -13,6 +13,8 @@ import com.typesafe.sbt.web.pipeline.Pipeline
 
 val removeLibs = taskKey[Pipeline.Stage]("Removes libraries")
 
+val moveLibs = taskKey[Pipeline.Stage]("Moves libraries")
+
 val removeUnversionedAssets = taskKey[Pipeline.Stage]("Removes unversioned assets")
 
 val explicitlyExcludedLibFiles = Set(
@@ -20,22 +22,28 @@ val explicitlyExcludedLibFiles = Set(
   "lib/bootstrap/fonts/glyphicons-halflings-regular.ttf", "lib/bootstrap/fonts/glyphicons-halflings-regular.woff2"
 )
 
+val genHtmlDir =  settingKey[File]("Output directory for HTML generated files")
+
+val YearDir = "^[0-9]+(?:$|/.*)".r
+
 lazy val server = (project in file("server")).settings(
   version := appVersion,
   name := "zbdb-stats-server",
   scalaVersion := scalaV,
   scalaJSProjects := Seq(client),
   pipelineStages in Assets := Seq(scalaJSPipeline),
-  pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip),
+  pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip, moveLibs),
   includeFilter in digest := "*",
   excludeFilter in digest := "*.html" || "*.csv" ||
     // When sbt-simple-url-update updates path for glyphicons-halflings-regular.woff, it garbles the path for glyphicons-halflings-regular.woff2.
     "glyphicons-halflings-regular.woff",
   includeFilter in filter := "*.less" || "*.note" || "*.source" || "*.css" || "*.js",
   excludeFilter in filter := "main.js" || "main.min.js" || "main.css" || "main.min.css",
+  genHtmlDir := target.value / "web" / "html" / "main",
+  resourceDirectories in Assets += genHtmlDir.value,
   resourceGenerators in Assets += Def.task {
     for(year <- PageGenerator.Years) yield {
-      val file = (resourceManaged in Assets).value / "assets" / s"${year.year}.html"
+      val file = genHtmlDir.value / s"${year.year}" / "statistiky" / s"index.html"
       println(s"Writing $file…")
       IO.write(file, PageGenerator.forYear(year))
       file
@@ -46,6 +54,12 @@ lazy val server = (project in file("server")).settings(
   },
   removeLibs := { mappings: Seq[PathMapping] => // Most of libs are already included in a CSS/JS file, so skip them
     mappings.filter{case (file, name) => (!name.startsWith("lib/")) || name.startsWith("lib/bootstrap/fonts")}
+  },
+  moveLibs := { mappings: Seq[PathMapping] =>
+    mappings.map {
+      case other @ (_, YearDir()) => other
+      case (file, name) => (file, "statistiky/" + name)
+    }
   },
   includeFilter in simpleUrlUpdate := "*.css" || "*.js" || "*.html",
   // triggers scalaJSPipeline when using compile or continuous compilation
