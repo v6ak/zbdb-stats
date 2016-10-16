@@ -6,7 +6,7 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 
 1. Nainstaluj si [Activator](https://www.lightbend.com/activator/download) (popř. lze použít SBT)
 2. activator ~run
-3. Otevři http://localhost:9000/2016.html (případně jiný rok)
+3. Otevři http://localhost:9000/2016/statistiky/ (případně jiný rok)
 
 ## Přidání ročníku
 
