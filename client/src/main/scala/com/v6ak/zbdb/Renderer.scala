@@ -204,19 +204,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       Seq(row),
       plot.generator,
       Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", "aria-hidden".attr := "true"))
-    )(title := name),
-    dropdownGroup(cls:="btn btn-xs btn-normal dropdown-toggle", "…")(
-      chartButton(
-        s"Graf pro ${row.fullNameWithNick} a všechny, které potkal(a) na cestě",
-        Seq(row) ++ getMates(row),
-        generateWalkPlotData,
-        Seq[Frag](
-          span(`class`:="glyphicon glyphicon-user", "aria-hidden".attr := "true"),
-          span(`class`:="glyphicon glyphicon-user", style:="margin-left: -5px;", "aria-hidden".attr := "true"),
-          s"Graf pro ${row.fullNameWithNick} a všechny, které potkal(a) na cestě"
-        )
-      )
-    )
+    )(title := name)
   )
 
   private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))
