@@ -24,6 +24,8 @@ val explicitlyExcludedLibFiles = Set(
 
 val genHtmlDir =  settingKey[File]("Output directory for HTML generated files")
 
+val PublicDirName = "statistiky" // TODO: DRY this constant from routes
+
 val YearDir = "^[0-9]+(?:$|/.*)".r
 
 lazy val server = (project in file("server")).settings(
@@ -43,9 +45,9 @@ lazy val server = (project in file("server")).settings(
   resourceDirectories in Assets += genHtmlDir.value,
   resourceGenerators in Assets += Def.task {
     for(year <- PageGenerator.Years) yield {
-      val file = genHtmlDir.value / s"${year.year}" / "statistiky" / s"index.html"
+      val file = genHtmlDir.value / s"${year.year}" / PublicDirName / s"index.html"
       println(s"Writing $file…")
-      IO.write(file, PageGenerator.forYear(year))
+      IO.write(file, PageGenerator.forYear(year, PublicDirName))
       file
     }
   }.taskValue,
@@ -58,7 +60,7 @@ lazy val server = (project in file("server")).settings(
   moveLibs := { mappings: Seq[PathMapping] =>
     mappings.map {
       case other @ (_, YearDir()) => other
-      case (file, name) => (file, "statistiky/" + name)
+      case (file, name) => (file, PublicDirName + "/" + name)
     }
   },
   includeFilter in simpleUrlUpdate := "*.css" || "*.js" || "*.html",

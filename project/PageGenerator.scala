@@ -59,15 +59,15 @@ object PageGenerator{
     )
   )
 
-  def forYear(year: Year) = {
+  def forYear(year: Year, publicDirName: String) = {
     val title = s"Výsledky Z Brna do Brna ${year.year}"
     val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
     "<!DOCTYPE html>"+
     <html>
       <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href="../../statistiky/main.min.css" />
-        <script type="text/javascript" src="../../statistiky/main.min.js"></script>
+        <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.min.css"} />
+        <script type="text/javascript" src={s"../../$publicDirName/main.min.js"}></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {if(year.dataSource.prefetchAjax) <link rel="prefetch" href={year.dataSource.csvAjaxUrl} /> else ""}
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
