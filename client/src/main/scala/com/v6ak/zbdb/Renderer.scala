@@ -87,7 +87,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
     Column(TableHeadCell(yearSelection, colCount = 2), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
-    Column[Participant](TableHeadCell.Empty, TableHeadCell("Kat."))(p => Seq[Frag](Genders(p.gender), br, p.age))()
+    Column[Participant](TableHeadCell.Empty, TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ parts.zipWithIndex.flatMap{case (part, i) =>
