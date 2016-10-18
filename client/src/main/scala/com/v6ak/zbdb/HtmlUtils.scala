@@ -11,7 +11,7 @@ object HtmlUtils {
 
   def dropdownGroup(mods: Modifier*)(buttons: Frag*) = div(cls:="btn-group")(
     button(cls:="btn btn-normal dropdown-toggle", "data-toggle".attr := "dropdown", "aria-haspopup".attr := "true", "aria-expanded".attr := "false")(mods: _*),
-    div(cls:="dropdown-menu")(buttons : _*)
+    ul(cls:="dropdown-menu")(buttons.map(li(_)) : _*)
   )
 
   def modal(title: Frag) = {
