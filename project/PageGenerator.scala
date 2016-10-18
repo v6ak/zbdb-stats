@@ -51,18 +51,18 @@ object PageGenerator{
       year = 2016, formatVersion = 2016,
       startTime = "2016-09-16 17:30", endTime="2016-09-17 20:00",
       dataSource = GoogleSpreadsheetDataSource(
-        key = "11g7db0Ael5BNC7Y7vDaEhod4qyb-0lMt2x4mnJw0lxM",
-        gid = 769056270,
+        key = "1Ijx8bsvSkCh27rnD7sAxfN5TLDDjSX5rMvp63MnnKFs",
+        gid = 1919778948,
         plotIds = Seq(
-          "Genderová struktura" -> 1030807690,
-          "Věková struktura" -> 237386558,
-          "Počet lidí" -> 1215865940,
-          "Počet lidí v %" -> 384816554,
-          "Časy stanovišť" -> 240092119
+          "Genderová struktura" -> 1400369628,
+          "Věková struktura" -> 664145624,
+          "Počet lidí" -> 895574875,
+          "Počet lidí v %" -> 1577608352,
+          "Časy stanovišť" -> 1256165661
         )
       ),
       additionalAlternativeLinks = Seq(
-        "PDF" -> "https://drive.google.com/file/d/0B-ovUvdMop8mdmlJb2szazllbE0/view?usp=sharing"
+        "PDF" -> "https://docs.google.com/spreadsheets/d/1Ijx8bsvSkCh27rnD7sAxfN5TLDDjSX5rMvp63MnnKFs/pub?output=pdf"
       )
     )
   )
