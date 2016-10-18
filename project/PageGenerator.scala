@@ -1,4 +1,4 @@
-import spray.json.{CompactPrinter, JsArray, JsString, JsonPrinter}
+import spray.json.{CompactPrinter, JsArray, JsObject, JsString, JsonPrinter}
 
 import scala.xml.Text
 
@@ -33,6 +33,14 @@ object PageGenerator{
     def alternativeLinks = Seq("Tabulka Google" -> dataSource.originalLink, "CSV" -> dataSource.csvDownloadUrl) ++ additionalAlternativeLinks
   }
 
+  val LegacyYears = Seq(
+    2011 -> "http://zbdb.skaut1stredisko.cz/2011/vysledky-16-rocniku-pochodu-z-brna-do-brna/",
+    2012 -> "http://zbdb.skaut1stredisko.cz/2012/vysledky-17-rocniku-pochodu-z-brna-do-brna/",
+    2013 -> "http://zbdb.skaut1stredisko.cz/2013/vysledky-18-rocniku/",
+    2014 -> "http://zbdb.skaut1stredisko.cz/2014/vysledky-19-rocniku/",
+    2015 -> "http://zbdb.skaut1stredisko.cz/2015/vysledky-pochodu-20-rocniku/"
+  )
+
   val Years = Seq(
     Year(
       year = 2015, formatVersion = 2015,
@@ -59,6 +67,8 @@ object PageGenerator{
     )
   )
 
+  val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
+
   def forYear(year: Year, publicDirName: String) = {
     val title = s"Výsledky Z Brna do Brna ${year.year}"
     val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
@@ -81,6 +91,8 @@ object PageGenerator{
         data-timezone="Europe/Prague"
         data-max-hour-delta={year.maxHoursDelta.toString}
         data-format-version={year.formatVersion.toString}
+        data-year={year.year.toString}
+        data-year-links={CompactPrinter.apply(JsObject(YearLinks.map{case (y, link) => s"$y"->JsString(link)}.toMap))}
       >
         <div class="container">
           <h1>{title}</h1>

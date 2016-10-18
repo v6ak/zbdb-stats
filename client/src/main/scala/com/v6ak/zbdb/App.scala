@@ -42,7 +42,9 @@ object App extends JSApp {
             val content = dom.document.getElementById("content")
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
             val plots = JSON.parse(body.getAttribute("data-plots")).asInstanceOf[js.Array[js.Array[String]]].toIndexedSeq.map{a => (a(0), a(1))}
-            Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"))
+            val yearLinks = JSON.parse(body.getAttribute("data-year-links")).asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted
+            val year = body.getAttribute("data-year")
+            Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"), year, yearLinks)
           } catch {
             case e: Throwable =>
               dom.console.error("Error when parsing: ", e.getMessage)

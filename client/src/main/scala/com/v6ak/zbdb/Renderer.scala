@@ -20,14 +20,14 @@ import scalatags.JsDom.all.{i => iTag, name => _, _}
 object Renderer{
   private val FirstBadge = div(cls := "label label-success")("1.")
 
-  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean) = {
-    val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness)
+  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinks: Seq[(String, String)]) = {
+    val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness, year, yearLinks)
     r.initialize()
     r
   }
 }
 
-final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean) {
+final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinks: Seq[(String, String)]) {
 
   private val plotRenderer = new PlotRenderer(participantTable)
 
@@ -77,13 +77,17 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
   }
 
+  private def yearSelection = dropdownGroup(year)(
+    yearLinks.reverse.map{case (y, link) => a(href:=link)(y)} : _*
+  )
+
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-condensed table-hover"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
-    Column(TableHeadCell("id, jméno", rowCount = 2))(renderParticipantColumn)(className = "participant-header"),
-    Column[Participant]("Kat.")(p => Seq[Frag](Genders(p.gender), br, p.age))
+    Column(TableHeadCell(yearSelection, colCount = 2), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
+    Column[Participant](TableHeadCell.Empty, TableHeadCell("Kat."))(p => Seq[Frag](Genders(p.gender), br, p.age))()
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ parts.zipWithIndex.flatMap{case (part, i) =>
