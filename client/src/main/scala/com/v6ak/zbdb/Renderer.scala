@@ -223,6 +223,20 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     case e => li(iTag(e.getClass.getName), ": ", e.getMessage)
   })
 
+  private val genPdfButton = button(cls := "btn btn-default")("Generovat PDF")(onclick := {e: Event =>
+    val doc = new jsPDF()
+    val source = dom.document.body
+    doc.fromHTML(source, 15, 15, js.Dictionary(
+      "width" -> 180,
+      "table_2" -> true,
+      "elementHandlers" -> js.Dictionary[js.Function2[js.Any, js.Any, Boolean]](
+        ".tableFloatingHeaderOriginal"-> ((e: Any, r: Any) => true),
+        "thead"-> ((e: Any, r: Any) => true)
+      )
+    ))
+    doc.output("dataurlnewwindow")
+  }).render
+
   private def initialize(): Unit = {
     showBar = false
     if(errors.nonEmpty){
@@ -242,6 +256,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
     content.appendChild(globalStats)
     content.appendChild(tableElement)
+    content.appendChild(genPdfButton)
     content.appendChild(barElement)
     dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
     if (enableHorizontalStickyness) {

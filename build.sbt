@@ -8,6 +8,8 @@ val jqPlot = "org.webjars" % "jqplot" % "1.0.8r1250"
 
 val bootstrap = "org.webjars" % "bootstrap" % "3.3.7-1"
 
+val jsPdf = "org.webjars.bower" % "jspdf" % "1.2.61"
+
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
 
@@ -98,7 +100,7 @@ lazy val client = (project in file("client")).settings(
     "com.github.marklister" %%% "product-collections" % "1.4.2"
   ),
   jsDependencies ++= Seq(
-    bootstrap / "bootstrap.min.js",
+    bootstrap / "bootstrap/3.3.7-1/js/bootstrap.min.js",
     "org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
     "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data-2010-2020.js" dependsOn "min/moment.min.js",
     "org.webjars" % "jquery" % "2.1.4" / jqueryName minified "jquery/2.1.4/jquery.min.js",
@@ -109,6 +111,7 @@ lazy val client = (project in file("client")).settings(
     jqPlot / "jqplot.barRenderer.min.js" dependsOn "jquery.jqplot.min.js",
     jqPlot / "jqplot.pointLabels.min.js" dependsOn "jquery.jqplot.min.js",
     jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
+    jsPdf / "jspdf.debug.js" minified "jspdf.min.js" dependsOn jqueryName,
     "org.webjars.bower" % "console-polyfill" % "0.2.2" / "console-polyfill/0.2.2/index.js"
   )
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb)//.dependsOn(sharedJs)
