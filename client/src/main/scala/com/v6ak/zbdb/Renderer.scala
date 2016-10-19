@@ -77,7 +77,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
   }
 
-  private def yearSelection = dropdownGroup(year)(
+  private def yearSelection = dropdownGroup(Seq[Frag](year, " ", span(cls:="caret")))(
     yearLinks.reverse.map{case (y, link) => a(href:=link)(y)} : _*
   )
 
