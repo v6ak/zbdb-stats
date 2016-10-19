@@ -91,7 +91,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def globalStatsPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+  def startTimeToTotalDurationPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
     val finishers = rowsLoader.groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
     import com.example.moment._
     val plotParams = js.Dictionary(

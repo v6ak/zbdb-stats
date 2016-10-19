@@ -178,7 +178,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   private val globalStats = div(id := "global-stats")(
     button("Porovnání startu a času")(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
       val (dialog, jqModal, modalBodyId) = modal("Porovnání startu a času")
-      jqModal.on("shown.bs.modal", {() => globalStatsPlot(modalBodyId, data.filter(p => p.hasFinished))})
+      jqModal.on("shown.bs.modal", {() => startTimeToTotalDurationPlot(modalBodyId, data.filter(p => p.hasFinished))})
       dom.document.body.appendChild(dialog)
       jqModal.modal(js.Dictionary("keyboard" -> true))
 
