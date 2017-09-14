@@ -52,6 +52,13 @@ object Column{
     override def createContentCell(row: T): Frag = td(`class` := className, renderContent(row))
   }
 
+  def rich[T](headers: TableHeadCell*)(cellRenderer: T => Seq[Modifier])(className: String = "") = new Column[T] {
+    override def rowCount: Int = headers.map(_.rowCount).sum
+    override def renderHeader(i: Int): Option[TableHeadColumn] = headers.lift(i).flatMap(_.build(className = className))
+    private def renderContent(data: T): Modifier = cellRenderer(data)
+    override def createContentCell(row: T): Frag = td(`class` := className, renderContent(row))
+  }
+
 }
 
 abstract class Column[T]{

@@ -18,7 +18,7 @@ import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all.{i => iTag, name => _, _}
 
 object Renderer{
-  private val FirstBadge = div(cls := "label label-success")("1.")
+  private val FirstBadge = div(cls := "label label-success first-badge")("1.")
 
   def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinks: Seq[(String, String)]) = {
     val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness, year, yearLinks)
@@ -116,36 +116,36 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     }
     val firstCell = if (i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
-      Column(firstCell, TableHeadCell("|=>"))((r: Participant) =>
-        partData(r).fold[Frag]("–")(pti => Seq(
-          pti.startTime.timeOnlyDiv,
-          if (best.hasBestStartTime(pti)) FirstBadge else EmptyHtml
-        ))
+      Column.rich(firstCell, TableHeadCell("|=>"))((r: Participant) =>
+        partData(r).fold[Seq[Modifier]](Seq("–"))(pti =>
+          Seq[Modifier](pti.startTime.timeOnlyDiv) ++ conditionalFirstBadge(best.hasBestStartTime(pti))
+        )
       )(className = "col-start"),
-      Column(
+      Column.rich(
         TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
         TableHeadCell(s"čas")
       )((r: Participant) =>
-        partData(r).collect { case f: Finished => f }.fold[Frag]("–")(pti => Seq[Frag](
-          div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
-            val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
-            "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:" + (pti.intervalTime - bestDuration)
-          }),
-          if (best.hasBestDuration(pti)) FirstBadge else EmptyHtml
-        ))
+        partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–"))(pti =>
+          Seq(
+            div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
+              val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
+              "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:" + (pti.intervalTime - bestDuration)
+            })
+          ) ++ conditionalFirstBadge(best.hasBestDuration(pti))
+        )
       )(className = "col-time"),
-      Column(
+      Column.rich(
         TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
         TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i + 1} – ${part.place}", "=>|"))
       ) { (r: Participant) =>
-        partData(r).collect { case f: Finished => f }.fold("–": Frag) { pti => Seq(
-          pti.endTime.timeOnlyDiv,
-          if (best.hasBestEndTime(pti)) FirstBadge else EmptyHtml
-        )
+        partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–")) { pti =>
+          Seq(pti.endTime.timeOnlyDiv) ++ conditionalFirstBadge(best.hasBestEndTime(pti))
         }
       }(className = "col-end")
     )
   }
+
+  private def conditionalFirstBadge(first: Boolean) = if (first) Seq(FirstBadge, cls := "first") else Seq()
 
   def renderParticipantColumn(r: Participant): Frag = Seq(
     label(`for` := r.checkboxId, cls := "participant-header-label")(
