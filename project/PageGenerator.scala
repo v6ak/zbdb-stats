@@ -19,8 +19,13 @@ object PageGenerator{
     private def pubhtml(sheetId: Int): String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml?gid=$sheetId"
     override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=$gid&single=true&output=csv"
     override def originalLink: String = pubhtml(gid)
-    //override def csvAjaxUrl: String = s"https://zbdb.v6ak.com/spreadsheets/$key"
     override def plots: Seq[(String, String)] = plotIds.map{case (name, sheetId) => (name, pubhtml(sheetId))}
+  }
+  final case class NewGoogleSpreadsheetDataSource(key: String/*, plotIds: Seq[(String, Int)]*/) extends DataSource with CorsAnywhereDataSource{
+    private def url(format: String): String = s"https://docs.google.com/spreadsheets/d/e/$key/pub?output=$format"
+    override def csvDownloadUrl: String = url("csv")
+    override def originalLink: String = url("html")
+    override def plots: Seq[(String, String)] = Seq() //not supported yet; plotIds.map{case (name, sheetId) => (name, pubhtml(sheetId))}
   }
   final case class FileDataSource(file: String, originalLink: String) extends DataSource{
     override def csvAjaxUrl: String = file
@@ -64,7 +69,12 @@ object PageGenerator{
       additionalAlternativeLinks = Seq(
         "PDF" -> "https://docs.google.com/spreadsheets/d/1Ijx8bsvSkCh27rnD7sAxfN5TLDDjSX5rMvp63MnnKFs/pub?output=pdf"
       )
-    )
+    )/*,
+    Year(
+      year = 2017, formatVersion = 2017,
+      startTime = "2017-09-15 17:30", endTime = "2017-09-16 20:00",
+      dataSource = NewGoogleSpreadsheetDataSource("…………")
+    )*/
   )
 
   val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
