@@ -29,7 +29,16 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   )
 
   val GlobalPlots = Seq(
-    "Porovnání startu a času" -> startTimeToTotalDurationPlot _
+    "Porovnání startu a času" -> startTimeToTotalDurationPlot _,
+    "Genderová struktura" -> genderStructurePlot _
+  ) ++
+    (if(participantTable.formatVersion.ageType == AgeType.BirthYear) Seq("Věková struktura" -> ageStructurePlot _) else Seq()) ++ Seq(
+
+  )
+
+  private val GenderNames = Map[Gender, String](
+    Gender.Male -> "muž",
+    Gender.Female -> "žena"
   )
 
   private def zeroMoment = moment("2000-01-01") // We don't want to mutate it
@@ -96,10 +105,10 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   def startTimeToTotalDurationPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
-    val finishers = rowsLoader.groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
+    val finishers = rowsLoader.filter(p => p.hasFinished).groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
     import com.example.moment._
     val plotParams = js.Dictionary(
-      "title" -> "Porovnání startu a času chůze",
+      "title" -> "Porovnání startu a času chůze (pouze finalisti)",
       "seriesDefaults" -> js.Dictionary(
         "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.BubbleRenderer,
         "rendererOptions" -> js.Dictionary(
@@ -133,6 +142,51 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       )
     )
     val plotPoints = js.Array(js.Array(finishers.map{case ((moment, time), participants) => js.Array(moment/*.hours()*60+moment.minutes()*/, zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString, math.sqrt(participants.size.toDouble), participants.map(_.fullName).mkString(", ") + " ("+participants.size+")")}.toSeq: _*))
+    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
+  }
+
+  def genderStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+    val structure = rowsLoader.groupBy(_.gender)
+    val plotParams = js.Dictionary(
+      "title" -> "Genderová struktura startujících",
+      "seriesDefaults" -> js.Dictionary(
+        "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.PieRenderer,
+        "rendererOptions" -> js.Dictionary(
+          "showDataLabels" -> true
+        ),
+        "shadow" -> true
+      ),
+      "height" -> 500,
+      "legend" -> Dictionary("show" -> true)
+    )
+    val plotPoints = js.Array(js.Array(structure.map{case (gender, p) => js.Array(GenderNames(gender), p.size)}.toSeq: _*))
+    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
+  }
+
+  def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+    val structure = rowsLoader.groupBy(_.age).toIndexedSeq.sortBy(_._1.dropWhile(!_.isDigit).takeWhile(_.isDigit).toInt) // hack for “20-40”, “nad40” etc.
+
+    val ticks = js.Array(structure.map(_._1): _*)
+    val plotParams = js.Dictionary(
+      "title" -> "Věková struktura",
+      "seriesDefaults" -> js.Dictionary(
+        "renderer" -> BarRenderer,
+        "pointLabels" -> js.Dictionary(
+          "show" -> true
+        ),
+        "shadow" -> true
+      ),
+      "axes" -> js.Dictionary(
+        "xaxis" -> js.Dictionary(
+          "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.CategoryAxisRenderer,
+          "ticks" -> ticks
+        )
+      ),
+      "height" -> 500,
+      "legend" -> Dictionary("show" -> true)
+    )
+    val plotPoints = js.Array(js.Array(structure.map{_._2.size}: _*))
+    dom.window.console.log("plotPoints", ticks, plotPoints)
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 

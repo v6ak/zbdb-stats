@@ -59,7 +59,6 @@ object PageGenerator{
         key = "1Ijx8bsvSkCh27rnD7sAxfN5TLDDjSX5rMvp63MnnKFs",
         gid = 1919778948,
         plotIds = Seq(
-          "Genderová struktura" -> 1400369628,
           "Věková struktura" -> 664145624,
           "Počet lidí" -> 895574875,
           "Počet lidí v %" -> 1577608352,
