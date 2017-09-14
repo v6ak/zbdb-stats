@@ -17,6 +17,7 @@ object NameFormat {
   object Single extends NameFormat{
     override def size: Int = 1
     override def parse(participantDataAfterNum: Seq[String]): (String, String, String, Seq[String]) = participantDataAfterNum match {
+      case Seq("", other @_*) => ("", "", "", other)
       case Seq(nameWithPotentialNickBloated, other @_*) =>
         val nameWithPotentialNick = nameWithPotentialNickBloated.trim
         val (nick, fullName) = nameWithPotentialNick.indexOf('(') match {

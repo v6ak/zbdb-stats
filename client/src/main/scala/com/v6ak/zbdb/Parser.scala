@@ -109,7 +109,7 @@ object Parser{
         cumulativeTrackLength = parseTrackLength(cumulativeTrackLengthString)
       )
     }.toIndexedSeq
-    val parsedDataTries = dataTable.map{participantData =>
+    val parsedDataTries = dataTable.filter(row => row.tail.exists(isUsefulCell)).map{ participantData =>
       Try(
         Left(parseParticipant(participantData, parts, startTime, maxHourDelta, totalEndTime = totalEndTime, formatVersion = formatVersion))
       ).recover{
@@ -126,6 +126,8 @@ object Parser{
     }
     (parts, parsedDataSuccessfulTries.map{case Left(p) => p}, parsedDataFailedTries.map{case Right((row, e)) => (row, e)})
   }
+
+  private def isUsefulCell(cell: String): Boolean = cell != "" && cell != "X" && cell != "0:00"
 
   private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
     val Seq(num, participantDataAfterNum@_*) = participantData
