@@ -28,6 +28,10 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     ParticipantPlotGenerator("pauz", "pauzy", "pause", generatePausesPlotData)
   )
 
+  val GlobalPlots = Seq(
+    "Porovnání startu a času" -> startTimeToTotalDurationPlot _
+  )
+
   private def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
   private val DurationRenderer: js.ThisFunction = (th: js.Dynamic) => {

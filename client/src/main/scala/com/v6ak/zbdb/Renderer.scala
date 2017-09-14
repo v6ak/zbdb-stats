@@ -176,13 +176,14 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   ).render
 
   private val globalStats = div(id := "global-stats")(
-    button("Porovnání startu a času")(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
-      val (dialog, jqModal, modalBodyId) = modal("Porovnání startu a času")
-      jqModal.on("shown.bs.modal", {() => startTimeToTotalDurationPlot(modalBodyId, data.filter(p => p.hasFinished))})
-      dom.document.body.appendChild(dialog)
-      jqModal.modal(js.Dictionary("keyboard" -> true))
-
-    }),
+    GlobalPlots.map{case (plotName, plotFunction) =>
+      button(plotName)(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
+        val (dialog, jqModal, modalBodyId) = modal(plotName)
+        jqModal.on("shown.bs.modal", {() => plotFunction(modalBodyId, data.filter(p => p.hasFinished))})
+        dom.document.body.appendChild(dialog)
+        jqModal.modal(js.Dictionary("keyboard" -> true))
+      })
+    },
     additionalPlots.map{case (name, url) =>
       a(href:=url, cls:="btn btn-default", target := "_blank")(name)
     }
