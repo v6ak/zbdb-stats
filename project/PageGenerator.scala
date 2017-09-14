@@ -66,12 +66,12 @@ object PageGenerator{
       additionalAlternativeLinks = Seq(
         "PDF" -> "https://docs.google.com/spreadsheets/d/1Ijx8bsvSkCh27rnD7sAxfN5TLDDjSX5rMvp63MnnKFs/pub?output=pdf"
       )
-    )/*,
+    ),
     Year(
       year = 2017, formatVersion = 2017,
       startTime = "2017-09-15 17:30", endTime = "2017-09-16 20:00",
-      dataSource = NewGoogleSpreadsheetDataSource("…………")
-    )*/
+      dataSource = NewGoogleSpreadsheetDataSource("2PACX-1vRb0q-j8kDjMk3ptlqdwjNTXDhpMAjc-fPc7JGoYdnpxrQ30lXAzhLgcXpvMHR_XgwxKbTr-NMZv0UE")
+    )
   )
 
   val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
