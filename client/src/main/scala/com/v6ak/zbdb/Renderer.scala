@@ -100,6 +100,12 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
       if(p.hasFinished) p.totalTime.toString else ""
     }(),
     Column(
+      "Čas od prvního"
+    )((p: Participant) =>
+      if(p.hasFinished) participantTable.bestTotalTimeOption.fold[Frag]("–")(fastest => (p.totalTime - fastest).toString)
+      else "–"
+    ),
+    Column(
       "Čistý čas chůze"
     ){(p: Participant) =>
       TimeInterval.fromMilliseconds(p.partTimes.flatMap(_.durationOption).sum).toString
