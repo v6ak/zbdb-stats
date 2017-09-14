@@ -60,8 +60,6 @@ object PageGenerator{
         gid = 1919778948,
         plotIds = Seq(
           "Věková struktura" -> 664145624,
-          "Počet lidí" -> 895574875,
-          "Počet lidí v %" -> 1577608352,
           "Časy stanovišť" -> 1256165661
         )
       ),
