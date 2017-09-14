@@ -2,7 +2,38 @@ package com.v6ak.zbdb
 
 import scala.collection.immutable.IndexedSeq
 
-final case class FormatVersion private (versionNumber: Int, ageType: AgeType, tail: Tail)
+sealed abstract class NameFormat {
+  def parse(participantDataAfterNum: Seq[String]): (String, String, String, Seq[String])
+  def size: Int
+}
+
+object NameFormat {
+  object Split extends NameFormat{
+    override def size: Int = 3
+    override def parse(participantDataAfterNum: Seq[String]): (String, String, String, Seq[String]) = participantDataAfterNum match {
+      case Seq(lastName, firstName, nick, other @_*) => (firstName, lastName, nick, other)
+    }
+  }
+  object Single extends NameFormat{
+    override def size: Int = 1
+    override def parse(participantDataAfterNum: Seq[String]): (String, String, String, Seq[String]) = participantDataAfterNum match {
+      case Seq(nameWithPotentialNickBloated, other @_*) =>
+        val nameWithPotentialNick = nameWithPotentialNickBloated.trim
+        val (nick, fullName) = nameWithPotentialNick.indexOf('(') match {
+          case -1 => ("", nameWithPotentialNick)
+          case leftParenPos if nameWithPotentialNick.last == ')' =>
+            (
+              nameWithPotentialNick.substring(0, leftParenPos),
+              nameWithPotentialNick.substring(leftParenPos+1, nameWithPotentialNick.size - 1)
+            )
+        }
+        val Array(firstName, lastName) = fullName.split(" ", 2)
+        (firstName.trim, lastName.trim, nick.trim, other)
+    }
+  }
+}
+
+final case class FormatVersion private (versionNumber: Int, ageType: AgeType, tail: Tail, headSize: Int, nameFormat: NameFormat)
 
 abstract sealed class AgeType {}
 object AgeType {
@@ -32,9 +63,9 @@ object Tail{
 object FormatVersion{
 
   val Versions: Map[Int, FormatVersion] = Seq(
-    FormatVersion(2015, ageType = AgeType.No, tail = Tail.Constant(2)),
-    FormatVersion(2016, ageType = AgeType.Category, tail = Tail.EmptyLine),
-    FormatVersion(2017, ageType = AgeType.BirthYear, tail = Tail.EmptyLine)
+    FormatVersion(2015, ageType = AgeType.No, tail = Tail.Constant(2), headSize = 1, nameFormat = NameFormat.Split),
+    FormatVersion(2016, ageType = AgeType.Category, tail = Tail.EmptyLine, headSize = 1, nameFormat = NameFormat.Split),
+    FormatVersion(2017, ageType = AgeType.Category, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single)
   ).map(fv => fv.versionNumber -> fv).toMap
 
 }

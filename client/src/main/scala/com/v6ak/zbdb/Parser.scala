@@ -97,12 +97,12 @@ object Parser{
 
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
     val fullDataTable = new CSVReader(new StringReader(csvData.trim)).toIndexedSeq.map(_.toIndexedSeq)
-    val Seq(title, header1, header2, header3, dataWithTail @ _*) = fullDataTable
+    val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize)
     val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
-    val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(6).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
+    val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(3+formatVersion.nameFormat.size).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
       Part(
         place = place,
         trackLength = parseTrackLength(trackLengthString),
@@ -128,7 +128,9 @@ object Parser{
   }
 
   private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
-    val Seq(num, lastName, firstName, nick, genderString, ageString, other@_*) = participantData
+    val Seq(num, participantDataAfterNum@_*) = participantData
+    val (firstName, lastName, nick, participantDataAfterName) = formatVersion.nameFormat.parse(participantDataAfterNum)
+    val Seq(genderString, ageString, other@_*) = participantDataAfterName
     if ((formatVersion.ageType == AgeType.No) && (ageString != "")) {
       sys.error("You seem to have left some data in age column. Clean it first, please.")
     }
