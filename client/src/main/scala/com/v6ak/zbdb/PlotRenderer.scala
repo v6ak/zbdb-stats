@@ -238,9 +238,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
-    val structure = rowsLoader.groupBy(_.age).toIndexedSeq.sortBy(_._1.dropWhile(!_.isDigit).takeWhile(_.isDigit).toInt) // hack for “20-40”, “nad40” etc.
-
-    val ticks = js.Array(structure.map(_._1): _*)
+    val structure = rowsLoader.groupBy(_.birthYear).toIndexedSeq.sortBy(_._1)
+    val ticks = js.Array(structure.map(_._1.get): _*)
     val plotParams = js.Dictionary(
       "title" -> "Věková struktura",
       "seriesDefaults" -> js.Dictionary(
@@ -254,6 +253,11 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         "xaxis" -> js.Dictionary(
           "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.CategoryAxisRenderer,
           "ticks" -> ticks
+        ),
+        "yaxis" -> js.Dictionary(
+          "tickOptions" -> js.Dictionary(
+            "formatString"-> "%.0f"
+          )
         )
       ),
       "height" -> 500,
