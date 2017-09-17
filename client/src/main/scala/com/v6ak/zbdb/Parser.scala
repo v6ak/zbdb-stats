@@ -102,7 +102,7 @@ object Parser{
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
-    val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(3+formatVersion.nameFormat.size).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
+    val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(3+formatVersion.nameFormat.size).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>"|"#ERROR!", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
       Part(
         place = place,
         trackLength = parseTrackLength(trackLengthString),
