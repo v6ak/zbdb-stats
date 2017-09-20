@@ -231,7 +231,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     GlobalPlots.map{case (plotName, plotFunction) =>
       button(plotName)(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
         val (dialog, jqModal, modalBodyId) = modal(plotName)
-        jqModal.on("shown.bs.modal", {() => plotFunction(modalBodyId, data)})
+        jqModal.on("shown.bs.modal", {() => plotFunction(modalBodyId, data, participantTable)})
         dom.document.body.appendChild(dialog)
         jqModal.modal(js.Dictionary("keyboard" -> true))
       })

@@ -106,7 +106,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def startTimeToTotalDurationPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+  def startTimeToTotalDurationPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
     val finishers = rowsLoader.filter(p => p.hasFinished).groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
     import com.example.moment._
     val plotParams = js.Dictionary(
@@ -153,11 +153,13 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     mortalitySeq.scan(0)(_ + _).tail
   }
 
-  def remainingParticipantsCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit = {
+  def remainingParticipantsCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit = {
     val rows = rowsLoader
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
-    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (i+1, cm, rows.size - cm)}
-    val ticks = js.Array(data.map(_._1): _*)
+    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (participantTable.parts(i), cm, rows.size - cm, i)}
+    val ticks = js.Array(data.map { case (header, _, _, i) =>
+      s"${i+1}. (${header.cumulativeTrackLength} km)"
+    }: _*)
     val plotParams = js.Dictionary(
       "title" -> "Počet lidí",
       "seriesDefaults" -> js.Dictionary(
@@ -167,7 +169,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       "highlighter" -> js.Dictionary(
         "show" -> true,
         "showTooltip" -> true,
-        "formatString" -> "%s|%s",
+        "formatString" -> "%2$s",
         "bringSeriesToFront" -> true
       ),
       "axes" -> js.Dictionary(
@@ -185,12 +187,15 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
-  def remainingRelativeCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit = {
+  def remainingRelativeCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit = {
     val rows = rowsLoader
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
     val size = rows.size
-    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (i+1, 100.0*cm/size, 100.0*(size - cm)/size)}
-    val ticks = js.Array(data.map(_._1): _*)
+    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (i, 100.0*cm/size, 100.0*(size - cm)/size)}
+    val ticks = js.Array(data.map{case (i, _, _) =>
+      val header = participantTable.parts(i)
+      s"${i+1}. (${header.cumulativeTrackLength} km)"
+    }: _*)
     val plotParams = js.Dictionary(
       "title" -> "Počet lidí v %",
       "seriesDefaults" -> js.Dictionary(
@@ -201,7 +206,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       "highlighter" -> js.Dictionary(
         "show" -> true,
         "showTooltip" -> true,
-        "formatString" -> "%s|%s",
+        "formatString" -> "%2$s",
         "bringSeriesToFront" -> true
       ),
       "axes" -> js.Dictionary(
@@ -219,7 +224,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
-  def genderStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+  def genderStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
     val structure = rowsLoader.groupBy(_.gender)
     val plotParams = js.Dictionary(
       "title" -> "Genderová struktura startujících",
@@ -237,7 +242,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
-  def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant]): Unit ={
+  def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
     val structure = rowsLoader.groupBy(_.birthYear).toIndexedSeq.sortBy(_._1)
     val ticks = js.Array(structure.map(_._1.get): _*)
     val plotParams = js.Dictionary(
