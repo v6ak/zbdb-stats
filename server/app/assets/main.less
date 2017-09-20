@@ -163,6 +163,20 @@ body{
     .age{
         display: block;
     }
+    .col-time{
+        position: relative !important;
+        .more-dropdown {
+            position: absolute;
+            bottom: 3px;
+            right: 3px;
+            .dropdown-menu{
+                width: 300px;
+            }
+        }
+        .more-button-placeholder {
+            visibility: hidden;
+        }
+    }
 }
 
 @media print {
@@ -187,6 +201,9 @@ body{
         .first-badge{
             display: none;
         }
+    }
+    .more-button, .more-button-placeholder{
+        display: none;
     }
 }
 

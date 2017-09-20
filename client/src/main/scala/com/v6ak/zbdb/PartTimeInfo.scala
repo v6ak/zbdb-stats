@@ -12,6 +12,8 @@ abstract sealed class PartTimeInfo{
 
 object PartTimeInfo{
   final case class Finished(startTime: Moment, endTime: Moment, intervalTime: TimeInterval) extends PartTimeInfo {
+    def outran(other: Finished) = this.startTime >= other.startTime && this.endTime < other.endTime
+
     def crosses(other: Finished) = ((this.startTime >= other.startTime) && (this.endTime <= other.endTime)) || ((this.startTime <= other.startTime) && (this.endTime >= other.endTime))
 
     override def endTimeOption: Option[Moment] = Some(endTime)

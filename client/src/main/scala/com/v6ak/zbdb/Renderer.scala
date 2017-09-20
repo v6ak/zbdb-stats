@@ -16,6 +16,8 @@ import scala.collection.mutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scalatags.JsDom.all.{i => iTag, name => _, _}
+import com.v6ak.scalajs.scalatags.ScalaTagsDomModifiers._
+import com.v6ak.scalajs.scalatags.ScalaTagsBootstrapDomModifiers._
 
 object Renderer{
   private val FirstBadge = div(cls := "label label-success first-badge")("1.")
@@ -41,7 +43,8 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   }
 
   implicit private class RichTime(moment: Moment){
-    def timeOnlyDiv = div(title:=moment.toString)(f"${moment.hours()}:${moment.minutes()}%02d")
+    def timeOnlyDiv: Frag = div(title:=moment.toString)(humanReadable)
+    def humanReadable: String = f"${moment.hours()}:${moment.minutes()}%02d"
   }
 
   private object selection {
@@ -114,12 +117,16 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   def createTrackPartColumns(part: Part, i: Int): Seq[Column[Participant]] = {
     def partData(row: Participant) = row.partTimes.lift(i)
+    def finishedPartData(row: Participant): Option[PartTimeInfo.Finished] = partData(row).collect{
+      case x: PartTimeInfo.Finished => x
+    }
     val best = if (firsts.length > i)
       firsts(i)
     else {
       dom.console.warn(s"It seems that nobody has reached part #$i")
       BestParticipantData.Empty
     }
+    def moreButton(c: String) = button(cls := s"btn btn-default btn-xs dropdown-toggle $c", `type` := "button", "data-toggle".attr := "dropdown")(span(cls:="caret"))//("⠇")
     val firstCell = if (i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
       Column.rich(firstCell, TableHeadCell("|=>"))((r: Participant) =>
@@ -131,14 +138,53 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
         TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
         TableHeadCell(s"čas")
       )((r: Participant) =>
-        partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–"))(pti =>
-          Seq(
-            div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
-              val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
-              "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:" + (pti.intervalTime - bestDuration)
-            })
-          ) ++ conditionalFirstBadge(best.hasBestDuration(pti))
-        )
+        partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–"))(pti => {
+          val popup = div(cls := "dropdown-menu")("Opravdu malý moment…").render
+          val timeDiv = div(pti.intervalTime.toString)(title := best.durationOption.fold("") { bestDurationMillis =>
+            val bestDuration = TimeInterval.fromMilliseconds(bestDurationMillis)
+            "Nejlepší: " + bestDuration + "\n" + "Ztráta na nejlepšího:" + (pti.intervalTime - bestDuration)
+          })
+          val detailsExpandable = Seq(
+            moreButton("more-button-placeholder"),
+            div(cls := "more-dropdown")(
+              div(cls := "dropdown")(
+                moreButton("more-button"),
+                popup
+              )(onBsShown({ _: js.Dynamic =>
+                if (!popup.hasAttribute("data-loaded")) {
+                  def select(f: (Finished, Finished) => Boolean) = participantTable.data.filter(p => (p!=r) && finishedPartData(p).exists(f(pti, _)))
+                  def compList(heading: Frag, participants: Seq[Participant]): Frag =
+                    Seq[Frag](
+                      h3(heading),
+                      participants match {
+                        case Seq() => "(nikdo)": Frag
+                        case _ =>
+                          ul(
+                            participants.map{p =>
+                              val pd = partData(p).get
+                              li(s"${p.id}: ${p.fullNameWithNick} (${pd.startTime.humanReadable} – ${pd.endTimeOption.fold("×")(_.humanReadable)})")
+                            }
+                          )
+                      }
+                    )
+                  val details: Frag = Seq(
+                    compList("Startoval(a) zároveň s", select((me, other) => me.startTime isSame other.startTime)),
+                    compList("Dorazil(a) zároveň s", select((me, other) => me.endTime isSame other.endTime)),
+                    compList("Předběhl(a)", select((me, other) => me outran other)),
+                    compList("Byl(a) předběhnuta", select((me, other) => other outran me))
+                  )
+                  val detailsRendered = details.render
+                  while (popup.hasChildNodes()) {
+                    popup.removeChild(popup.lastChild)
+                  }
+                  popup.appendChild(detailsRendered)
+                  popup.setAttribute("data-loaded", "true")
+                }
+              }))
+            )
+          )
+          Seq(timeDiv) ++ conditionalFirstBadge(best.hasBestDuration(pti)) ++ detailsExpandable
+        })
       )(className = "col-time"),
       Column.rich(
         TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
@@ -151,7 +197,7 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
     )
   }
 
-  private def conditionalFirstBadge(first: Boolean) = if (first) Seq(FirstBadge, cls := "first") else Seq()
+  private def conditionalFirstBadge(first: Boolean) = if (first) Seq[Modifier](FirstBadge, addClass("first")) else Seq()
 
   def renderParticipantColumn(r: Participant): Frag = Seq(
     label(`for` := r.checkboxId, cls := "participant-header-label")(
