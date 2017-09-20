@@ -66,8 +66,10 @@ class Moment extends js.Any {
     def isAfter(other: Moment): Boolean = js.native
     def isAfter(other: Moment, precision: String): Boolean = js.native
 
-    def >=(other: Moment) = isSame(other) || (this isAfter other)
-    def <=(other: Moment) = isSame(other) || (this isBefore other)
+    def >=(other: Moment):Boolean = isSame(other) || (this isAfter other)
+    def <=(other: Moment):Boolean = isSame(other) || (this isBefore other)
+    def >(other: Moment): Boolean = this isAfter other
+    def <(other: Moment): Boolean = this isBefore other
 
     def isSame(other: Moment): Boolean = js.native
     //def clone(): Moment = js.native
