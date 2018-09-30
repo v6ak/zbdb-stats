@@ -81,6 +81,8 @@ object PageGenerator{
 
   val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
 
+  def allYearsJsonString = CompactPrinter.apply(JsObject(YearLinks.map{case (y, link) => s"$y"->JsString(link)}.toMap))
+
   def forYear(year: Year, publicDirName: String) = {
     val title = s"Výsledky Z Brna do Brna ${year.year}"
     val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
@@ -104,7 +106,6 @@ object PageGenerator{
         data-max-hour-delta={year.maxHoursDelta.toString}
         data-format-version={year.formatVersion.toString}
         data-year={year.year.toString}
-        data-year-links={CompactPrinter.apply(JsObject(YearLinks.map{case (y, link) => s"$y"->JsString(link)}.toMap))}
       >
         <div class="container">
           <h1>{title}</h1>

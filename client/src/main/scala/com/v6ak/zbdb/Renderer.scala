@@ -22,14 +22,14 @@ import com.v6ak.scalajs.scalatags.ScalaTagsBootstrapDomModifiers._
 object Renderer{
   private val FirstBadge = div(cls := "label label-success first-badge")("1.")
 
-  def initialize(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinks: Seq[(String, String)]) = {
-    val r = new Renderer(participantTable, errors, content, plots, enableHorizontalStickyness, year, yearLinks)
+  def initialize(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) = {
+    val r = new Renderer(participantTable, processingErrors, content, plots, enableHorizontalStickyness, year, yearLinksOption)
     r.initialize()
     r
   }
 }
 
-final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinks: Seq[(String, String)]) {
+final class Renderer private(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) {
 
   private val plotRenderer = new PlotRenderer(participantTable)
 
@@ -81,7 +81,10 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
   }
 
   private def yearSelection = dropdownGroup(Seq[Frag](year, " ", span(cls:="caret")))(
-    yearLinks.reverse.map{case (y, yearLink) => a(href:=yearLink)(y)} : _*
+    yearLinksOption match{
+      case Some(yearLinks) => yearLinks.reverse.map{case (y, yearLink) => a(href:=yearLink)(y)}
+      case None => span(cls:="label label-danger")("Ročníky nejsou k dispozici.")
+    }
   )
 
   private val renderer = new TableRenderer[Participant](
@@ -278,12 +281,24 @@ final class Renderer private(participantTable: ParticipantTable, errors: Seq[(Se
 
   private def initialize(): Unit = {
     showBar = false
-    if(errors.nonEmpty){
+    yearLinksOption match {
+      case Some(yearLinks) =>
+        if(!yearLinks.map(_._1).contains(year)){
+          content.appendChild(
+            div(cls:="alert alert-danger")("Výsledky pro tento ročník ještě nejsou finální.", br, "Pro adminy: pokud je to již hotovo, jdi do adresáře statistiky a přepiš soubor years.json souborem years.json.new. Tím schválíš všechny nové ročníky jako finální.").render
+          )
+        }
+      case None =>
+        content.appendChild(
+          div(cls:="alert alert-danger")("Neporařilo se načíst seznam starších ročníků. Takže vlastně ani nevím, jestli jsou toto finální výsledky.").render
+        )
+    }
+    if(processingErrors.nonEmpty){
       content.appendChild(
         div(cls:="alert alert-danger")(
-          s"Některé řádky (celkem ${errors.size}) se nepodařilo zpracovat",
+          s"Některé řádky (celkem ${processingErrors.size}) se nepodařilo zpracovat",
           ul(
-            errors.map{case (row, e) =>
+            processingErrors.map{case (row, e) =>
               li(
                 div(showCells(row)),
                 div(showThrowable(e))

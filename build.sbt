@@ -28,6 +28,12 @@ val PublicDirName = "statistiky" // TODO: DRY this constant from routes
 
 val YearDir = "^[0-9]+(?:$|/.*)".r
 
+def write(file: File, content: String) = {
+  println(s"Writing $file…")
+  IO.write(file, content)
+  file
+}
+
 lazy val server = (project in file("server")).settings(
   version := appVersion,
   name := "zbdb-stats-server",
@@ -36,7 +42,7 @@ lazy val server = (project in file("server")).settings(
   pipelineStages in Assets := Seq(scalaJSPipeline),
   pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip, moveLibs),
   includeFilter in digest := "*",
-  excludeFilter in digest := "*.html" || "*.csv" ||
+  excludeFilter in digest := "*.html" || "*.csv" || "*.json" || "*.json.new" ||
     // When sbt-simple-url-update updates path for glyphicons-halflings-regular.woff, it garbles the path for glyphicons-halflings-regular.woff2.
     "glyphicons-halflings-regular.woff",
   includeFilter in filter := "*.less" || "*.note" || "*.source" || "*.css" || "*.js",
@@ -44,12 +50,14 @@ lazy val server = (project in file("server")).settings(
   genHtmlDir := target.value / "web" / "html" / "main",
   resourceDirectories in Assets += genHtmlDir.value,
   resourceGenerators in Assets += Def.task {
-    for(year <- PageGenerator.Years) yield {
-      val file = genHtmlDir.value / s"${year.year}" / PublicDirName / s"index.html"
-      println(s"Writing $file…")
-      IO.write(file, PageGenerator.forYear(year, PublicDirName))
-      file
+    val yearHtmlFiles = for(year <- PageGenerator.Years) yield {
+      write(
+        file = genHtmlDir.value / s"${year.year}" / PublicDirName / s"index.html",
+        content = PageGenerator.forYear(year, PublicDirName)
+      )
     }
+    val allYearsListJsonFile = write(genHtmlDir.value / "years.json.new", PageGenerator.allYearsJsonString)
+    yearHtmlFiles :+ allYearsListJsonFile
   }.taskValue,
   removeUnversionedAssets := { mappings: Seq[PathMapping] =>
     mappings.filter{case (file, name) => !(name.startsWith("main.") || explicitlyExcludedLibFiles.contains(name))}

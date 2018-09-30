@@ -32,7 +32,14 @@ object App extends JSApp {
           case Array(name) => (name, "")
         }
       }.toMap
-      Ajax.get(fileName, responseType = "text") onComplete {
+      val resultsFuture = Ajax.get(fileName, responseType = "text")
+      val allYearsLinksFuture = Ajax.get("../../statistiky/years.json", responseType = "application/json").map{ayXhr =>
+        Some(JSON.parse(ayXhr.responseText).asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted)
+      }.recover{case e =>
+        e.printStackTrace()
+        None
+      }
+      resultsFuture onComplete {
         case Failure(e) =>
           dom.window.alert("Failed to load data")
         case Success(xhr) =>
@@ -42,9 +49,14 @@ object App extends JSApp {
             val content = dom.document.getElementById("content")
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
             val plots = JSON.parse(body.getAttribute("data-plots")).asInstanceOf[js.Array[js.Array[String]]].toIndexedSeq.map{a => (a(0), a(1))}
-            val yearLinks = JSON.parse(body.getAttribute("data-year-links")).asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted
             val year = body.getAttribute("data-year")
-            Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"), year, yearLinks)
+            allYearsLinksFuture onComplete {
+              case Success(yearLinksOption) =>
+                Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"), year, yearLinksOption)
+              case Failure(exception) =>
+                exception.printStackTrace()
+                dom.window.alert("Jste svědkem/svědkyní chyby, která neměla nastat!")
+            }
           } catch {
             case e: Throwable =>
               dom.console.error("Error when parsing: ", e.getMessage)
