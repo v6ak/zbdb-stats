@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# safety settings
+set -u
+set -e
+set -o pipefail
+
+./pack.sh
+
+if [ -e target/all ]; then
+	rm -r target/all
+fi
+mkdir target/all
+(cd target/all; unzip ../../pack.zip)
+ln pack.zip target/all/pack.zip

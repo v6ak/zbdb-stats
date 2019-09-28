@@ -8,5 +8,5 @@
 pack.zip
 trash
 .idea
-upload.config
+upload*.config
 dockerenv.sh
