@@ -28,8 +28,10 @@ object NameFormat {
               nameWithPotentialNick.substring(leftParenPos+1, nameWithPotentialNick.size - 1)
             )
         }
-        val Array(firstName, lastName) = fullName.split(" ", 2)
-        (firstName.trim, lastName.trim, nick.trim, other)
+        fullName.split(" ", 2) match {
+          case Array(firstName, lastName) => (firstName.trim, lastName.trim, nick.trim, other)
+          case other => sys.error("Name looks like it contains a nick, but it is not in expected format “nick (FirstName LastName)”.")
+        }
     }
   }
 }
