@@ -10,7 +10,7 @@ object BestParticipantData{
     case None => b // (None, b) --> b
     case Some(firstTime) => b match {
       case None => a // (a@Some(firstTime), None) --> a
-      case Some(secondTime) => if(firstTime.unix() < secondTime.unix()) a else b // (a@Some(firstTime), b@Some(secondTime)) --> compare firstTime and secondTime
+      case Some(secondTime) => if(firstTime < secondTime) a else b // (a@Some(firstTime), b@Some(secondTime)) --> compare firstTime and secondTime
     }
   }
   private def minDurationOption(a: Option[Int], b: Option[Int]): Option[Int] = a match { // minimize garbage
