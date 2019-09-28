@@ -76,6 +76,11 @@ object PageGenerator{
       year = 2018, formatVersion = 2017,
       startTime = "2018-09-21 17:30", endTime = "2018-09-22 21:00",
       dataSource = NewGoogleSpreadsheetDataSource("2PACX-1vQyyPGYg-MeFN9nRpHCkog0GKd2h3sSV1lI-EYwMZckmf1w2IV3FSyObWC4GPDKAY6Tu3s46ILm3gN4")
+    ),
+    Year(
+      year = 2019, formatVersion = 2017,
+      startTime = "2019-09-20 17:30", endTime = "2019-09-21 21:00",
+      dataSource = NewGoogleSpreadsheetDataSource("2PACX-1vTZSX8UVnXyoF8PeiQH-L1RvoBogXw8WlXn7oCkogWG2QPP2ZDc4PVNy3Lz6FDyzXqL_Ep78cZgSiCQ")
     )
   )
 
