@@ -9,3 +9,4 @@ pack.zip
 trash
 .idea
 upload.config
+dockerenv.sh

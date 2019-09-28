@@ -4,7 +4,7 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 
 ## Běh lokálně
 
-1. Nainstaluj si [Activator](https://www.lightbend.com/activator/download) (popř. lze použít SBT)
+1. Nainstaluj si SBT (nebo použij Dockerové prostředí)
 2. activator ~run
 3. Otevři http://localhost:9000/2016/statistiky/ (případně jiný rok)
 
