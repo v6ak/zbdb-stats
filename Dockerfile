@@ -17,7 +17,7 @@ RUN echo 1.1.1 > /version
 FROM openjdk:${OPENJDK_TAG}
 COPY --from=sbt-version /version /sbt-version
 RUN \
-  curl -L -o sbt-$(cat /sbt-version).deb https://dl.bintray.com/sbt/debian/sbt-$(cat /sbt-version).deb && \
+  curl -L -o sbt-$(cat /sbt-version).deb https://scala.jfrog.io/ui/api/v1/download\?repoKey=debian\&path=%252Fsbt-$(cat /sbt-version).deb && \
   dpkg -i sbt-$(cat /sbt-version).deb && \
   rm sbt-$(cat /sbt-version).deb && \
   sbt sbtVersion && \
