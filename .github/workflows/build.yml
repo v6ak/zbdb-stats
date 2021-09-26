@@ -1,0 +1,26 @@
+name: Build web
+on:
+  push:
+    branches:
+      - feature/github-build
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      #- uses: actions/cache@v2
+      #  with:
+      #    path: ~/.cache/my
+      - name: build image
+        run: docker build .
+      - name: build website
+        run: ./dockerenv-github.sh ./pack.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: site
+          path: pack.zip
