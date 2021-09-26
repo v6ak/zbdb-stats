@@ -76,7 +76,7 @@ object PageGenerator{
       dataSource = NewGoogleSpreadsheetDataSource("2PACX-1vTZSX8UVnXyoF8PeiQH-L1RvoBogXw8WlXn7oCkogWG2QPP2ZDc4PVNy3Lz6FDyzXqL_Ep78cZgSiCQ")
     ),
     Year(
-      year = 2021, formatVersion = 2017,
+      year = 2021, formatVersion = 2021,
       startTime = "2021-09-17 17:05", endTime = "2021-09-18 20:05",
       dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vSo5X1l36As8yB9-XRquV9UGIAcptWSzm7P7bEIoj93WVcEhwYumOKOG6h3O147IASNhAJrVwd-CKDq")
     )
