@@ -103,13 +103,12 @@ object Parser{
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
-    val parts = (header1, header2, header3).zipped.toIndexedSeq.drop(3+formatVersion.nameFormat.size).dropRight(4).grouped(3).map{ case Seq((""|"čas startu", "", "odch"), (" =>"|"=>"|"#ERROR!", trackLengthString, ""), (place, cumulativeTrackLengthString, "přích")) =>
-      Part(
-        place = place,
-        trackLength = parseTrackLength(trackLengthString),
-        cumulativeTrackLength = parseTrackLength(cumulativeTrackLengthString)
-      )
-    }.toIndexedSeq
+    val parts = (header1, header2, header3).zipped.toIndexedSeq.
+      drop(3+formatVersion.nameFormat.size).  // skip participant info
+      dropRight(4).  // skip final columns like total time and order
+      grouped(3).  // all parts are Seq(start, time, finish)
+      map(parseHeaderPart).  // parse it
+      toIndexedSeq
     val parsedDataTries = dataTable.filter(row => row.tail.exists(isUsefulCell)).map{ participantData =>
       Try(
         Left(parseParticipant(participantData, parts, startTime, maxHourDelta, totalEndTime = totalEndTime, formatVersion = formatVersion))
@@ -126,6 +125,28 @@ object Parser{
       }
     }
     (parts, parsedDataSuccessfulTries.map{case Left(p) => p}, parsedDataFailedTries.map{case Right((row, e)) => (row, e)})
+  }
+
+  private def parseHeaderPart(cellGroup: Seq[(String, String, String)]) = {
+    cellGroup match {
+      case header @ Seq(
+        ("" | "čas startu", "", "odch"),
+        (" =>" | "=>" | "#ERROR!", trackLengthString, ""),
+        (place, cumulativeTrackLengthString, "přích")
+      ) =>
+        try {
+          Part(
+            place = place,
+            trackLength = parseTrackLength(trackLengthString),
+            cumulativeTrackLength = parseTrackLength(cumulativeTrackLengthString)
+          )
+        } catch {
+          case e =>
+            throw new RuntimeException(s"error when parsing header: $header", e)
+        }
+      case unmatchedHeader =>
+        throw new RuntimeException(s"header does not match: $unmatchedHeader")
+    }
   }
 
   private def isUsefulCell(cell: String): Boolean = cell != "" && cell != "X" && cell != "0:00"
