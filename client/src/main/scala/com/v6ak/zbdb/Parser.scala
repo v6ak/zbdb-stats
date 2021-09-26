@@ -23,6 +23,7 @@ object Parser{
 
   private def parseTrackLength(s: String) = s match {
     case TrackLengthRegex(tl) => BigDecimal(tl.replace(',', '.'))
+    case other => sys.error(s"Unknown track length: $s")
   }
 
   private val TimeRegexp = """^([0-9]+):([0-9]+)$""".r
