@@ -5,32 +5,25 @@ import scala.xml.Text
 object PageGenerator{
 
   sealed abstract class DataSource{
-    def csvAjaxUrl: String
     def csvDownloadUrl: String
     def originalLink: String
-    def prefetchAjax: Boolean
     def plots: Seq[(String, String)]
   }
-  trait CorsAnywhereDataSource extends DataSource {
-    override def csvAjaxUrl: String = s"https://cors-anywhere.herokuapp.com/$csvDownloadUrl"
-    override def prefetchAjax: Boolean = false
-  }
-  final case class GoogleSpreadsheetDataSource(key: String, gid: Int = 0, plotIds: Seq[(String, Int)]) extends DataSource with CorsAnywhereDataSource{
+  final case class GoogleSpreadsheetDataSource(key: String, gid: Int = 0, plotIds: Seq[(String, Int)]) extends DataSource {
     private def pubhtml(sheetId: Int): String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml?gid=$sheetId"
     override def csvDownloadUrl: String = s"https://docs.google.com/spreadsheets/d/$key/pub?gid=$gid&single=true&output=csv"
     override def originalLink: String = pubhtml(gid)
     override def plots: Seq[(String, String)] = plotIds.map{case (name, sheetId) => (name, pubhtml(sheetId))}
   }
-  final case class NewGoogleSpreadsheetDataSource(key: String/*, plotIds: Seq[(String, Int)]*/) extends DataSource with CorsAnywhereDataSource{
+  final case class NewGoogleSpreadsheetDataSource(key: String/*, plotIds: Seq[(String, Int)]*/) extends DataSource {
     private def url(format: String): String = s"https://docs.google.com/spreadsheets/d/e/$key/pub?output=$format"
     override def csvDownloadUrl: String = url("csv")
     override def originalLink: String = url("html")
     override def plots: Seq[(String, String)] = Seq() //not supported yet; plotIds.map{case (name, sheetId) => (name, pubhtml(sheetId))}
   }
   final case class FileDataSource(file: String, originalLink: String) extends DataSource{
-    override def csvAjaxUrl: String = file
-    override def csvDownloadUrl: String = file
-    override def prefetchAjax: Boolean = true
+    // Works well only if file is <year>.csv. I could fix it, but it is legacy DataSource and it fits the needs well.
+    override def csvDownloadUrl: String = s"$file"
     override def plots: Seq[(String, String)] = Seq()
   }
 
@@ -50,7 +43,7 @@ object PageGenerator{
     Year(
       year = 2015, formatVersion = 2015,
       startTime = "2015-09-18 17:30", endTime = "2015-09-19 19:00",
-      dataSource = FileDataSource("zbdb-2015-simplified.csv", "https://docs.google.com/spreadsheets/d/1sCOP6tEAQmjkdRhfrgOd0RLXAlgZ_0NiXAU1prcXqP0/pubhtml?gid=1935861499&single=true")
+      dataSource = FileDataSource("2015.csv", "https://docs.google.com/spreadsheets/d/1sCOP6tEAQmjkdRhfrgOd0RLXAlgZ_0NiXAU1prcXqP0/pubhtml?gid=1935861499&single=true")
     ),
     Year(
       year = 2016, formatVersion = 2016,
@@ -91,6 +84,7 @@ object PageGenerator{
   def forYear(year: Year, publicDirName: String) = {
     val title = s"Výsledky Z Brna do Brna ${year.year}"
     val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
+    val csvFile = s"${year.year}.csv"
     "<!DOCTYPE html>"+
     <html>
       <head>
@@ -98,13 +92,13 @@ object PageGenerator{
         <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.min.css"} />
         <script type="text/javascript" src={s"../../$publicDirName/main.min.js"}></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {if(year.dataSource.prefetchAjax) <link rel="prefetch" href={year.dataSource.csvAjaxUrl} /> else ""}
+        <link rel="prefetch" href={csvFile} />
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
         <title>{title}</title>
       </head>
       <body
         data-plots={plots}
-        data-file={year.dataSource.csvAjaxUrl}
+        data-file={csvFile}
         data-start-time={year.startTime}
         data-end-time={year.endTime}
         data-timezone="Europe/Prague"

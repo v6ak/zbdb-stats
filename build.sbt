@@ -59,6 +59,16 @@ lazy val server = (project in file("server")).settings(
     val allYearsListJsonFile = write(genHtmlDir.value / "years.json.new", PageGenerator.allYearsJsonString)
     yearHtmlFiles :+ allYearsListJsonFile
   }.taskValue,
+  resourceGenerators in Assets += Def.task {
+    for(year <- PageGenerator.Years if year.dataSource.csvDownloadUrl startsWith "https://") yield {
+      val out = genHtmlDir.value / s"${year.year}" / PublicDirName / s"${year.year}.csv"
+      IO.download(
+        new java.net.URL(year.dataSource.csvDownloadUrl),
+        out
+      )
+      out
+    }
+  }.taskValue,
   removeUnversionedAssets := { mappings: Seq[PathMapping] =>
     mappings.filter{case (file, name) => !(name.startsWith("main.") || explicitlyExcludedLibFiles.contains(name))}
   },
