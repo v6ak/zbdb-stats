@@ -32,11 +32,11 @@ object PageGenerator{
   }
 
   val LegacyYears = Seq(
-    2011 -> "http://zbdb.skaut1stredisko.cz/2011/vysledky-16-rocniku-pochodu-z-brna-do-brna/",
-    2012 -> "http://zbdb.skaut1stredisko.cz/2012/vysledky-17-rocniku-pochodu-z-brna-do-brna/",
-    2013 -> "http://zbdb.skaut1stredisko.cz/2013/vysledky-18-rocniku/",
-    2014 -> "http://zbdb.skaut1stredisko.cz/2014/vysledky-19-rocniku/",
-    2015 -> "http://zbdb.skaut1stredisko.cz/2015/vysledky-pochodu-20-rocniku/"
+    2011 -> "https://zbdb.skauting.cz/2011/vysledky-16-rocniku-pochodu-z-brna-do-brna/",
+    2012 -> "https://zbdb.skauting.cz/2012/vysledky-17-rocniku-pochodu-z-brna-do-brna/",
+    2013 -> "https://zbdb.skauting.cz/2013/vysledky-18-rocniku/",
+    2014 -> "https://zbdb.skauting.cz/2014/vysledky-19-rocniku/",
+    2015 -> "https://zbdb.skauting.cz/2015/vysledky-pochodu-20-rocniku/"
   )
 
   val Years = Seq(
