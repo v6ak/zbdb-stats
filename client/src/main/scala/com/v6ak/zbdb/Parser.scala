@@ -97,7 +97,7 @@ object Parser{
   }
 
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
-    val fullDataTable = new CSVReader(new StringReader(csvData.trim)).toIndexedSeq.map(_.toIndexedSeq)
+    val fullDataTable = new CSVReader(new StringReader(csvData.trim)).map(_.clone()).toIndexedSeq.map(_.toIndexedSeq)
     val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize)
     val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>
