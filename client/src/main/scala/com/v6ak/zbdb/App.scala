@@ -26,7 +26,7 @@ object App {
       dom.console.log("startTime", startTime.toString)
       dom.console.log("endTime", endTime.toString)
       dom.console.log("fileName", fileName)
-      val params = dom.window.location.search.substring(1).split("&").map{paramString =>
+      val params = dom.window.location.search.drop(1).split("&").map{paramString =>
         paramString.split("=", 2) match {
           case Array(name, value) => (name, value)
           case Array(name) => (name, "")
