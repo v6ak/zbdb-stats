@@ -3,6 +3,7 @@ package com.v6ak.zbdb
 import com.example.moment.Moment
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
+import com.example.RichMoment._
 
 object BestParticipantData{
   val Empty = BestParticipantData(None, None, None)

@@ -6,10 +6,10 @@
 GET     /statistiky/main.min.js        controllers.Application.mainJs()
 
 # Simulate index.html
-GET     /:year/statistiky/             controllers.Application.yearStats(year: Int)
+GET     /:year/statistiky/             controllers.Application.yearStatsRedirect(year: Int)
 GET     /:year/statistiky              controllers.Application.yearStatsRedirect(year: Int)
 
 # Map static resources from the /public folder to the /URL path
 GET     /statistiky/*file              controllers.Assets.versioned(path="/public", file: Asset)
 # Map year-specific static resources
-GET     /:year/statistiky/*file        controllers.Application.staticFile(year: Int, file)
+GET     /*file                         controllers.Assets.at(path="/public", file)

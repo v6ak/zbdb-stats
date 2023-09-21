@@ -2,6 +2,7 @@ package com.v6ak.zbdb
 
 import com.example.moment.Moment
 import com.v6ak.scalajs.time.TimeInterval
+import com.example.RichMoment._
 
 abstract sealed class PartTimeInfo{
   def endTimeOption: Option[Moment]

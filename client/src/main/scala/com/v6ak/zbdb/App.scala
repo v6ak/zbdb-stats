@@ -4,16 +4,16 @@ import com.example.moment._
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 
-import scala.scalajs.js.{JSApp, JSON}
+import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.JSExport
 import scala.util.{Failure, Success}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
-object App extends JSApp {
+object App {
 
   @JSExport
-  override def main(): Unit = {
+  def main(args: Array[String]): Unit = {
     dom.window.onload = { _: Any =>
       val body = dom.window.document.body
       val fileName = body.getAttribute("data-file")

@@ -34,6 +34,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val plotRenderer = new PlotRenderer(participantTable)
 
   import Renderer._
+  import Bootstrap._
   import participantTable._
   import plotRenderer._
 
@@ -129,7 +130,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
       dom.console.warn(s"It seems that nobody has reached part #$i")
       BestParticipantData.Empty
     }
-    def moreButton(c: String) = button(cls := s"btn btn-default btn-xs dropdown-toggle $c", `type` := "button", "data-toggle".attr := "dropdown")(span(cls:="caret"))//("⠇")
+    def moreButton(c: String) = button(cls := s"btn btn-default btn-xs dropdown-toggle $c", `type` := "button", toggle := "dropdown")(span(cls:="caret"))//("⠇")
     val firstCell = if (i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
       Column.rich(firstCell, TableHeadCell("|=>"))((r: Participant) =>
@@ -265,7 +266,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
       name,
       Seq(row),
       plot.generator,
-      Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", "aria-hidden".attr := "true"))
+      Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", aria.hidden := "true"))
     )(title := name)
   )
 

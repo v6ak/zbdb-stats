@@ -7,17 +7,12 @@ import play.api.libs.json.JsString
 import play.api.mvc._
 import play.twirl.api.Txt
 
-class Application @Inject() ()(implicit environment: Environment) extends Controller {
-
-  def yearStats(year: Int) = Assets.versioned(path = "/public", file = Assets.Asset(s"$year/statistiky/index.html"))
+class Application @Inject() (cc: ControllerComponents)(implicit environment: Environment)
+  extends AbstractController(cc)
+{
 
   def yearStatsRedirect(year: Int) = Action{
-    Redirect(routes.Application.yearStats(year))
-  }
-
-  def staticFile(year: Int, file: String) = {
-    println(s"$year/statistiky/$file")
-    Assets.versioned(path = "/public", file = Assets.Asset(s"$year/statistiky/$file"))
+    Redirect(routes.Assets.at(s"$year/statistiky/index.html"))
   }
 
   def mainJs() = Action {

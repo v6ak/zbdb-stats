@@ -7,8 +7,10 @@ import org.scalajs.dom
 import scala.collection.immutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
+import scala.scalajs.js
+import scala.scalajs.js.annotation._
 
-@js.native object `$` extends js.Object{
+@JSGlobal @js.native object `$` extends js.Object{
   @js.native object jqplot extends js.Object{
     @js.native class LinearAxisRenderer extends js.Object{
       def createTicks(plot: js.Dynamic): Unit = js.native
@@ -148,7 +150,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   private def computeCumulativeMortality(rows: Seq[Participant]) = {
-    val mortalityMap = rows.map(_.partTimes.size).groupBy(identity).mapValues(_.size).map(identity)
+    val mortalityMap = rows.map(_.partTimes.size).groupBy(identity).mapValues(_.size).map(identity).toMap
     val mortalitySeq = (0 to mortalityMap.keys.max).map(mortalityMap.getOrElse(_, 0))
     mortalitySeq.scan(0)(_ + _).tail
   }

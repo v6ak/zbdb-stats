@@ -3,7 +3,6 @@ package com.v6ak.zbdb
 import java.io.StringReader
 
 import com.example.moment._
-import com.github.marklister.collections.io.CSVReader
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
@@ -97,7 +96,9 @@ object Parser{
   }
 
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
-    val fullDataTable = new CSVReader(new StringReader(csvData.trim)).map(_.clone()).toIndexedSeq.map(_.toIndexedSeq)
+    import kantan.csv._
+    import kantan.csv.ops._
+    val fullDataTable: IndexedSeq[IndexedSeq[String]] = csvData.trim.unsafeReadCsv[IndexedSeq, IndexedSeq[String]](rfc)
     val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize)
     val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>

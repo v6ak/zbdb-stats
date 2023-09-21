@@ -5,18 +5,18 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 ## Běh lokálně
 
 1. Nainstaluj si SBT (nebo použij Dockerové prostředí)
-2. activator ~run
+2. `sbt "project server" ~run`
 3. Otevři http://localhost:9000/2016/statistiky/ (případně jiný rok)
 
 ## Přidání ročníku
 
 1. Uprav project/PageGenerator.scala
-2. Pokud běží Activator, restartuj ho nebo použij příkaz reload.
+2. Pokud běží SBT, restartuj ho nebo použij příkaz reload.
 
 ## Export na web
 
 a. Pouze pro Linux/MacOS: `./pack.sh` vygeneruje pack.zip
-b. Kdekoliv: `activator stage` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.
+b. Kdekoliv: `sbt stage` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_sjs${scalaJsVersion}_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.
 
 ## Verze formátu
 
