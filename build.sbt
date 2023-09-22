@@ -140,7 +140,7 @@ lazy val client = (project in file("client")).settings(
   jsDependencies ++= Seq(
     bootstrap / "bootstrap.min.js",
     "org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
-    "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data-2010-2020.js" dependsOn "min/moment.min.js",
+    "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data.js" dependsOn "min/moment.min.js",
     "org.webjars" % "jquery" % "2.1.4" / jqueryName minified "jquery/2.1.4/jquery.min.js",
     ProvidedJS / "jquery.stickytableheaders.js" /*minified "jquery.stickytableheaders.min.js"*/ dependsOn jqueryName,  // Cannot use minified version as it is patched,
     jqPlot / "jquery.jqplot.min.js" dependsOn jqueryName,
