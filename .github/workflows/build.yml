@@ -36,5 +36,33 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
+          name: site-for-verification
+          path: pack.zip
+
+  compare:
+    needs: [build, test-bleeding-edge-java-and-npm]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
           name: site
-          path: pack-for-verification.zip
+          path: ./build
+
+      - name: Download test-bleeding-edge-java-and-npm artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: site-for-verification
+          path: ./verification
+
+      - name: Extract build artifact
+        run: mkdir build/unpacked && unzip -d build/unpacked build/pack.zip
+
+      - name: Extract test-bleeding-edge-java-and-npm artifact
+        run: mkdir verification/unpacked && unzip -d verification/unpacked verification/pack.zip
+
+      - name: Find
+        run: find
+
+      - name: Compare artifacts
+        run: diff --exclude="*.gz" -r build/unpacked verification/unpacked
