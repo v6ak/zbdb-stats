@@ -1,7 +1,5 @@
 package com.v6ak.zbdb
 
-import java.io.StringReader
-
 import com.example.moment._
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
@@ -10,7 +8,7 @@ import org.scalajs.dom
 import scala.collection.immutable
 import scala.scalajs.js
 import scala.util.Try
-import scala.util.matching.Regex
+import com.v6ak.scalajs.regex.JsPattern._
 
 object Parser{
 
@@ -18,14 +16,14 @@ object Parser{
 
   private val StrictMode = true
 
-  private val TrackLengthRegex = """^([0-9]+(?:,[0-9]+)?)\s?(?:km)?$""".r
+  private val TrackLengthRegex = """^([0-9]+(?:,[0-9]+)?)\s?(?:km)?$""".jsr
 
   private def parseTrackLength(s: String) = s match {
     case TrackLengthRegex(tl) => BigDecimal(tl.replace(',', '.'))
     case other => sys.error(s"Unknown track length: $s")
   }
 
-  private val TimeRegexp = """^([0-9]+):([0-9]+)$""".r
+  private val TimeRegexp = """^([0-9]+):([0-9]+)$""".jsr
 
   private def strictCheck(f: => Unit): Unit = {
     if(StrictMode){
@@ -72,7 +70,7 @@ object Parser{
     case e: Throwable => throw CellsParsingException(data, e)
   }
 
-  private val Empty = """^(?:x|X|)$""".r
+  private val Empty = """^(?:x|X|)$""".jsr
 
   private def parseTimeInfo(data: Seq[String], prevTimeOption: Option[Moment], maxHourDelta: Int): Option[PartTimeInfo] = guard(data){
     data match {

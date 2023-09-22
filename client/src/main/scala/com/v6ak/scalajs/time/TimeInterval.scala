@@ -1,5 +1,7 @@
 package com.v6ak.scalajs.time
 
+import com.v6ak.scalajs.regex.JsPattern.wrapString
+
 case class TimeInterval(totalMinutes: Int) extends AnyVal{
   def hours = totalMinutes/60
   def minutes = totalMinutes%60
@@ -8,7 +10,7 @@ case class TimeInterval(totalMinutes: Int) extends AnyVal{
 }
 
 object TimeInterval{
-  private val TimeIntervalRegex = """^([0-9]+):([0-9]+)$""".r
+  private val TimeIntervalRegex = """^([0-9]+):([0-9]+)$""".jsr
 
   def parse(s: String) = s match {
     case TimeIntervalRegex(hs, ms) => TimeInterval(hs.toInt*60 + ms.toInt)
