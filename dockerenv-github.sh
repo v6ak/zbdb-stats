@@ -4,6 +4,8 @@ set -u
 set -e
 set -o pipefail
 
+TAG=${DOCKER_TAG:-conservative}
+
 exec docker run \
   -v "$HOME"/.ivycache:/root/.ivy2 \
   -v "$HOME"/.sbtcache:/root/.sbt \
@@ -12,5 +14,5 @@ exec docker run \
   -v "$HOME"/.ssh/zbdb-id_rsa.pub:/root/.ssh/id_rsa.pub:ro \
   -v "$(pwd)":/project \
   -p 9000:9000 \
-  "$(docker build -q .)" \
+  "$(docker build -q . --target $TAG)" \
   "$@"

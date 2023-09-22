@@ -24,3 +24,17 @@ jobs:
         with:
           name: site
           path: pack.zip
+
+  test-bleeding-edge-java-and-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build image
+        run: docker build . --target bleeding-edge
+      - name: build website
+        run: env DOCKER_TAG=bleeding-edge ./dockerenv-github.sh ./pack.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: site
+          path: pack-for-verification.zip
