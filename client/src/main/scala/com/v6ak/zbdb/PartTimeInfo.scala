@@ -9,6 +9,7 @@ abstract sealed class PartTimeInfo{
   def startTime: Moment
   def durationOption: Option[Int] = endTimeOption.map(_ - startTime)
   def lastTime: Moment
+  def hasEndTime: Boolean = endTimeOption.isDefined
 }
 
 object PartTimeInfo{

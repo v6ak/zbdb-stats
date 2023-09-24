@@ -150,7 +150,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   private def computeCumulativeMortality(rows: Seq[Participant]) = {
-    val mortalityMap = rows.map(_.partTimes.size).groupBy(identity).mapValues(_.size).map(identity).toMap
+    val mortalityMap = rows.map(_.partTimes.count(_.hasEndTime)).groupBy(identity).mapValues(_.size).map(identity).toMap
     val mortalitySeq = (0 to mortalityMap.keys.max).map(mortalityMap.getOrElse(_, 0))
     mortalitySeq.scan(0)(_ + _).tail
   }
