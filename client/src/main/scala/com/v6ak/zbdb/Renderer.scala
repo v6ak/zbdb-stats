@@ -32,6 +32,7 @@ object Renderer{
 final class Renderer private(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) {
 
   private val plotRenderer = new PlotRenderer(participantTable)
+  private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
 
   import Renderer._
   import Bootstrap._
@@ -267,7 +268,17 @@ final class Renderer private(participantTable: ParticipantTable, processingError
       Seq(row),
       plot.generator,
       Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", aria.hidden := "true"))
-    )(title := name)
+    )(title := name),
+    button(
+      `class` := "btn btn-default btn-xs",
+      Seq(span(`class`:=s"glyphicon glyphicon-list", aria.hidden := "true")),
+      onclick := { _: Any =>
+        val (dialog, jqModal, modalBodyId) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
+        dom.document.body.appendChild(dialog)
+        dom.document.getElementById(modalBodyId).appendChild(timeLineRenderer.timeLine(row).render)
+        jqModal.modal(js.Dictionary("keyboard" -> true))
+      }
+    )
   )
 
   private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))

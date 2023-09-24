@@ -2,7 +2,14 @@ package com.v6ak.scalajs.time
 
 import com.v6ak.scalajs.regex.JsPattern.wrapString
 
+import java.math.MathContext
+
 case class TimeInterval(totalMinutes: Int) extends AnyVal{
+  def /(trackLength: BigDecimal): Pace = {
+    val paceSecPerKm = totalMinutes * 60.0 / trackLength
+    Pace(paceSecPerKm.round(MathContext.UNLIMITED).toInt)
+  }
+
   def hours = totalMinutes/60
   def minutes = totalMinutes%60
   def -(other: TimeInterval) = TimeInterval(this.totalMinutes - other.totalMinutes)

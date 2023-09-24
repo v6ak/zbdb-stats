@@ -159,6 +159,44 @@ body{
     padding-left: 5px;
 }
 
+.timeline {
+    margin-bottom: 20px;
+    &, td {
+        border-width: 0;
+    }
+    .timeline-point {
+        .timeline-point-time {
+            text-align: right;
+            padding-left: 10px;
+            padding-right: 10px;
+            border-right: 5px solid blue;
+        }
+    }
+    .timeline-process {
+        .timeline-process-time {
+            border-right: 5px dotted blue;
+        }
+    }
+    .timeline-process.pause {
+        .timeline-process-time {
+            border-right: 5px double blue;
+        }
+    }
+    .timeline-process.gave-up {
+        .timeline-process-time {
+            border-right: 5px double red;
+        }
+    }
+    .timeline-process.finish {
+        .timeline-process-time {
+            border-right: 5px double green;
+        }
+    }
+    .timeline-content {
+        padding-left: 10px;
+    }
+}
+
 @media screen {
     .age{
         display: block;
