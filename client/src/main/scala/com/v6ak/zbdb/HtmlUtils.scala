@@ -27,4 +27,6 @@ object HtmlUtils {
     (dialog, jqModal, modalBodyId)
   }
 
+  @inline def fseq(frags: Frag*): Seq[Frag] = frags
+
 }

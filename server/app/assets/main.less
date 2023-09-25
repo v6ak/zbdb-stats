@@ -159,13 +159,22 @@ body{
     padding-left: 5px;
 }
 
+.legend {
+    float: right;
+    border: 2px solid black;
+    padding: 10px;
+}
+
 .timeline {
     margin-bottom: 20px;
     &, td {
         border-width: 0;
     }
+    .timeline-duration {
+        padding-left: 5px
+    }
     .timeline-point {
-        .timeline-point-time {
+        .timeline-time {
             text-align: right;
             padding-left: 10px;
             padding-right: 10px;
@@ -173,23 +182,31 @@ body{
         }
     }
     .timeline-process {
-        .timeline-process-time {
+        .timeline-time {
             border-right: 5px dotted blue;
         }
     }
     .timeline-process.pause {
-        .timeline-process-time {
-            border-right: 5px double blue;
+        .timeline-time {
+            border-right: 5px dotted gray;
         }
     }
-    .timeline-process.gave-up {
-        .timeline-process-time {
-            border-right: 5px double red;
+    .timeline-end.gave-up {
+        .timeline-time {
+            border-right: 5px solid red;
         }
     }
-    .timeline-process.finish {
-        .timeline-process-time {
-            border-right: 5px double green;
+    .timeline-point.finish {
+        .timeline-time, .timeline-content {
+            padding-top: 20px;
+        }
+        .timeline-time {
+            border-right: 5px solid green;
+        }
+    }
+    .timeline-point.start {
+        .timeline-time, .timeline-content {
+            padding-bottom: 20px;
         }
     }
     .timeline-content {
