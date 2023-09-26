@@ -167,6 +167,8 @@ body{
 
 .timeline {
     margin-bottom: 20px;
+
+    // We recomment even numbers. Otherwise, the centering looks quite odd.
     @thin-line: 2px;
     @thick-line: 6px;
 
@@ -204,6 +206,7 @@ body{
     .timeline-duration {
         padding-left: 5px
     }
+
     .timeline-point {
 
         &.arrival {
@@ -228,20 +231,7 @@ body{
         .with-bullet(red, red, 0, solid);
     }
     .timeline-point.finish {
-        .timeline-time, .timeline-content {
-            padding-top: 20px;
-        }
-        .with-bullet(green, green, @thick-line, solid, 20px);
-        .timeline-time:before{
-            // silly hack that covers the end of the line
-            content: "";
-            width: 7px;
-            height: 30px;
-            background-color: white;
-            position: absolute;
-            top: 27px;
-            right: -7px;
-        }
+        .with-bullet(green, green, 0, solid);
     }
     .timeline-point.start {
         .timeline-time, .timeline-content {

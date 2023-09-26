@@ -55,6 +55,13 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(`class` := "timeline-content", content),
     )
 
+    private def empty() = tr(
+      `class` := s"timeline-process",
+      td(`class` := "timeline-time")(br()),
+      td(`class` := "timeline-duration"),
+      td(`class` := "timeline-content"),
+    )
+
     private def end(content: Frag, className: String = "") = tr(
       `class` := s"timeline-end $className",
       td(`class` := "timeline-time"),
@@ -145,10 +152,13 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
               duration = intervalTime,
             ),
             if (isFinish)
-              finish(
-                endTime,
-                fseq(s"Cíl: ${partMeta.place}", cumLen)
-                // TODO: stats
+              fseq(
+                empty(),
+                finish(
+                  endTime,
+                  fseq(s"Cíl: ${partMeta.place}", cumLen)
+                  // TODO: stats
+                )
               )
             else
               timePoint(
