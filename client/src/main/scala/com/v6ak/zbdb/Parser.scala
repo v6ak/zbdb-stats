@@ -104,7 +104,7 @@ object Parser{
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
     val parts = (header1 lazyZip header2 lazyZip header3).toIndexedSeq.
-      drop(3+formatVersion.nameFormat.size).  // skip participant info
+      drop(2+formatVersion.nameFormat.size).  // skip participant info
       dropRight(4).  // skip final columns like total time and order
       grouped(3).  // all parts are Seq(start, time, finish)
       map(parseHeaderPart).  // parse it
@@ -154,9 +154,13 @@ object Parser{
   private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
     val Seq(num, participantDataAfterNum@_*) = participantData
     val (firstName, lastName, nick, participantDataAfterName) = formatVersion.nameFormat.parse(participantDataAfterNum)
-    val Seq(genderString, ageString, other@_*) = participantDataAfterName
-    if ((formatVersion.ageType == AgeType.No) && (ageString != "")) {
-      sys.error("You seem to have left some data in age column. Clean it first, please.")
+    val (genderString, ageString, other) = formatVersion.ageType match {
+      case AgeType.No =>
+        val Seq(genderString, other@_*) = participantDataAfterName
+        (genderString, "", other)
+      case _ =>
+        val Seq(genderString, ageString, other@_*) = participantDataAfterName
+        (genderString, ageString, other)
     }
     val timesUnparsed = other.dropRight(4).grouped(3).toIndexedSeq
     val last3 = other.takeRight(4)

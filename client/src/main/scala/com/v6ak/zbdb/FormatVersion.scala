@@ -67,9 +67,8 @@ object FormatVersion{
 
   val Versions: Map[Int, FormatVersion] = Seq(
     FormatVersion(2015, ageType = AgeType.No, tail = Tail.Constant(2), headSize = 1, nameFormat = NameFormat.Split),
-    FormatVersion(2016, ageType = AgeType.Category, tail = Tail.EmptyLine, headSize = 1, nameFormat = NameFormat.Split),
-    FormatVersion(2017, ageType = AgeType.BirthYear, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single),
-    FormatVersion(2021, ageType = AgeType.Category, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single)
+    FormatVersion(2016, ageType = AgeType.No, tail = Tail.EmptyLine, headSize = 1, nameFormat = NameFormat.Split),
+    FormatVersion(2017, ageType = AgeType.No, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single),
   ).map(fv => fv.versionNumber -> fv).toMap
 
 }

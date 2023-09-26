@@ -76,17 +76,17 @@ object PageGenerator{
       dataSource = NewGoogleSpreadsheetDataSource("2PACX-1vTZSX8UVnXyoF8PeiQH-L1RvoBogXw8WlXn7oCkogWG2QPP2ZDc4PVNy3Lz6FDyzXqL_Ep78cZgSiCQ")
     ),
     Year(
-      year = 2021, formatVersion = 2021,
+      year = 2021, formatVersion = 2017,
       startTime = "2021-09-17 17:05", endTime = "2021-09-18 20:05",
       dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vSo5X1l36As8yB9-XRquV9UGIAcptWSzm7P7bEIoj93WVcEhwYumOKOG6h3O147IASNhAJrVwd-CKDq")
     ),
     Year(
-      year = 2022, formatVersion = 2021,
+      year = 2022, formatVersion = 2017,
       startTime = "2022-09-16 17:30", endTime = "2022-09-17 20:00",
       dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vQEmRVRc1DBm9PZoRU-4oKu0p6gTWqv6lYbvvrDwGT-umiXtB4Xy13NEcFeanZ37PTw2UrN8TYaHK15")
     ),
     Year(
-      year = 2023, formatVersion = 2021,
+      year = 2023, formatVersion = 2017,
       startTime = "2023-09-15 17:30", endTime = "2023-09-16 18:10",
       dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vTzrUrHEarwmtqap2WZQRMJvO7UVy6rGln2xuZv5kWa_slIM6c_-p7BasSUkipAJs86iIOwWDtJlrlb")
     ),
