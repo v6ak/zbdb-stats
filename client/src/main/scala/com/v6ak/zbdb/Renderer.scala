@@ -104,10 +104,8 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
     Column(TableHeadCell(yearSelection), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
-    Column[Participant](TableHeadCell(""), TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
-  ) ++ Seq[Option[Column[Participant]]](
-    if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
-  ).flatten ++ Seq(
+    Column[Participant](TableHeadCell(""), TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender))))(className = "category")
+  ) ++ Seq(
     Column.rich(TableHeadCell("", rowCount = 2))( (p: Participant) =>
       fseq(timelineButton(p)(`class` := "btn-xl"))
     )(className = "without-details-only")

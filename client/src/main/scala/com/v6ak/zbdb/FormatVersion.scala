@@ -36,14 +36,8 @@ object NameFormat {
   }
 }
 
-final case class FormatVersion private (versionNumber: Int, ageType: AgeType, tail: Tail, headSize: Int, nameFormat: NameFormat)
+final case class FormatVersion private (versionNumber: Int, tail: Tail, headSize: Int, nameFormat: NameFormat)
 
-abstract sealed class AgeType {}
-object AgeType {
-  case object BirthYear extends AgeType
-  case object No extends AgeType
-  case object Category extends AgeType
-}
 
 abstract sealed class Tail{
   def split(data: IndexedSeq[IndexedSeq[String]]): (IndexedSeq[IndexedSeq[String]], IndexedSeq[IndexedSeq[String]])
@@ -66,9 +60,9 @@ object Tail{
 object FormatVersion{
 
   val Versions: Map[Int, FormatVersion] = Seq(
-    FormatVersion(2015, ageType = AgeType.No, tail = Tail.Constant(2), headSize = 1, nameFormat = NameFormat.Split),
-    FormatVersion(2016, ageType = AgeType.No, tail = Tail.EmptyLine, headSize = 1, nameFormat = NameFormat.Split),
-    FormatVersion(2017, ageType = AgeType.No, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single),
+    FormatVersion(2015, tail = Tail.Constant(2), headSize = 1, nameFormat = NameFormat.Split),
+    FormatVersion(2016, tail = Tail.EmptyLine, headSize = 1, nameFormat = NameFormat.Split),
+    FormatVersion(2017, tail = Tail.EmptyLine, headSize = 2, nameFormat = NameFormat.Single),
   ).map(fv => fv.versionNumber -> fv).toMap
 
 }
