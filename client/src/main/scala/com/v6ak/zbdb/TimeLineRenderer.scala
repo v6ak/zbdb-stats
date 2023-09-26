@@ -41,6 +41,9 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(),
       td(`class` := "timeline-content", content),
     )
+    private def arrival(time: Moment, content: Frag) = timePoint(time, content, className = "arrival")
+    private def departure(time: Moment, content: Frag, start: Boolean) =
+      timePoint(time, content, className = if(start) "departure start" else "departure")
 
     private def process(content: Frag, duration: TimeInterval, durationIcon: String, className: String = "") = tr(
       `class` := s"timeline-process $className",
@@ -108,8 +111,9 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
     private def legendTable = {
       table(
         `class` := "timeline",
+        departure(moment("2016-01-20 10:55"), "odchod v 10:55", start = false),
         walk("chůze trvající 4:20", TimeInterval(260)),
-        timePoint(moment("2016-01-20 15:15"), "příchod/odchod v 15:15"),
+        arrival(moment("2016-01-20 15:15"), "příchod v 15:15"),
         pause("pauza trvající 10 minut", TimeInterval(10)),
         gaveUp("konec před dosažením cíle"),
         finish(moment("2016-01-20 16:20"), "Dosažení cíle v 16:20"),
@@ -129,14 +133,14 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       def cumLen: Frag = fseq(" (celkem ", strong(formatLength(partMeta.cumulativeTrackLength)), ")")
 
       Seq(
-        timePoint(
+        departure(
           part.startTime,
           previousPartMetaOption.fold("Start")(pm =>
             verbose(s"${gender.inflect("vyšla", "vyšel")} ${
               s"z $pos. stanoviště ${pm.place}"
             }")
           ),
-          className = if (previousPartMetaOption.isEmpty) "start departure" else "departure"
+          start = previousPartMetaOption.isEmpty
         ),
       ) ++ (part match {
         case PartTimeInfo.Finished(_startTime, endTime, intervalTime) =>
@@ -161,10 +165,9 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
                 )
               )
             else
-              timePoint(
+              arrival(
                 endTime,
                 verbose(s"$langArrived na ${pos + 1}. stanoviště ${partMeta.place}"),
-                className = "arrival"
               ),
             nextPartOption.fold[Frag](
               if (isFinish) ""
