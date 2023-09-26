@@ -129,7 +129,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
               s"z $pos. stanoviště ${pm.place}"
             }")
           ),
-          className = if (previousPartMetaOption.isEmpty) "start" else ""
+          className = if (previousPartMetaOption.isEmpty) "start departure" else "departure"
         ),
       ) ++ (part match {
         case PartTimeInfo.Finished(_startTime, endTime, intervalTime) =>
@@ -153,7 +153,8 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
             else
               timePoint(
                 endTime,
-                verbose(s"$langArrived na ${pos + 1}. stanoviště ${partMeta.place}")
+                verbose(s"$langArrived na ${pos + 1}. stanoviště ${partMeta.place}"),
+                className = "arrival"
               ),
             nextPartOption.fold[Frag](
               if (isFinish) ""

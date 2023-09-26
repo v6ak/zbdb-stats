@@ -167,6 +167,37 @@ body{
 
 .timeline {
     margin-bottom: 20px;
+    @thin-line: 2px;
+    @thick-line: 6px;
+
+    .with-bullet(@color, @lineColor, @thickness, @style, @top: 0px) {
+        .timeline-time {
+            @radius: 7px;
+            border-right: @thickness @style @lineColor;
+            &:after {
+                content: "";
+                display: block;
+                position: absolute;
+                top: @top;
+                right: -@radius - @thickness/2;
+                width: 2*@radius;
+                height: 2*@radius;
+                background-color: @color;
+                border-radius: @radius;
+            }
+        }
+        .timeline-point+(&) .timeline-time {
+            border-right: @thickness @style @color;
+        }
+    }
+    .just-line(@color, @thickness, @style) {
+        .timeline-time {
+            border-right: @thickness @style @color;
+        }
+    }
+    .timeline-time {
+        position: relative;
+    }
     &, td {
         border-width: 0;
     }
@@ -174,34 +205,42 @@ body{
         padding-left: 5px
     }
     .timeline-point {
+
+        &.arrival {
+            .with-bullet(blue, gray, @thin-line, solid);
+        }
+        &.departure {
+            .with-bullet(blue, blue, @thick-line, solid);
+        }
         .timeline-time {
             text-align: right;
             padding-left: 10px;
             padding-right: 10px;
-            border-right: 5px solid blue;
         }
     }
     .timeline-process {
-        .timeline-time {
-            border-right: 5px dotted blue;
-        }
+        .just-line(blue, @thick-line, solid);
     }
     .timeline-process.pause {
-        .timeline-time {
-            border-right: 5px dotted gray;
-        }
+        .just-line(gray, @thin-line, solid);
     }
     .timeline-end.gave-up {
-        .timeline-time {
-            border-right: 5px solid red;
-        }
+        .with-bullet(red, red, 0, solid);
     }
     .timeline-point.finish {
         .timeline-time, .timeline-content {
             padding-top: 20px;
         }
-        .timeline-time {
-            border-right: 5px solid green;
+        .with-bullet(green, green, @thick-line, solid, 20px);
+        .timeline-time:before{
+            // silly hack that covers the end of the line
+            content: "";
+            width: 7px;
+            height: 30px;
+            background-color: white;
+            position: absolute;
+            top: 27px;
+            right: -7px;
         }
     }
     .timeline-point.start {
