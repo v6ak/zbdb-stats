@@ -92,7 +92,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         ),
         // TODO: buttons for swithching clock/relTime and pace/speed
         table(
-          `class` := "timeline",
+          `class` := "timeline timeline-real",
           (
             prevParts lazyZip
               parts lazyZip
@@ -110,7 +110,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
 
     private def legendTable = {
       table(
-        `class` := "timeline",
+        `class` := "timeline timeline-legend",
         departure(moment("2016-01-20 10:55"), "odchod v 10:55", start = false),
         walk("chůze trvající 4:20", TimeInterval(260)),
         arrival(moment("2016-01-20 15:15"), "příchod v 15:15"),
