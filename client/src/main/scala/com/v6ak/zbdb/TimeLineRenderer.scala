@@ -6,6 +6,7 @@ import com.v6ak.scalajs.time.TimeInterval
 import HtmlUtils._
 import TextUtils._
 import Bootstrap._
+import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
 import scalatags.JsDom.all.{i => iTag, name => _, _}
 import scala.scalajs.js
@@ -105,6 +106,16 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         option(value := cls, if(cls == switchesState(switchName)) selected := true else "")(name)
     )
 
+    private def csNumInflection[T](num: Int)(one: T, few: T, many: T) = num match {
+      case 1 => one
+      case n if n < 5 => few
+      case _ => many
+    }
+    private def peopleList(symbol: String, others: Seq[Participant]) = s"$symbol${others.size} ${csNumInflection(others.size)("človek", "lidi", "lidí")}"
+    private def togetherWith(others: Seq[Participant]) = peopleList("+", others)
+    private def outran(others: Seq[Participant]) = peopleList("+", others)
+    private def wasOutran(others: Seq[Participant]) = peopleList("-", others)
+
     def timeLine = {
       val prevParts = Seq(None) ++ parts.map(Some(_))
       val nextPartInfos: Seq[Option[PartTimeInfo]] = row.partTimes.drop(1).map(Some(_)) ++ Seq(None)
@@ -167,24 +178,28 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       Seq(
         departure(
           part.startTime,
-          previousPartMetaOption.fold("Start")(pm =>
-            verbose(s"${gender.inflect("vyšla", "vyšel")} ${
-              s"z $pos. stanoviště ${pm.place}"
-            }")
+          fseq(
+            previousPartMetaOption.fold[Frag](fseq("Start", br()))(_ => ""),
+            togetherWith(filterOthers(pos, row)((me, other) => me.startTime isSame other.startTime))
           ),
           start = previousPartMetaOption.isEmpty
         ),
       ) ++ (part match {
         case PartTimeInfo.Finished(_startTime, endTime, intervalTime) =>
           val isFinish = pos == parts.size - 1
+          //noinspection ConvertibleToMethodValue
+          val arrivalWith = togetherWith(filterOthers(pos, row)((me, other) =>
+            other.endTimeOption.exists(endTime isSame _)
+          ))
           fseq(
             walk(
               fseq(
-                strong(formatLength(partMeta.trackLength)), br(),
+                strong(formatLength(partMeta.trackLength)),
                 span(`class` := "speed")(strong(formatSpeed(partMeta.trackLength * 60 / intervalTime.totalMinutes))),
-                " ",
                 span(`class` := "pace")(strong(f"${intervalTime / partMeta.trackLength} / km")),
-              ),
+                outran(filterOthers(pos, row)((me, other) => me outran other)),
+                wasOutran(filterOthers(pos, row)((me, other) => other outran me)),
+              ).map(fseq(_, " ")),
               duration = intervalTime,
             ),
             if (isFinish)
@@ -192,14 +207,14 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
                 empty(),
                 finish(
                   endTime,
-                  fseq(s"Cíl: ${partMeta.place}", cumLen)
+                  fseq(s"Cíl: ${partMeta.place}", cumLen, arrivalWith)
                   // TODO: stats
                 )
               )
             else
               arrival(
                 endTime,
-                verbose(s"$langArrived na ${pos + 1}. stanoviště ${partMeta.place}"),
+                arrivalWith,
               ),
             nextPartOption.fold[Frag](
               if (isFinish) ""

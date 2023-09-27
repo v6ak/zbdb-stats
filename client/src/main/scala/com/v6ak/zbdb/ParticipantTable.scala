@@ -2,6 +2,7 @@ package com.v6ak.zbdb
 
 import com.example.moment.Moment
 import com.v6ak.scalajs.time.TimeInterval.TimeIntervalOrdering
+import com.v6ak.zbdb.PartTimeInfo.Finished
 
 object ParticipantTable {
 }
@@ -45,5 +46,20 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
       participant.partTimes.map(Some(_)), None
     ).map{(fastestParticipantSoFar, current) => fastestParticipantSoFar.merge(current)}
   }
+
+  def partData(row: Participant, pos: Int) = row.partTimes.lift(pos)
+
+  def finishedPartData(row: Participant, pos: Int): Option[PartTimeInfo.Finished] = partData(row, pos).collect {
+    case x: PartTimeInfo.Finished => x
+  }
+
+  def filterOthers(pos: Int, current: Participant)(f: (PartTimeInfo, PartTimeInfo) => Boolean) = {
+    val currentPartInfo = current.partTimes(pos)
+    data.filter { p =>
+      (p != current) &&
+        partData(p, pos).exists(f(currentPartInfo, _))
+    }
+  }
+
 
 }

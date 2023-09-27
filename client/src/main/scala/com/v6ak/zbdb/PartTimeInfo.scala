@@ -10,6 +10,11 @@ abstract sealed class PartTimeInfo{
   def durationOption: Option[Int] = endTimeOption.map(_ - startTime)
   def lastTime: Moment
   def hasEndTime: Boolean = endTimeOption.isDefined
+  def outran(other: PartTimeInfo.Finished): Boolean
+  def outran(other: PartTimeInfo): Boolean = other match {
+    case of: PartTimeInfo.Finished => outran(of)
+    case _ => false
+  }
 }
 
 object PartTimeInfo{
@@ -26,5 +31,7 @@ object PartTimeInfo{
     override def endTimeOption: Option[Moment] = None
 
     override def lastTime: Moment = startTime
+
+    override def outran(other: Finished): Boolean = false
   }
 }
