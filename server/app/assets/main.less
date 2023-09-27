@@ -246,7 +246,22 @@ body{
             display: none;
         }
     }
+
+    &.timeline-real {
+        .with-relative-time & .clock-time,
+        .with-clock-time & .relative-time,
+        .with-pace & .speed,
+        .with-speed & .pace,
+        {
+            display: none;
+        }
+    }
 }
+
+.timeline-switches {
+    margin-bottom: 20px;
+}
+
 
 @media screen {
     .age{

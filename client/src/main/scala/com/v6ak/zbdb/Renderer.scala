@@ -276,6 +276,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         val (dialog, jqModal, modalBodyId) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
         dom.document.getElementById(modalBodyId).appendChild(timeLineRenderer.timeLine(row).render)
+        timeLineRenderer.bodyClasses.foreach(dom.document.body.classList.add)
         jqModal.modal(js.Dictionary("keyboard" -> true))
       }
     )

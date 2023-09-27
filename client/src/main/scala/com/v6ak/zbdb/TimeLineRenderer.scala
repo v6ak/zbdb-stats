@@ -9,6 +9,7 @@ import Bootstrap._
 import org.scalajs.dom
 import scalatags.JsDom.all.{i => iTag, name => _, _}
 import scala.scalajs.js
+import org.scalajs.dom.raw._
 
 
 final case class FullPartInfo(
@@ -21,6 +22,13 @@ final case class FullPartInfo(
 final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: PlotRenderer) {
   import participantTable._
   import plotRenderer.{Plots, initializePlot}
+
+  val switchesState = collection.mutable.Map[String, String](
+    "speed" -> "with-speed",
+    "time" -> "with-clock-time",
+  )
+
+  def bodyClasses = switchesState.values
 
   val brief = true
 
@@ -82,6 +90,21 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
 
     private def finish(time: Moment, content: Frag) = timePoint(time, content, className = "finish")
 
+    private def classSelect(switchName: String)(items: (String, String)*) = select(
+      onchange := { e: Event =>
+        val el = e.currentTarget.asInstanceOf[HTMLSelectElement]
+        val newClass = el.value
+        val oldClasses = items.map(_._1).toSet - newClass
+        val classList = dom.document.body.classList
+        classList.add(newClass)
+        oldClasses.foreach(classList.remove)
+        switchesState(switchName) = newClass
+      }
+    )(
+      for ( (cls, name) <- items) yield
+        option(value := cls, if(cls == switchesState(switchName)) selected := true else "")(name)
+    )
+
     def timeLine = {
       val prevParts = Seq(None) ++ parts.map(Some(_))
       val nextPartInfos: Seq[Option[PartTimeInfo]] = row.partTimes.drop(1).map(Some(_)) ++ Seq(None)
@@ -90,7 +113,16 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
           h2("Legenda"),
           legendTable,
         ),
-        // TODO: buttons for swithching clock/relTime and pace/speed
+        div(`class` := "timeline-switches")(
+          classSelect("time")(
+            "with-relative-time" -> "Čas od startu",
+            "with-clock-time" -> "Skutečný čas",
+          ),
+          classSelect("speed")(
+            "with-speed" -> "rychlost (km/h)",
+            "with-pace" -> "tempo (mm:ss / km)",
+          )
+        ),
         table(
           `class` := "timeline timeline-real",
           (
