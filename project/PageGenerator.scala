@@ -134,13 +134,7 @@ object PageGenerator{
         </div></div>
         <div class="container hidden-print">
           <h2>Když něco nefunguje…</h2>
-          <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč. Nepodporuju ale:</p>
-          <ul>
-            <li>Archaické verze prohlížečů</li>
-            <li>Malý displej – není úplně jednoduché to udělat na malém displeji dobře použitelné</li>
-            <li>Prohlížeč Opera Mini – dost specifický prohlížeč vhodný spíše na jednoduché stránky</li>
-            <li>Obskurní prohlížeče jako Lynx apod. :)</li>
-          </ul>
+          <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč.</p>
           <p>Zdrojové kódy jsou <a href="https://github.com/v6ak/zbdb-stats">na GitHubu</a>.</p>
         </div>
       </body>
