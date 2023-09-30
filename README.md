@@ -16,7 +16,7 @@ Kompiluje se do statického JS, běží celé v prohlížeči. Troška informac�
 ## Export na web
 
 a. Pouze pro Linux/MacOS: `./pack.sh` vygeneruje pack.zip
-b. Kdekoliv: `sbt stage` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_sjs${scalaJsVersion}_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.
+b. Kdekoliv: `sbt dist` vygeneruje soubor server/target/scala-$scalaVersion/zbdb-stats-server_sjs${scalaJsVersion}_$scalaVersion-$version-web-assets.jar, ve kterém je adresář public.
 
 ## Verze formátu
 
