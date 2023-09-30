@@ -33,6 +33,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private val plotRenderer = new PlotRenderer(participantTable)
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
+  private val switches = new ClassSwitches(Map("details" -> "with-details"))
 
   import Renderer._
   import Bootstrap._
@@ -91,14 +92,18 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
-    tableModifiers = Seq(`class` := "table table-condensed table-hover"),
+    tableModifiers = Seq(`class` := "table table-condensed table-hover participants-table"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
     Column(TableHeadCell(yearSelection, colCount = 2), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
     Column[Participant](TableHeadCell.Empty, TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
-  ).flatten ++ parts.zipWithIndex.flatMap{case (part, i) =>
+  ).flatten ++ Seq(
+    Column.rich(TableHeadCell("", rowCount = 2))( (p: Participant) =>
+      fseq(timelineButton(p)(`class` := "btn-xl"))
+    )(className = "without-details-only")
+  ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
     Column(
@@ -138,7 +143,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         partData(r).fold[Seq[Modifier]](Seq("–"))(pti =>
           Seq[Modifier](pti.startTime.timeOnlyDiv) ++ conditionalFirstBadge(best.hasBestStartTime(pti))
         )
-      )(className = "col-start"),
+      )(className = "col-start detailed-only"),
       Column.rich(
         TableHeadCell(span(`class` := "track-length", formatLength(part.trackLength))),
         TableHeadCell(s"čas")
@@ -190,7 +195,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
           )
           Seq(timeDiv) ++ conditionalFirstBadge(best.hasBestDuration(pti)) ++ detailsExpandable
         })
-      )(className = "col-time"),
+      )(className = "col-time detailed-only"),
       Column.rich(
         TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
         TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i + 1} – ${part.place}", "=>|"))
@@ -198,7 +203,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–")) { pti =>
           Seq(pti.endTime.timeOnlyDiv) ++ conditionalFirstBadge(best.hasBestEndTime(pti))
         }
-      }(className = "col-end")
+      }(className = "col-end detailed-only")
     )
   }
 
@@ -259,19 +264,14 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     jqModal.modal(js.Dictionary("keyboard" -> true))
   })
 
-  private def chartButtons(row: Participant) = Seq[Frag](
-    for{
-      plot <- Plots
-      name = s"Graf ${plot.nameGenitive} pro ${row.fullNameWithNick}"
-    } yield chartButton(
-      name,
-      Seq(row),
-      plot.generator,
-      Seq(span(`class`:=s"glyphicon glyphicon-${plot.glyphiconName}", aria.hidden := "true"))
-    )(title := name),
+  private def chartButtons(row: Participant) = span(cls := "detailed-only")(
+    timelineButton(row)(`class` := "btn-xs")
+  )
+
+  private def timelineButton(row: Participant) =
     button(
-      `class` := "btn btn-default btn-xs",
-      Seq(span(`class`:=s"glyphicon glyphicon-list", aria.hidden := "true")),
+      `class` := "btn btn-default",
+      Seq(span(`class` := s"glyphicon glyphicon-list", aria.hidden := "true")),
       onclick := { _: Any =>
         val (dialog, jqModal, modalBodyId) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
@@ -280,7 +280,6 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         jqModal.modal(js.Dictionary("keyboard" -> true))
       }
     )
-  )
 
   private def showCells(cells: Seq[String]): Frag = addSeparators[Frag](", ")(cells.map(c => code(c)))
 
@@ -294,6 +293,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private def initialize(): Unit = {
     showBar = false
+    switches.values.foreach(dom.document.body.classList.add)
     yearLinksOption match {
       case Some(yearLinks) =>
         if(!yearLinks.map(_._1).contains(year)){
@@ -321,7 +321,16 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         ).render
       )
     }
-    content.appendChild(globalStats)
+    content.appendChild(
+      div(`class` := "container")(
+        h2("Grafy"),
+        globalStats,
+        h2("Výsledky"),
+        switches.checkbox("details", "Ukázat stručnou tabulku")(
+          "without-details", "with-details"
+        ),
+      ).render
+    )
     content.appendChild(tableElement)
     content.appendChild(barElement)
     dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
