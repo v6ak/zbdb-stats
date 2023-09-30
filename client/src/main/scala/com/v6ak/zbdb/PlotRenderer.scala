@@ -307,7 +307,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
 
   private def generatePausesPlotData(rows: Seq[Participant]) = {
     val data = rows.map{p =>
-      PlotLine(row = p, label = p.fullName, points = js.Array((p.pauses, parts).zipped.map((pause, part) => js.Array(part.cumulativeTrackLength.toDouble, pause/1000/60)): _*))
+      PlotLine(row = p, label = p.fullName, points = js.Array((p.pauseTimes, parts).zipped.map((pause, part) => js.Array(part.cumulativeTrackLength.toDouble, pause/1000/60)): _*))
     }
     dom.console.log("rows.head.pauses = " + rows.head.pauses.toIndexedSeq.toString)
     val series = js.Array(data.map(_.seriesOptions): _*)

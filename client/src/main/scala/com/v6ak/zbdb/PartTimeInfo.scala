@@ -10,16 +10,16 @@ abstract sealed class PartTimeInfo{
   def durationOption: Option[Int] = endTimeOption.map(_ - startTime)
   def lastTime: Moment
   def hasEndTime: Boolean = endTimeOption.isDefined
-  def outran(other: PartTimeInfo.Finished): Boolean
-  def outran(other: PartTimeInfo): Boolean = other match {
-    case of: PartTimeInfo.Finished => outran(of)
+  def overtook(other: PartTimeInfo.Finished): Boolean
+  def overtook(other: PartTimeInfo): Boolean = other match {
+    case of: PartTimeInfo.Finished => overtook(of)
     case _ => false
   }
 }
 
 object PartTimeInfo{
   final case class Finished(startTime: Moment, endTime: Moment, intervalTime: TimeInterval) extends PartTimeInfo {
-    def outran(other: Finished): Boolean = this.startTime >= other.startTime && this.endTime < other.endTime
+    def overtook(other: Finished): Boolean = this.startTime >= other.startTime && this.endTime < other.endTime
 
     def crosses(other: Finished): Boolean = ((this.startTime >= other.startTime) && (this.endTime <= other.endTime)) || ((this.startTime <= other.startTime) && (this.endTime >= other.endTime))
 
@@ -32,6 +32,6 @@ object PartTimeInfo{
 
     override def lastTime: Moment = startTime
 
-    override def outran(other: Finished): Boolean = false
+    override def overtook(other: Finished): Boolean = false
   }
 }

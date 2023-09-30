@@ -179,6 +179,8 @@ body{
         .timeline-time {
             @radius: 7px;
             border-right: @thickness @style @lineColor;
+            // padding should be adjusted according to the border
+            padding-right: 10px - @thickness / 2;
             &:after {
                 content: "";
                 display: block;
@@ -191,13 +193,12 @@ body{
                 border-radius: @radius;
             }
         }
-        .timeline-point+(&) .timeline-time {
-            border-right: @thickness @style @color;
-        }
     }
     .just-line(@color, @thickness, @style) {
         .timeline-time {
             border-right: @thickness @style @color;
+            // padding should be adjusted according to the border
+            padding-right: 10px - @thickness / 2;
         }
     }
     .timeline-time {
@@ -245,6 +246,10 @@ body{
         }
     }
 
+    .without-overtaking & .people-list-expand {
+        display: none;
+    }
+
     &.timeline-real {
         .with-relative-time & .clock-time,
         .with-clock-time & .relative-time,
@@ -254,6 +259,42 @@ body{
             display: none;
         }
     }
+
+    .people-list-expand {
+        min-width: 43px;
+    }
+
+    .checkpoint {
+        @size: 25px;
+        background-color: black;
+        color: white;
+        min-width: @size;
+        min-height: @size;
+        border-radius: @size/2;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        padding-top: 4px;
+    }
+
+    .finish .checkpoint {
+        border-radius: 0;
+        @size: 3px;
+    }
+    .start .checkpoint {
+        border-radius: 0;
+        border: 18px solid transparent;
+        border-top-color: black;
+        background-color: transparent;
+        border-bottom-width: 0;
+        margin-top: 5px;
+        min-height: auto;
+    }
+
+    .people-list-dropdown {
+        display: inline-block;
+    }
+
 }
 
 .timeline-switches {
@@ -277,6 +318,12 @@ body{
         }
         .more-button-placeholder {
             visibility: hidden;
+        }
+    }
+
+    .people-list-dropdown {
+        .dropdown-menu{
+            width: 300px;
         }
     }
 }

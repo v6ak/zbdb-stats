@@ -175,8 +175,8 @@ final class Renderer private(participantTable: ParticipantTable, processingError
                   val details: Frag = Seq(
                     compList("Startoval(a) zároveň s", select((me, other) => me.startTime isSame other.startTime)),
                     compList("Dorazil(a) zároveň s", select((me, other) => me.endTime isSame other.endTime)),
-                    compList("Předběhl(a)", select((me, other) => me outran other)),
-                    compList("Byl(a) předběhnuta", select((me, other) => other outran me))
+                    compList("Předběhl(a)", select((me, other) => me overtook other)),
+                    compList("Byl(a) předběhnuta", select((me, other) => other overtook me))
                   )
                   val detailsRendered = details.render
                   while (popup.hasChildNodes()) {

@@ -140,7 +140,7 @@ object Parser{
             cumulativeTrackLength = parseTrackLength(cumulativeTrackLengthString)
           )
         } catch {
-          case e =>
+          case e: Throwable =>
             throw new RuntimeException(s"error when parsing header: $header", e)
         }
       case unmatchedHeader =>

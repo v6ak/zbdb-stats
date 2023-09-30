@@ -29,4 +29,6 @@ object HtmlUtils {
 
   @inline def fseq(frags: Frag*): Seq[Frag] = frags
 
+  def spaceSeparated(values: Frag*): Frag = values.map(fseq(_, " "))
+
 }

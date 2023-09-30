@@ -1,8 +1,16 @@
 package com.v6ak.zbdb
 
 import com.example.moment.Moment
+import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.scalajs.time.TimeInterval.TimeIntervalOrdering
-import com.v6ak.zbdb.PartTimeInfo.Finished
+import scala.language.implicitConversions
+
+final case class FullPartInfo(
+  previousPartMetaOption: Option[Part],
+  partMeta: Part,
+  part: PartTimeInfo,
+  nextPartOption: Option[PartTimeInfo],
+)
 
 object ParticipantTable {
 }
@@ -36,7 +44,7 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
     val maxSize = a.size max b.size
     val ea = expandSeq(a, emptyA, maxSize)
     val eb = expandSeq(b, emptyB, maxSize)
-    (ea, eb).zipped
+    ea lazyZip eb
   }
 
   val firsts = data.foldLeft(Seq.empty[BestParticipantData]){ (fastestSoFar, participant) =>
@@ -48,6 +56,7 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
   }
 
   def partData(row: Participant, pos: Int) = row.partTimes.lift(pos)
+  def pauseData(row: Participant, pos: Int) = row.pauses.lift(pos)
 
   def finishedPartData(row: Participant, pos: Int): Option[PartTimeInfo.Finished] = partData(row, pos).collect {
     case x: PartTimeInfo.Finished => x
@@ -59,6 +68,85 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
       (p != current) &&
         partData(p, pos).exists(f(currentPartInfo, _))
     }
+  }
+
+  def filterOthersPauses(pos: Int, current: Participant)(f: (Pause, Pause) => Boolean) = {
+    val currentPartInfo = current.pauses(pos)
+    data.filter { p =>
+      (p != current) &&
+        pauseData(p, pos).exists(f(currentPartInfo, _))
+    }
+  }
+
+  private def partWalkEvents(row: Participant)(
+    fullPartInfo: FullPartInfo,
+    pos: Int,
+  ): Seq[WalkEvent] = {
+    import fullPartInfo._
+    val checkpoint = Checkpoint(pos, partMeta.place, partMeta.cumulativeTrackLength)
+    Seq(
+      WalkEvent.Departure(
+        time = part.startTime,
+        togetherWith = filterOthers(pos, row)((me, other) => me.startTime isSame other.startTime),
+        checkpoint = checkpoint,
+        isStart = previousPartMetaOption.isEmpty
+      )
+    ) ++ (
+      part match {
+        case PartTimeInfo.Finished(_startTime, endTime, intervalTime) =>
+          val isFinish = pos == parts.size - 1
+          //noinspection ConvertibleToMethodValue
+          Seq(
+            WalkEvent.Walk(
+              duration = intervalTime,
+              len = partMeta.trackLength,
+              overtakes = Overtakes(
+                overtook = filterOthers(pos, row)((me, other) => me overtook other),
+                overtakenBy = filterOthers(pos, row)((me, other) => other overtook me),
+              ),
+            ),
+            WalkEvent.Arrival(
+              time = endTime,
+              togetherWith = filterOthers(pos, row)((me, other) =>
+                other.endTimeOption.exists(endTime isSame _)
+              ),
+              checkpoint = checkpoint,
+              isFinish = isFinish,
+            )
+          ) ++ nextPartOption.fold[Seq[WalkEvent]](
+            if (isFinish) Seq()
+            else Seq(WalkEvent.GaveUp.AtCheckpoint(checkpoint))
+          ) { nextPart =>
+            Seq(
+              WalkEvent.WaitingOnCheckpoint(
+                checkpoint = checkpoint,
+                duration = TimeInterval((nextPart.startTime - endTime) / 60 / 1000),
+                overtakes = Overtakes(
+                  overtook = filterOthersPauses(pos, row)((me, other) => me overtook other),
+                  overtakenBy = filterOthersPauses(pos, row)((me, other) => other overtook me),
+                )
+              )
+            )
+          }
+        case PartTimeInfo.Unfinished(_startTime) => Seq(WalkEvent.GaveUp.DuringWalk(pos + 1))
+      }
+    )
+  }
+
+
+  def walkEvents(row: Participant): Seq[WalkEvent] = {
+    val prevParts = Seq(None) ++ parts.map(Some(_))
+    val nextPartInfos: Seq[Option[PartTimeInfo]] = row.partTimes.drop(1).map(Some(_)) ++ Seq(None)
+
+    (
+      prevParts lazyZip
+        parts lazyZip
+        row.partTimes lazyZip
+        nextPartInfos
+    )
+      .map(FullPartInfo)
+      .zipWithIndex
+      .flatMap((partWalkEvents(row) _).tupled)
   }
 
 

@@ -8,39 +8,32 @@ import TextUtils._
 import Bootstrap._
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
-import scalatags.JsDom.all.{i => iTag, name => _, _}
+import scalatags.JsDom._
+import scalatags.JsDom.all._
 import scala.scalajs.js
-import org.scalajs.dom.raw._
+import org.scalajs.dom._
+import org.scalajs.dom.html.TableRow
+
+import scala.scalajs.js.annotation._
 
 
-final case class FullPartInfo(
-  previousPartMetaOption: Option[Part],
-  partMeta: Part,
-  part: PartTimeInfo,
-  nextPartOption: Option[PartTimeInfo],
-)
 
 final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: PlotRenderer) {
   import participantTable._
   import plotRenderer.{Plots, initializePlot}
 
-  val switchesState = collection.mutable.Map[String, String](
+  private val switches = new ClassSwitches(Map(
     "speed" -> "with-speed",
     "time" -> "with-clock-time",
-  )
+    "overtaking"-> "without-overtaking",
+  ))
 
-  def bodyClasses = switchesState.values
-
-  val brief = true
-
-  def verbose(f: Frag) = if (brief) "" else f
-
-  def verbose(s: String) = if (brief) "" else s
-
+  def bodyClasses = switches.values
 
   final private class ForPlayer(row: Participant) {
-    private def timePoint(time: Moment, content: Frag, className: String = "") = tr(
-      `class` := s"timeline-point $className",
+    import row.gender
+    private def timePoint(time: Moment)(content: Frag*): TypedTag[TableRow] = tr(
+      `class` := s"timeline-point",
       td(
         `class` := "timeline-time",
         span(`class` := "clock-time", time.hoursAndMinutes),
@@ -50,9 +43,6 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(),
       td(`class` := "timeline-content", content),
     )
-    private def arrival(time: Moment, content: Frag) = timePoint(time, content, className = "arrival")
-    private def departure(time: Moment, content: Frag, start: Boolean) =
-      timePoint(time, content, className = if(start) "departure start" else "departure")
 
     private def process(content: Frag, duration: TimeInterval, durationIcon: String, className: String = "") = tr(
       `class` := s"timeline-process $className",
@@ -65,13 +55,6 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         )
       ),
       td(`class` := "timeline-content", content),
-    )
-
-    private def empty() = tr(
-      `class` := s"timeline-process",
-      td(`class` := "timeline-time")(br()),
-      td(`class` := "timeline-duration"),
-      td(`class` := "timeline-content"),
     )
 
     private def end(content: Frag, className: String = "") = tr(
@@ -89,150 +72,179 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
 
     private def gaveUp(content: Frag) = end(content, className = "gave-up")
 
-    private def finish(time: Moment, content: Frag) = timePoint(time, content, className = "finish")
-
-    private def classSelect(switchName: String)(items: (String, String)*) = select(
-      onchange := { e: Event =>
-        val el = e.currentTarget.asInstanceOf[HTMLSelectElement]
-        val newClass = el.value
-        val oldClasses = items.map(_._1).toSet - newClass
-        val classList = dom.document.body.classList
-        classList.add(newClass)
-        oldClasses.foreach(classList.remove)
-        switchesState(switchName) = newClass
-      }
-    )(
-      for ( (cls, name) <- items) yield
-        option(value := cls, if(cls == switchesState(switchName)) selected := true else "")(name)
-    )
-
     private def csNumInflection[T](num: Int)(one: T, few: T, many: T) = num match {
       case 1 => one
       case n if n < 5 => few
       case _ => many
     }
-    private def peopleList(symbol: String, others: Seq[Participant]) = s"$symbol${others.size} ${csNumInflection(others.size)("človek", "lidi", "lidí")}"
-    private def togetherWith(others: Seq[Participant]) = peopleList("+", others)
-    private def outran(others: Seq[Participant]) = peopleList("+", others)
-    private def wasOutran(others: Seq[Participant]) = peopleList("-", others)
+    private def peopleList(symbol: String, title: String, others: Seq[Participant]): Frag =
+      peopleList((symbol, title, others))
+    private def peopleList(items: (String, String, Seq[Participant])*): Frag =
+      div(cls := "dropdown people-list-dropdown")(
+        btn(`class`:="btn-xs people-list-expand dropdown-toggle", toggle := "dropdown")(
+          items.map{case (symbol, _, others) => s"$symbol${others.size}"}.mkString(""),
+          span(cls:="caret"),
+        ),
+        div(cls := "dropdown-menu")(
+          for((_, title, people) <- items) yield fseq(
+            h2(title, s" (${people.size})"),
+            ul(
+              for(person <- people) yield li(s"${person.id}: ${person.fullNameWithNick}")
+            )
+          )
+        )
+      )
+    private def renderTogetherWith(others: Seq[Participant]) =
+      peopleList("=", "Spolu s", others)
+    private def renderOvertakes(overtakes: Overtakes): Frag = renderOvertakes(
+      overtook = overtakes.overtook,
+      overtakenBy = overtakes.overtakenBy
+    )
+    private def renderOvertakes(
+      overtook: Seq[Participant],
+      overtakenBy: Seq[Participant],
+    ): Frag = fseq(
+      peopleList(
+        ("+", gender.inflect("Předběhla", "Předběhl"), overtook),
+        ("-", gender.inflect("Byla předběhnuta", "Byl předběhnut"), overtakenBy),
+      ),
+    )
 
     def timeLine = {
-      val prevParts = Seq(None) ++ parts.map(Some(_))
-      val nextPartInfos: Seq[Option[PartTimeInfo]] = row.partTimes.drop(1).map(Some(_)) ++ Seq(None)
+      val events = walkEvents(row)
+      val (overtookTotal, overtakenTotal) = events.collect { case p: WalkEvent.Process => p.overtakes }
+        .foldLeft((0, 0))((cum, overtakes) =>
+          (cum._1 + overtakes.overtook.size, cum._2 + overtakes.overtakenBy.size)
+        )
+      val totalWalkTime = events
+        .collect { case p: WalkEvent.Walk => p.duration }
+        .foldLeft(TimeInterval(0))(_ + _)
+      val allPauses = events.collect { case p: WalkEvent.WaitingOnCheckpoint => p.duration }
+      val totalPausesTime = allPauses.foldLeft(TimeInterval(0))(_ + _)
       div(
         div(`class` := "legend")(
           h2("Legenda"),
           legendTable,
         ),
         div(`class` := "timeline-switches")(
-          classSelect("time")(
+          switches.classSelect("time")(
             "with-relative-time" -> "Čas od startu",
             "with-clock-time" -> "Skutečný čas",
           ),
-          classSelect("speed")(
+          switches.classSelect("speed")(
             "with-speed" -> "rychlost (km/h)",
             "with-pace" -> "tempo (mm:ss / km)",
           )
         ),
         table(
           `class` := "timeline timeline-real",
-          (
-            prevParts lazyZip
-              parts lazyZip
-              row.partTimes lazyZip
-              nextPartInfos
-          )
-            .map(FullPartInfo)
-            .zipWithIndex
-            .flatMap((partTimeLine _).tupled)
+          events.map(renderWalkEvent)
+        ),
+        h2("Celkový čas"),
+        s"Pochod ${gender.inflect("jí", "mu")} trval celkem ",
+        strong((totalWalkTime + totalPausesTime).toString),
+        s", z toho $totalWalkTime čistá chůze a $totalPausesTime čekání na stanovištích.",
+        if(allPauses.nonEmpty) s" Na jednom stanovišti čekal$langGenderSuffix průměrně ${totalPausesTime / allPauses.size}."
+        else "",
+        h2("Předbíhání"),
+        p("Za jeden úsek cesty počítáme předběhnutí maximálně jednou. Počítáme předběhnutí i na stanovišti."),
+        ul(
+          li(s"Předběhl$langGenderSuffix $overtookTotal×"),
+          li(s"Byl$langGenderSuffix předběhnut$langGenderSuffix $overtakenTotal×"),
+        ),
+        switches.checkbox(
+          "overtaking", "Zobrazit předbíhání v průběhu pochodu"
+        )(
+          "with-overtaking", "without-overtaking"
         ),
         h2("Vizualizace"),
         chartButtons(row),
       )
     }
 
+    private def langGenderSuffix = {
+      gender.inflect("a", "")
+    }
+
     private def legendTable = {
       table(
         `class` := "timeline timeline-legend",
-        departure(moment("2016-01-20 10:55"), "odchod v 10:55", start = false),
+        timePoint(moment("2016-01-20 10:55"))("odchod v 10:55")(`class` := "departure"),
         walk("chůze trvající 4:20", TimeInterval(260)),
-        arrival(moment("2016-01-20 15:15"), "příchod v 15:15"),
+        timePoint(moment("2016-01-20 15:15"))("příchod v 15:15")(`class` := "arrival"),
         pause("pauza trvající 10 minut", TimeInterval(10)),
         gaveUp("konec před dosažením cíle"),
-        finish(moment("2016-01-20 16:20"), "Dosažení cíle v 16:20"),
+        timePoint(moment("2016-01-20 16:20"))("Dosažení cíle v 16:20")(`class` := "finish"),
       )
     }
 
-    private def partTimeLine(
-      fullPartInfo: FullPartInfo,
-      pos: Int,
-    ): Seq[Frag] = {
-      import fullPartInfo._
-      import row.gender
-      def langGaveUp = gender.inflect("vzdala", "vzdal")
+    private def renderCumLen(cumLen: BigDecimal): Frag = fseq(
+      " (celkem ", strong(formatLength(cumLen)), ")"
+    )
 
-      def langArrived = gender.inflect("dorazila", "dorazil")
+    private def renderCheckpoint(checkpoint: Checkpoint) = emptyCheckpoint(s"${checkpoint.pos + 1}.")
 
-      def cumLen: Frag = fseq(" (celkem ", strong(formatLength(partMeta.cumulativeTrackLength)), ")")
+    private def langGaveUp = gender.inflect("vzdala", "vzdal")
 
-      Seq(
-        departure(
-          part.startTime,
-          fseq(
-            previousPartMetaOption.fold[Frag](fseq("Start", br()))(_ => ""),
-            togetherWith(filterOthers(pos, row)((me, other) => me.startTime isSame other.startTime))
-          ),
-          start = previousPartMetaOption.isEmpty
-        ),
-      ) ++ (part match {
-        case PartTimeInfo.Finished(_startTime, endTime, intervalTime) =>
-          val isFinish = pos == parts.size - 1
-          //noinspection ConvertibleToMethodValue
-          val arrivalWith = togetherWith(filterOthers(pos, row)((me, other) =>
-            other.endTimeOption.exists(endTime isSame _)
-          ))
-          fseq(
-            walk(
-              fseq(
-                strong(formatLength(partMeta.trackLength)),
-                span(`class` := "speed")(strong(formatSpeed(partMeta.trackLength * 60 / intervalTime.totalMinutes))),
-                span(`class` := "pace")(strong(f"${intervalTime / partMeta.trackLength} / km")),
-                outran(filterOthers(pos, row)((me, other) => me outran other)),
-                wasOutran(filterOthers(pos, row)((me, other) => other outran me)),
-              ).map(fseq(_, " ")),
-              duration = intervalTime,
-            ),
-            if (isFinish)
-              fseq(
-                empty(),
-                finish(
-                  endTime,
-                  fseq(s"Cíl: ${partMeta.place}", cumLen, arrivalWith)
-                  // TODO: stats
-                )
-              )
-            else
-              arrival(
-                endTime,
-                arrivalWith,
-              ),
-            nextPartOption.fold[Frag](
-              if (isFinish) ""
-              else gaveUp(fseq(s"$langGaveUp to na stanovišti ", strong(s"${pos + 1}."), s" ${partMeta.place}", cumLen))
-            ) { nextPart =>
-              pause(
-                fseq(strong(s"${pos + 1}."), s" ${partMeta.place}", cumLen),
-                duration = TimeInterval((nextPart.startTime - endTime) / 60 / 1000)
-              )
-            }
-          )
-        case PartTimeInfo.Unfinished(_startTime) => Seq(
-          gaveUp(s"$langGaveUp to při cestě na ${pos + 1}. stanoviště.")
+    def renderWalkEvent(walkEvent: WalkEvent): Frag = walkEvent match {
+      case tp: WalkEvent.TimePoint =>
+        timePoint(tp.time)(
+          renderTogetherWith(tp.togetherWith),
+          if (tp.isStart) fseq(emptyCheckpoint, " Start") else fseq(),
+          if (tp.isFinish) fseq(emptyCheckpoint, s" Cíl: ${tp.checkpoint.place}", renderCumLen(tp.checkpoint.cumLen))
+          else fseq(),
+        )(
+          `class` := (tp match {
+            case _: WalkEvent.Departure => "departure"
+            case _: WalkEvent.Arrival => "arrival"
+          }),
+          if (tp.isStart) `class` := "start" else "",
+          if (tp.isFinish) `class` := "finish" else "",
         )
-      })
+      case proc: WalkEvent.Process => proc match {
+        case WalkEvent.Walk(duration, overtakes, len) => walk(
+          spaceSeparated(
+            renderOvertakes(overtakes),
+            strong(formatLength(len)),
+            renderSpeedAndPace(duration, len),
+          ),
+          duration = duration,
+        )
+        case WalkEvent.WaitingOnCheckpoint(checkpoint, duration, overtakes) =>
+          pause(
+            fseq(
+              renderOvertakes(overtakes),
+              renderCheckpoint(checkpoint),
+              s" ${checkpoint.place}",
+              renderCumLen(checkpoint.cumLen),
+            ),
+            duration = duration,
+          )
+      }
+      case utp: WalkEvent.UnknownTimePoint => utp match {
+        case WalkEvent.GaveUp.DuringWalk(nextPos: Int) =>
+          gaveUp(s"$langGaveUp to při cestě na ${nextPos}. stanoviště.")
+        case WalkEvent.GaveUp.AtCheckpoint(checkpoint) =>
+          gaveUp(
+            fseq(
+              s"$langGaveUp to na stanovišti ",
+              renderCheckpoint(checkpoint),
+              s" ${checkpoint.place}",
+              renderCumLen(checkpoint.cumLen),
+            )
+          )
+      }
     }
 
+    private def emptyCheckpoint = {
+      span(`class` := "checkpoint")
+    }
   }
+
+  private def renderSpeedAndPace(duration: TimeInterval, len: BigDecimal) = fseq(
+    span(`class` := "speed")(strong(formatSpeed(len * 60 / duration.totalMinutes))),
+    span(`class` := "pace")(strong(f"${duration / len} / km"))
+  )
 
   def timeLine(row: Participant) = new ForPlayer(row).timeLine
 

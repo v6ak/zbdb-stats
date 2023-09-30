@@ -10,9 +10,12 @@ case class TimeInterval(totalMinutes: Int) extends AnyVal{
     Pace(paceSecPerKm.round(MathContext.UNLIMITED).toInt)
   }
 
+  def /(divisor: Int): Seconds = Seconds(totalMinutes * 60 / divisor)
+
   def hours = totalMinutes/60
   def minutes = totalMinutes%60
   def -(other: TimeInterval) = TimeInterval(this.totalMinutes - other.totalMinutes)
+  def +(other: TimeInterval) = TimeInterval(this.totalMinutes + other.totalMinutes)
   override def toString: String = f"$hours:$minutes%02d"
 }
 
