@@ -21,3 +21,11 @@ b. Kdekoliv: `sbt dist` vygeneruje soubor server/target/scala-$scalaVersion/zbdb
 ## Verze formátu
 
 Pokud je potřeba data z různých ročkíků zpracovávat různě, použije se jiná verze formátu. Verze formátu odpovídá ročkíku, od kterého se používá. Pokud uvidíme verze 2045, určitě se použila pro ročník 2045, ale možná i v dalších letech.
+
+## Nouzové přidání ročníku
+
+Pokud by nefungoval build a nebylo snadné jej rozjet, lze nouzově přidat nový ročník takto:
+
+1. Stáhni CSV z Google Sheets a ulož jako `<rok>/statistiky/<rok>.html`.
+2. Zkopíruj a uprav `<rok>/statistiky/<rok>.html` z jiného ročníku.
+3. Přidej nový ročník do `statistiky/years.json`.
