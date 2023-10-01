@@ -19,7 +19,7 @@ final class ClassSwitches(initialSwitchesState: Map[String, String]) {
   }
 
   def classSelect(switchName: String)(items: (String, String)*) = select(
-    onchange := { e: Event =>
+    onchange := { (e: Event) =>
       val el = e.currentTarget.asInstanceOf[HTMLSelectElement]
       update(switchName, el.value, items.map(_._1).toSet)
     }
@@ -32,7 +32,7 @@ final class ClassSwitches(initialSwitchesState: Map[String, String]) {
     input(
       `type` := "checkbox",
       if (onClass == switchesState(switchName)) checked := true else "",
-      onchange := { e: Event =>
+      onchange := { (e: Event) =>
         val el = e.currentTarget.asInstanceOf[HTMLInputElement]
         update(switchName, if (el.checked) onClass else offClass, Set(onClass, offClass))
       }

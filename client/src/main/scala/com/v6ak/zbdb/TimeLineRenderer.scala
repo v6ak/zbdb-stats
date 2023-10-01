@@ -291,7 +291,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
   )
 
   private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) =
-    button(`class` := "btn btn-default btn-l")(description, " ", title)(onclick := { _: Any =>
+    button(`class` := "btn btn-default btn-l")(description, " ", title)(onclick := { (_: Any) =>
       val (dialog, jqModal, modalBodyId) = modal(title)
       jqModal.on("shown.bs.modal", { () => initializePlot(modalBodyId, plotDataGenerator(rowsLoader)) })
       dom.document.body.appendChild(dialog)

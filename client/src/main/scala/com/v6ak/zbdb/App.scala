@@ -14,7 +14,7 @@ object App {
 
   @JSExport
   def main(args: Array[String]): Unit = {
-    dom.window.onload = { _: Any =>
+    dom.window.onload = { (_: Any) =>
       val body = dom.window.document.body
       val fileName = body.getAttribute("data-file")
       val maxHourDelta = body.getAttribute("data-max-hour-delta").toInt

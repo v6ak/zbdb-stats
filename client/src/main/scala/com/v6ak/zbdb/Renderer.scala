@@ -160,7 +160,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
               div(cls := "dropdown")(
                 moreButton("more-button"),
                 popup
-              )(onBsShown({ _: js.Dynamic =>
+              )(onBsShown({ (_: js.Dynamic) =>
                 if (!popup.hasAttribute("data-loaded")) {
                   def select(f: (Finished, Finished) => Boolean) = participantTable.data.filter(p => (p!=r) && finishedPartData(p).exists(f(pti, _)))
                   def compList(heading: Frag, participants: Seq[Participant]): Frag =
@@ -212,7 +212,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   def renderParticipantColumn(r: Participant): Frag = Seq(
     label(`for` := r.checkboxId, cls := "participant-header-label")(
       r.orderOption.fold(span(cls := "label label-danger label-result")("DNF"))(order => span(cls := "label label-success label-result")(s"$order.")),
-      input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { e: Event =>
+      input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { (e: Event) =>
         val el = e.currentTarget.asInstanceOf[HTMLInputElement]
         el.checked match {
           case true => selection.addRow(r)
@@ -230,7 +230,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val selectedParticipantsElement = span(`class` := "selected-participants")("–").render
 
   private val barElement = div(id := "button-bar")(
-    button("×", `class` := "close")(onclick := {e: Event => selection.clear() }),
+    button("×", `class` := "close")(onclick := {(e: Event) => selection.clear() }),
     dropdownGroup("Porovnat vybrané účastníky…", cls:="btn btn-primary dropdown-toggle")(
       for(plot <- Plots) yield chartButton(s"Porovnat ${plot.nameAccusative}", selection().toSeq, plot.generator, s"Porovnat ${plot.nameAccusative}")
     )(cls := "btn-group dropup"),
@@ -239,7 +239,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private val globalStats = div(id := "global-stats")(
     GlobalPlots.map{case (plotName, plotFunction) =>
-      button(plotName)(cls := "btn btn-default hidden-print")(onclick := {e: Event =>
+      button(plotName)(cls := "btn btn-default hidden-print")(onclick := {(e: Event) =>
         val (dialog, jqModal, modalBodyId) = modal(plotName)
         jqModal.on("shown.bs.modal", {() => plotFunction(modalBodyId, data, participantTable)})
         dom.document.body.appendChild(dialog)
@@ -257,7 +257,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     barElement.style.visibility = if(shown) "" else "hidden"
   }
 
-  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) = button(`class` := "btn btn-default btn-xs")(description)(onclick := {_:Any =>
+  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) = button(`class` := "btn btn-default btn-xs")(description)(onclick := {(_:Any) =>
     val (dialog, jqModal, modalBodyId) = modal(title)
     jqModal.on("shown.bs.modal", {() => initializePlot(modalBodyId, plotDataGenerator(rowsLoader))})
     dom.document.body.appendChild(dialog)
@@ -272,7 +272,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     button(
       `class` := "btn btn-default",
       Seq(span(`class` := s"glyphicon glyphicon-list", aria.hidden := "true")),
-      onclick := { _: Any =>
+      onclick := { (_: Any) =>
         val (dialog, jqModal, modalBodyId) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
         dom.document.getElementById(modalBodyId).appendChild(timeLineRenderer.timeLine(row).render)
