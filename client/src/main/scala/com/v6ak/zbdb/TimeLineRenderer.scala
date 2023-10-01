@@ -206,7 +206,12 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       " (celkem ", strong(formatLength(cumLen)), ")"
     )
 
-    private def renderCheckpoint(checkpoint: Checkpoint) = emptyCheckpoint(s"${checkpoint.pos + 1}.")
+    private def renderCheckpoint(checkpoint: Checkpoint) = emptyCheckpoint(
+      fseq(
+        s"${checkpoint.pos + 1}",
+        span(`class` := "dot", aria.hidden := "false")("."),
+      )
+    )
 
     private def langGaveUp = gender.inflect("vzdala", "vzdal")
 
