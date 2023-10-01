@@ -29,3 +29,14 @@ Pokud by nefungoval build a nebylo snadné jej rozjet, lze nouzově přidat nov�
 1. Stáhni CSV z Google Sheets a ulož jako `<rok>/statistiky/<rok>.html`.
 2. Zkopíruj a uprav `<rok>/statistiky/<rok>.html` z jiného ročníku.
 3. Přidej nový ročník do `statistiky/years.json`.
+
+## Testování
+
+Je dobré zkontrolovat výsledky u několika druhů účastníků:
+
+* Skončil ještě před prvním stanovištěm. Těmto musíme některé věci vypínat, protože například průměrná rychlost nedává smysl a dělili bychom nulou.
+* Skončil mezi stanovištěmi, ale na první dorazil.
+* Skončil na nějakém stanovišti.
+* Dorazil do cíle.
+
+Také je dobré testovat muže a ženy, protože texty se přizpůsobují.
