@@ -4,6 +4,7 @@ import com.example.moment.Moment
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
+import scala.language.implicitConversions
 
 @js.native trait MomentSingleton extends js.Any {
   //def moment(): Moment = js.native
