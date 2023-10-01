@@ -120,8 +120,41 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         .collect { case p: WalkEvent.Walk => p.duration }
         .foldLeft(TimeInterval(0))(_ + _)
       val allPauses = events.collect { case p: WalkEvent.WaitingOnCheckpoint => p.duration }
+      val cumLenOption = events.collect { case p: WalkEvent.Arrival => p.checkpoint.cumLen }.lastOption
       val totalPausesTime = allPauses.foldLeft(TimeInterval(0))(_ + _)
+      val totalTime = totalWalkTime + totalPausesTime
       div(
+        intro,
+        table(`class` := "timeline timeline-real")(events.map(renderWalkEvent)),
+        h2("Celkový čas a rychlost"),
+        s"Pochod ${gender.inflect("jí", "mu")} trval celkem ",
+        strong(totalTime.toString),
+        s", z toho $totalWalkTime čistá chůze a $totalPausesTime čekání na stanovištích.",
+        if(allPauses.nonEmpty) s" Na jednom stanovišti čekal$langGenderSuffix průměrně ${totalPausesTime / allPauses.size}."
+        else "",
+        cumLenOption.fold("":Frag)(cumLen => p(
+          "Na ", strong(formatLength(cumLen)), s" cestě ${gender.inflect("šla", "šel")} průměrně ",
+          renderSpeedAndPace(totalTime, cumLen), " včetně pauz, resp. ", renderSpeedAndPace(totalWalkTime, cumLen),
+          " čisté chůze.",
+        )),
+        h2("Předbíhání"),
+        p("Za jeden úsek cesty počítáme předběhnutí maximálně jednou. Počítáme předběhnutí i na stanovišti."),
+        ul(
+          li(s"Předběhl$langGenderSuffix $overtookTotal×"),
+          li(s"Byl$langGenderSuffix předběhnut$langGenderSuffix $overtakenTotal×"),
+        ),
+        switches.checkbox(
+          "overtaking", "Zobrazit předbíhání v průběhu pochodu"
+        )(
+          "with-overtaking", "without-overtaking"
+        ),
+        h2("Vizualizace"),
+        chartButtons(row),
+      )
+    }
+
+    private def intro = {
+      fseq(
         div(`class` := "legend")(
           h2("Legenda"),
           legendTable,
@@ -136,29 +169,6 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
             "with-pace" -> "tempo (mm:ss / km)",
           )
         ),
-        table(
-          `class` := "timeline timeline-real",
-          events.map(renderWalkEvent)
-        ),
-        h2("Celkový čas"),
-        s"Pochod ${gender.inflect("jí", "mu")} trval celkem ",
-        strong((totalWalkTime + totalPausesTime).toString),
-        s", z toho $totalWalkTime čistá chůze a $totalPausesTime čekání na stanovištích.",
-        if(allPauses.nonEmpty) s" Na jednom stanovišti čekal$langGenderSuffix průměrně ${totalPausesTime / allPauses.size}."
-        else "",
-        h2("Předbíhání"),
-        p("Za jeden úsek cesty počítáme předběhnutí maximálně jednou. Počítáme předběhnutí i na stanovišti."),
-        ul(
-          li(s"Předběhl$langGenderSuffix $overtookTotal×"),
-          li(s"Byl$langGenderSuffix předběhnut$langGenderSuffix $overtakenTotal×"),
-        ),
-        switches.checkbox(
-          "overtaking", "Zobrazit předbíhání v průběhu pochodu"
-        )(
-          "with-overtaking", "without-overtaking"
-        ),
-        h2("Vizualizace"),
-        chartButtons(row),
       )
     }
 
@@ -243,6 +253,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
 
   private def renderSpeedAndPace(duration: TimeInterval, len: BigDecimal) = fseq(
     span(`class` := "speed")(strong(formatSpeed(len * 60 / duration.totalMinutes))),
+    " ",
     span(`class` := "pace")(strong(f"${duration / len} / km"))
   )
 
