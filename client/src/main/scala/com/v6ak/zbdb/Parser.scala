@@ -42,7 +42,7 @@ object Parser{
       result.hours(h)
       result.minutes(m)
       if(result isBefore prevTime){
-        result.date(result.date + 1)
+        result.date(result.date() + 1)
       }
       if(!result.isValid()){
         sys.error(s"invalid date: $timeString")
@@ -84,7 +84,7 @@ object Parser{
         val startMoment = startTime.toMoment(prevMoment, maxHourDelta)
         val endMoment = endTime.toMoment(startMoment, maxHourDelta)
         val intervalTime = interval.toTimeInterval
-        assert( (endMoment.toDate.getTime - startMoment.toDate.getTime) == (intervalTime.totalMinutes*60*1000), "Computed duration does not match.")
+        assert( (endMoment.toDate().getTime() - startMoment.toDate().getTime()) == (intervalTime.totalMinutes*60*1000), "Computed duration does not match.")
         Some(PartTimeInfo.Finished(
           startTime = startMoment,
           endTime = endMoment,

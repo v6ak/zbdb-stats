@@ -1,5 +1,7 @@
 package com.v6ak.zbdb
 
+import scala.language.implicitConversions
+
 abstract sealed class ParticipantInContext {
 
   def participant: Participant

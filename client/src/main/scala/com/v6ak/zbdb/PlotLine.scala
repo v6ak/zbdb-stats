@@ -7,7 +7,7 @@ final private case class PlotLine(row: Participant, label: String, points: js.Ar
   def seriesOptions = js.Dictionary(
     "label" -> label,
     "highlighter" -> Dictionary(
-      "formatString" -> (row.id+": %s|%s|%s|%s")
+      "formatString" -> s"${row.id}: %s|%s|%s|%s"
     )
   )
 }

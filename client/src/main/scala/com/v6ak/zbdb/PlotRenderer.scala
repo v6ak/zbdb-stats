@@ -145,7 +145,18 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         )
       )
     )
-    val plotPoints = js.Array(js.Array(finishers.map{case ((moment, time), participants) => js.Array(moment/*.hours()*60+moment.minutes()*/, zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString, math.sqrt(participants.size.toDouble), participants.map(_.fullName).mkString(", ") + " ("+participants.size+")")}.toSeq: _*))
+    val plotPoints = js.Array(
+      js.Array(
+        finishers.map{case ((moment, time), participants) =>
+          js.Array(
+            moment/*.hours()*60+moment.minutes()*/,
+            zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString,
+            math.sqrt(participants.size.toDouble),
+            participants.map(_.fullName).mkString(", ") + " ("+participants.size+")",
+          )
+        }.toSeq
+      :_*)
+    )
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
@@ -278,7 +289,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   private def generateSpeedPlotData(rows: Seq[Participant]) = {
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points = js.Array(
-        (p.partTimes, parts).zipped.flatMap((partTime, part) => partTime.durationOption.map { duration =>
+        (p.partTimes lazyZip parts).flatMap((partTime, part) => partTime.durationOption.map { duration =>
           js.Array(part.cumulativeTrackLength.toDouble, part.trackLength.toDouble / (duration.toDouble / 1000 / 3600))
         }): _*)
       )
@@ -340,13 +351,16 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   private def processTimes(participant: Participant): PlotLine = {
-    val data: Seq[(Moment, BigDecimal)] = (participant.partTimes, parts, previousPartCummulativeLengths).zipped.flatMap{(ti, pi, prev) => Seq(
-      Some((ti.startTime, prev)),
-      ti.endTimeOption.map( endTime => (endTime, pi.cumulativeTrackLength))
-    ).flatten}
+    val data: Seq[(Moment, BigDecimal)] = (participant.partTimes lazyZip parts lazyZip previousPartCummulativeLengths)
+      .flatMap{(ti, pi, prev) =>
+        Seq(
+          Some((ti.startTime, prev)),
+          ti.endTimeOption.map( endTime => (endTime, pi.cumulativeTrackLength))
+        ).flatten
+      }
     PlotLine(
       row = participant,
-      label = participant.id+": "+participant.fullName,
+      label = s"${participant.id}: ${participant.fullName}",
       points = js.Array(data.map{case (x, y) => js.Array(x.toString, y.toDouble)}: _*)
     )
   }
