@@ -13,6 +13,7 @@ import scalatags.JsDom.all._
 import scala.scalajs.js
 import org.scalajs.dom._
 import org.scalajs.dom.html.TableRow
+import scala.annotation.tailrec
 
 import scala.scalajs.js.annotation._
 
@@ -44,8 +45,21 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(`class` := "timeline-content", content),
     )
 
+    @tailrec def findParent(name: String, el: Element): Element =
+      if (el.nodeName.toUpperCase == name.toUpperCase()) el
+      else findParent(name, el.parentNode.asInstanceOf[Element])
+
     private def process(content: Frag, duration: TimeInterval, durationIcon: String, className: String = "") = tr(
       `class` := s"timeline-process $className",
+      onmouseover := { (e: Event) =>
+        val tr = findParent("tr", e.target.asInstanceOf[Element])
+        tr.previousSibling.asInstanceOf[Element].classList.add("before-hover")
+      },
+      onmouseout := { (e: Event) =>
+        val tr = findParent("tr", e.target.asInstanceOf[Element])
+        tr.previousSibling.asInstanceOf[Element].classList.remove("before-hover")
+      },
+    )(
       td(`class` := "timeline-time"),
       td(`class` := "timeline-duration")(
         fseq(
