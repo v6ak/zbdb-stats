@@ -1,6 +1,6 @@
 package com.v6ak.scalajs.scalatags
 
-import org.scalajs.dom.raw.Element
+import org.scalajs.dom.Element
 
 import scalatags.JsDom.all.Modifier
 

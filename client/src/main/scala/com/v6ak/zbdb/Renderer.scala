@@ -10,7 +10,7 @@ import com.v6ak.zbdb.PartTimeInfo.Finished
 import com.v6ak.zbdb.TextUtils._
 import org.scalajs.dom
 import org.scalajs.dom.Node
-import org.scalajs.dom.raw._
+import org.scalajs.dom._
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -72,7 +72,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         removeRow(selectedParticipants.head)
       }
     }
-    private def rowsChanged() {
+    private def rowsChanged(): Unit = {
       showBar = selectedParticipants.nonEmpty
       while(selectedParticipantsElement.firstChild != null){
         selectedParticipantsElement.removeChild(selectedParticipantsElement.firstChild)
@@ -220,7 +220,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
         }
       }),
       " ",
-      r.id + ": " + r.fullNameWithNick
+      s"${r.id}: ${r.fullNameWithNick}",
     ),
     div(`class` := "actions hidden-print")(chartButtons(r))
   )

@@ -1,7 +1,7 @@
 package com.v6ak.zbdb
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.{Event, HTMLElement, HTMLTableElement}
+import org.scalajs.dom.{Event, HTMLElement, HTMLTableElement}
 
 import scala.scalajs.js
 
