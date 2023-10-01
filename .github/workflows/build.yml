@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       #- uses: actions/cache@v2
       #  with:
       #    path: ~/.cache/my
@@ -22,7 +22,7 @@ jobs:
       - name: build website
         run: ./dockerenv-github.sh ./pack.sh
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: site
           path: pack.zip
@@ -30,13 +30,13 @@ jobs:
   test-bleeding-edge-java-and-npm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: build image
         run: docker build . --target bleeding-edge
       - name: build website
         run: env DOCKER_TAG=bleeding-edge ./dockerenv-github.sh ./pack.sh
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: site-for-verification
           path: pack.zip
