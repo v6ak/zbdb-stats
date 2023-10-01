@@ -9,6 +9,7 @@ import scala.collection.immutable
 import scala.scalajs.js
 import scala.util.Try
 import com.v6ak.scalajs.regex.JsPattern._
+import EitherPartitioningRichSeq._
 
 object Parser{
 
@@ -102,7 +103,7 @@ object Parser{
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
     }
-    val parts = (header1, header2, header3).zipped.toIndexedSeq.
+    val parts = (header1 lazyZip header2 lazyZip header3).toIndexedSeq.
       drop(3+formatVersion.nameFormat.size).  // skip participant info
       dropRight(4).  // skip final columns like total time and order
       grouped(3).  // all parts are Seq(start, time, finish)
@@ -115,15 +116,15 @@ object Parser{
         case e: Throwable => Right(participantData, e)
       }.get
     }
-    val (parsedDataSuccessfulTries, parsedDataFailedTries) = parsedDataTries.partition(_.isLeft)
-    if(false && parsedDataFailedTries.nonEmpty){
-      dom.console.error(s"parsing some data failed (${parsedDataFailedTries.size}):")
-      parsedDataFailedTries foreach { case Right((data, e)) =>
+    val (parsedData, parsedDataFails) = parsedDataTries.partitionLeftRight
+    if(false && parsedDataFails.nonEmpty){
+      dom.console.error(s"parsing some data failed (${parsedDataFails.size}):")
+      parsedDataFails foreach { case (data, e) =>
         dom.console.error("following row is not successfuly parsed:", js.Array(data : _*))
         e.printStackTrace()
       }
     }
-    (parts, parsedDataSuccessfulTries.map{case Left(p) => p}, parsedDataFailedTries.map{case Right((row, e)) => (row, e)})
+    (parts, parsedData, parsedDataFails)
   }
 
   private def parseHeaderPart(cellGroup: Seq[(String, String, String)]) = {
