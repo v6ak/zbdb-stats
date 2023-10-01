@@ -175,12 +175,20 @@ body{
     @thin-line: 2px;
     @thick-line: 6px;
 
-    .with-bullet(@color, @lineColor, @thickness, @style, @top: 0px) {
+    .just-line(@color, @thickness, @style) {
         .timeline-time {
-            @radius: 7px;
-            border-right: @thickness @style @lineColor;
+            border-right: @thickness @style @color;
             // padding should be adjusted according to the border
             padding-right: 10px - @thickness / 2;
+        }
+        .timeline-duration {
+            padding-left: 7px - @thickness / 2;
+        }
+    }
+    .with-bullet(@color, @lineColor, @thickness, @style, @top: 0px) {
+        .just-line(@lineColor, @thickness, @style);
+        .timeline-time {
+            @radius: 7px;
             &:after {
                 content: "";
                 display: block;
@@ -194,21 +202,11 @@ body{
             }
         }
     }
-    .just-line(@color, @thickness, @style) {
-        .timeline-time {
-            border-right: @thickness @style @color;
-            // padding should be adjusted according to the border
-            padding-right: 10px - @thickness / 2;
-        }
-    }
     .timeline-time {
         position: relative;
     }
     &, td {
         border-width: 0;
-    }
-    .timeline-duration {
-        padding-left: 5px
     }
 
     .timeline-point {
