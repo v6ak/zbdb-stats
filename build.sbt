@@ -3,7 +3,9 @@ import java.io.IOException
 
 val appVersion= "1.0"
 
-lazy val scalaV = "2.13.12"
+lazy val scalaV2 = "2.13.12"
+
+lazy val scalaV3 = "3.3.1"
 
 val jqueryName: String = "jquery/2.1.4/jquery.js"
 
@@ -58,7 +60,7 @@ lazy val server = (project in file("server")).settings(
   version := appVersion,
   name := "zbdb-stats-server",
   scalacOptions ++= Seq("-deprecation", "-feature"),
-  scalaVersion := scalaV,
+  scalaVersion := scalaV2,
   scalaJSProjects := Seq(client),
   scalaJSStage := FullOptStage,
   Assets / pipelineStages := Seq(scalaJSPipeline),
@@ -116,7 +118,7 @@ lazy val server = (project in file("server")).settings(
     jqPlot,
     specs2 % Test
   ),
-).enablePlugins(PlayScala, JSDependenciesPlugin, SbtWeb)//.dependsOn(sharedJvm)
+).enablePlugins(PlayScala, JSDependenciesPlugin, SbtWeb, WebScalaJSBundlerPlugin)//.dependsOn(sharedJvm)
 
 def toPathMapping(f: File): PathMapping = f -> f.getName
 
@@ -126,13 +128,13 @@ lazy val client = (project in file("client")).settings(
   version := appVersion,
   scalacOptions ++= Seq("-deprecation", "-feature"),
   scalaJSStage := FullOptStage,
-  scalaVersion := scalaV,
+  scalaVersion := scalaV3,
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
   scalaJSUseMainModuleInitializer := true,
   Test / scalaJSUseMainModuleInitializer := false,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "2.7.0",
     "com.lihaoyi" %%% "scalatags" % "0.12.0",
-    "com.nrinaudo" %%% "kantan.csv" % "0.7.0",
   ),
 
   // Some magic required for compatibility with running the website directly from SBT (using Play)
@@ -155,7 +157,11 @@ lazy val client = (project in file("client")).settings(
     jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
     "org.webjars.bower" % "console-polyfill" % "0.2.2" / "console-polyfill/0.2.2/index.js"
   ),
-).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb)//.dependsOn(sharedJs)
+  Compile / npmDependencies ++= Seq(
+    //"csv-parser" -> "3.0.0",
+    "csv-parse" -> "5.5.0",
+  ),
+).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb, ScalaJSBundlerPlugin, ScalablyTypedConverterPlugin)//.dependsOn(sharedJs)
 
 /*lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(scalaVersion := scalaV).
