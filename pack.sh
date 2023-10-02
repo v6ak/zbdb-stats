@@ -27,4 +27,8 @@ if [ -e pack.zip ]; then
 	rm pack.zip
 fi
 
-(cd target/assets/public && zip -r ../../../pack.zip .)
+(
+  cd target/assets/public &&
+    find -name '*.js' | xargs ls -lh &&
+    zip -r ../../../pack.zip .
+)
