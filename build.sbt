@@ -157,6 +157,7 @@ lazy val client = (project in file("client")).settings(
     jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
     "org.webjars.bower" % "console-polyfill" % "0.2.2" / "console-polyfill/0.2.2/index.js"
   ),
+  webpack / version := "5.88.2",  // https://github.com/ScalablyTyped/Converter/issues/546
   Compile / npmDependencies ++= Seq(
     //"csv-parser" -> "3.0.0",
     "csv-parse" -> "5.5.0",
