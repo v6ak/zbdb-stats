@@ -153,7 +153,6 @@ lazy val client = (project in file("client")).settings(
     jqPlot / "jqplot.barRenderer.min.js" dependsOn "jquery.jqplot.min.js",
     jqPlot / "jqplot.pointLabels.min.js" dependsOn "jquery.jqplot.min.js",
     jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
-    "org.webjars.bower" % "console-polyfill" % "0.2.2" / "console-polyfill/0.2.2/index.js"
   ),
 ).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb)//.dependsOn(sharedJs)
 
