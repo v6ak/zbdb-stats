@@ -55,6 +55,22 @@
 
 @import (inline) "lib/jqplot/jquery.jqplot.min.css";
 
+.participants-table {
+    border-collapse: separate;
+    td, th {
+        border-left-width: 0;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        tr+tr th {  // last row
+            border-bottom: 5px solid lightgray;
+        }
+    }
+}
+
 table{
     border-bottom: 5px solid lightgray;
     border-top: 5px solid lightgray;
@@ -63,7 +79,6 @@ table{
 
 table thead{
     background-color: white;
-    border-bottom: 2px solid lightgray;
 }
 /*table td, table th{
     padding-left: 5px;

@@ -333,10 +333,6 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     )
     content.appendChild(tableElement)
     content.appendChild(barElement)
-    dom.window.asInstanceOf[js.Dynamic].$(tableElement).stickyTableHeaders(Dictionary("cacheHeaderHeight" -> true, "fixedOffset" -> 0))
-    if (enableHorizontalStickyness) {
-      HorizontalStickiness.addHorizontalStickiness(tableElement)
-    }
   }
 
 }
