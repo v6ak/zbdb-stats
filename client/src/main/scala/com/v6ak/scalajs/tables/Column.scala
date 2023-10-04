@@ -22,10 +22,16 @@ abstract sealed class TableHeadCell{
 }
 
 object TableHeadCell{
-  //def apply(content: Node, colCount: Int = 1, rowCount: Int = 1) = Full(content = content, colCount = colCount, rowCount = rowCount)
-  def apply(frag: Frag, colCount: Int = 1, rowCount: Int = 1) = Full(content = frag.render, colCount = colCount, rowCount = rowCount)
-  final case class Full(content: Node, colCount: Int, rowCount: Int) extends TableHeadCell{
-    def build(className: String) = Some(TableHeadColumn(content = content, colCount = colCount, rowCountOption = Some(rowCount), className = className))
+  def apply(frag: Frag, colCount: Int = 1, rowCount: Int = 1, additionalClass: String = "") = Full(
+    content = frag.render, colCount = colCount, rowCount = rowCount, additionalClass = additionalClass
+  )
+  final case class Full(content: Node, colCount: Int, rowCount: Int, additionalClass: String) extends TableHeadCell{
+    def build(className: String) = Some(TableHeadColumn(
+      content = content,
+      colCount = colCount,
+      rowCountOption = Some(rowCount),
+      className = className + " " + additionalClass
+    ))
   }
   case object Empty extends TableHeadCell{
     override def rowCount: Int = 0

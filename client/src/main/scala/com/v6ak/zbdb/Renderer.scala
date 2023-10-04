@@ -107,7 +107,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
     Column(
-      TableHeadCell.Empty,
+      TableHeadCell("", additionalClass = "without-details-only"),
       TableHeadCell(span(title := "Celkový čas")("Celk."))
     ){(p: Participant) =>
       if(p.hasFinished) p.totalTime.toString else ""
