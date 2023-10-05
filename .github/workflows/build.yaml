@@ -4,9 +4,11 @@ on:
     branches:
       - feature/github-build
       - master
+      - devel
   pull_request:
     branches:
       - master
+      - devel
   schedule:
     - cron: "5 4 2 * *"
 jobs:
@@ -26,6 +28,17 @@ jobs:
         with:
           name: site
           path: pack.zip
+      - name: Repack as tar.gz
+        run: mkdir pack &&
+          cd pack &&
+          unzip ../pack.zip &&
+          mv statistiky/years.json{.new,} &&
+          tar cvf ../pack.tar .
+      - name: Upload Github Pages artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: pack.tar
 
   test-bleeding-edge-java-and-npm:
     runs-on: ubuntu-latest
@@ -68,3 +81,14 @@ jobs:
 
       - name: Compare artifacts
         run: diff -r build/unpacked verification/unpacked
+
+  deploy-to-github-pages:
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to Github Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
