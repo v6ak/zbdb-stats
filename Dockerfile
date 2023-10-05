@@ -24,9 +24,13 @@ RUN \
 WORKDIR /project
 
 # This stage can be used for testing whether the build is compatible with fresh versions of JDK and NodeJS/NPM
+FROM fedora:latest AS sbt-version-bleeding-edge
+COPY project/build.properties /
+RUN sed -n -e 's/^sbt\.version=//p' /build.properties > /version
+
 FROM fedora:latest AS bleeding-edge
 RUN dnf install -y rsync lftp zip unzip which nodejs npm java-latest-openjdk-devel
-COPY --from=sbt-version /version /sbt-version
+COPY --from=sbt-version-bleeding-edge /version /sbt-version
 RUN \
   curl -L -o sbt-$(cat /sbt-version).rpm https://scala.jfrog.io/ui/api/v1/download\?repoKey=rpm\&path=%252Fsbt-$(cat /sbt-version).rpm && \
   echo SBT launcher downloaded && \
