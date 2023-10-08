@@ -106,7 +106,7 @@ object PageGenerator{
         <meta charset="utf-8" />
         <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.min.css"} />
         <script type="text/javascript" src={s"../../$publicDirName/main.min.js"}></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
         <link rel="prefetch" href={csvFile} />
         <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
         <title>{title}</title>
