@@ -95,8 +95,8 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     tableModifiers = Seq(`class` := "table table-condensed table-hover participants-table"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
-    Column(TableHeadCell(yearSelection, colCount = 2), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
-    Column[Participant](TableHeadCell.Empty, TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
+    Column(TableHeadCell(yearSelection), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
+    Column[Participant](TableHeadCell(""), TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
