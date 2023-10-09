@@ -28,9 +28,7 @@ final case class Participant(
 
   def fullName: String = firstName+" "+lastName
 
-  def pauses: Seq[Pause] = {
-    dom.console.log("pauses: partTimes.size", partTimes.size)
-    dom.console.log("pauses: partTimes.sliding(2).size", partTimes.sliding(2).size)
+  def pauses: Seq[Pause] =
     partTimes match {
       case Seq() | Seq(_) => Seq()
       case partTimesWithPauses => partTimesWithPauses.sliding(2).map { case Seq(previous, next) =>
@@ -40,7 +38,6 @@ final case class Participant(
         )
       }.toSeq
     }
-  }
 
   def pauseTimes = pauses.map(p => p.endTime - p.startTime)
 
