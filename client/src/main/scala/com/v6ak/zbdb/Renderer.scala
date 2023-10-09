@@ -20,7 +20,12 @@ import com.v6ak.scalajs.scalatags.ScalaTagsDomModifiers._
 import com.v6ak.scalajs.scalatags.ScalaTagsBootstrapDomModifiers._
 
 object Renderer{
-  private val FirstBadge = div(cls := "label label-success first-badge")("1.")
+  def renderPositionBadge(position: Option[Int]) =
+    position.fold(span(cls := "badge bg-danger badge-result")("DNF"))(order =>
+      span(cls := "badge bg-success badge-result")(s"$order.")
+    )
+
+  private val FirstBadge = div(cls := "badge bg-success first-badge")("1.")
 
   def initialize(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) = {
     val r = new Renderer(participantTable, processingErrors, content, plots, enableHorizontalStickyness, year, yearLinksOption)
@@ -86,13 +91,13 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private def yearSelection = dropdownGroup(Seq[Frag](year, " ", span(cls:="caret")))(
     yearLinksOption match{
       case Some(yearLinks) => yearLinks.reverse.map{case (y, yearLink) => a(href:=yearLink)(y)}
-      case None => span(cls:="label label-danger")("Ročníky nejsou k dispozici.")
+      case None => span(cls:="badge bg-danger")("Ročníky nejsou k dispozici.")
     }
   )
 
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
-    tableModifiers = Seq(`class` := "table table-condensed table-hover participants-table"),
+    tableModifiers = Seq(`class` := "table table-sm table-hover participants-table"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
     Column(TableHeadCell(yearSelection), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
@@ -136,7 +141,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
       dom.console.warn(s"It seems that nobody has reached part #$i")
       BestParticipantData.Empty
     }
-    def moreButton(c: String) = button(cls := s"btn btn-default btn-xs dropdown-toggle $c", `type` := "button", toggle := "dropdown")(span(cls:="caret"))//("⠇")
+    def moreButton(c: String) = btnDefault(cls := s"btn-sm dropdown-toggle $c", toggle:="dropdown")(span(cls:="caret"))
     val firstCell = if (i == 0) TableHeadCell("Start") else TableHeadCell.Empty
     Seq[Column[Participant]](
       Column.rich(firstCell, TableHeadCell("|=>"))((r: Participant) =>
@@ -211,8 +216,8 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   def renderParticipantColumn(r: Participant): Frag = Seq(
     label(`for` := r.checkboxId, cls := "participant-header-label")(
-      r.orderOption.fold(span(cls := "label label-danger label-result")("DNF"))(order => span(cls := "label label-success label-result")(s"$order.")),
-      input(`type` := "checkbox", `class` := "participant-checkbox hidden-print", id := r.checkboxId, onchange := { (e: Event) =>
+      renderPositionBadge(r.orderOption),
+      input(`type`:="checkbox", `class`:="participant-checkbox d-print-none", id:=r.checkboxId, onChange { e =>
         val el = e.currentTarget.asInstanceOf[HTMLInputElement]
         el.checked match {
           case true => selection.addRow(r)
@@ -222,7 +227,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
       " ",
       s"${r.id}: ${r.fullNameWithNick}",
     ),
-    div(`class` := "actions hidden-print")(chartButtons(r))
+    div(`class` := "actions d-print-none")(chartButtons(r))
   )
 
   private val tableElement = renderer.renderTable(data)
@@ -230,7 +235,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val selectedParticipantsElement = span(`class` := "selected-participants")("–").render
 
   private val barElement = div(id := "button-bar")(
-    button("×", `class` := "close")(onclick := {(e: Event) => selection.clear() }),
+    button(`class` := "btn-close")(onclick := {(e: Event) => selection.clear() }),
     dropdownGroup("Porovnat vybrané účastníky…", cls:="btn btn-primary dropdown-toggle")(
       for(plot <- Plots) yield chartButton(s"Porovnat ${plot.nameAccusative}", selection().toSeq, plot.generator, s"Porovnat ${plot.nameAccusative}")
     )(cls := "btn-group dropup"),
@@ -239,15 +244,15 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private val globalStats = div(id := "global-stats")(
     GlobalPlots.map{case (plotName, plotFunction) =>
-      button(plotName)(cls := "btn btn-default hidden-print")(onclick := {(e: Event) =>
-        val (dialog, jqModal, modalBodyId) = modal(plotName)
-        jqModal.on("shown.bs.modal", {() => plotFunction(modalBodyId, data, participantTable)})
+      button(plotName)(cls := "btn btn-secondary d-print-none")(onclick := {(e: Event) =>
+        val (dialog, modalBodyId, bsMod) = modal(plotName)
+        dialog.onBsModalShown{ () => plotFunction(modalBodyId, data, participantTable) }
         dom.document.body.appendChild(dialog)
-        jqModal.modal(js.Dictionary("keyboard" -> true))
+        bsMod.show()
       })
     },
     additionalPlots.map{case (name, url) =>
-      a(href:=url, cls:="btn btn-default", target := "_blank")(name)
+      a(href:=url, cls:="btn btn-secondary", target := "_blank")(name)
     }
   ).render
 
@@ -257,27 +262,29 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     barElement.style.visibility = if(shown) "" else "hidden"
   }
 
-  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) = button(`class` := "btn btn-default btn-xs")(description)(onclick := {(_:Any) =>
-    val (dialog, jqModal, modalBodyId) = modal(title)
-    jqModal.on("shown.bs.modal", {() => initializePlot(modalBodyId, plotDataGenerator(rowsLoader))})
-    dom.document.body.appendChild(dialog)
-    jqModal.modal(js.Dictionary("keyboard" -> true))
-  })
+  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) =
+    btnDefault(`class` := "btn-sm")(description)(onclick := {(_:Any) =>
+      val (dialog, modalBodyId, bsMod) = modal(title)
+      dialog.onBsModalShown({() => initializePlot(modalBodyId, plotDataGenerator(rowsLoader))})
+      dom.document.body.appendChild(dialog)
+      bsMod.show()
+    })
 
   private def chartButtons(row: Participant) = span(cls := "detailed-only")(
-    timelineButton(row)(`class` := "btn-xs")
+    timelineButton(row)(`class` := "btn-sm")
   )
 
   private def timelineButton(row: Participant) =
-    button(
-      `class` := "btn btn-default",
-      Seq(span(`class` := s"glyphicon glyphicon-list", aria.hidden := "true")),
+    btnPrimary(
+      Glyphs.Timeline.toHtml,
       onclick := { (_: Any) =>
-        val (dialog, jqModal, modalBodyId) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
+        val (dialog, modalBodyId, bsMod) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
-        dom.document.getElementById(modalBodyId).appendChild(timeLineRenderer.timeLine(row).render)
+        val (timeLine, renderPlots) = timeLineRenderer.timeLine(row)
+        dom.document.getElementById(modalBodyId).appendChild(timeLine)
         timeLineRenderer.bodyClasses.foreach(dom.document.body.classList.add)
-        jqModal.modal(js.Dictionary("keyboard" -> true))
+        bsMod.show()
+        dialog.onBsModalShown(renderPlots)
       }
     )
 

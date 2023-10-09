@@ -9,7 +9,7 @@ val jqueryName: String = "jquery/2.1.4/jquery.js"
 
 val jqPlot = "org.webjars" % "jqplot" % "1.0.8r1250"
 
-val bootstrap = "org.webjars" % "bootstrap" % "3.3.7-1"
+val bootstrap = "org.webjars" % "bootstrap" % "5.3.2"
 
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
@@ -67,7 +67,7 @@ lazy val server = (project in file("server")).settings(
   digest / excludeFilter := "*.html" || "*.csv" || "*.json" || "*.json.new" ||
     // When sbt-simple-url-update updates path for glyphicons-halflings-regular.woff, it garbles the path for glyphicons-halflings-regular.woff2.
     "glyphicons-halflings-regular.woff",
-  filter / excludeFilter := "*.less" || "*.note" || "*.source" || "*.css" - "main.min.css" || "*.js" - "main.min.js",
+  filter / excludeFilter := "*.scss" || "*.note" || "*.source" || "*.css" - "main.css" || "*.js" - "main.min.js",
   filter / includeFilter := "*.css" || "*.html" || "*.js" || "*.csv" || "*.svg" || "*.woff" || "*.ttf" || "*.eot" || "*.woff2" || "*.json.new",
   genHtmlDir := target.value / "web" / "html" / "main",
   Assets / resourceDirectories += genHtmlDir.value,
@@ -107,8 +107,6 @@ lazy val server = (project in file("server")).settings(
   Concat.groups := Seq(
     "main.min.js" -> group(Seq("zbdb-stats-client-jsdeps.min.js", "zbdb-stats-client-opt/main.js"))
   ),
-  LessKeys.cleancss := true,
-  LessKeys.compress := true,
   libraryDependencies ++= Seq(
     "com.vmunier" %% "scalajs-scripts" % "1.2.0",
     guice,
@@ -140,7 +138,7 @@ lazy val client = (project in file("client")).settings(
   Compile / fullLinkJS / jsMappings += toPathMapping((Compile / packageMinifiedJSDependencies).value),
 
   jsDependencies ++= Seq(
-    bootstrap / "bootstrap.min.js",
+    bootstrap / "bootstrap.bundle.min.js",
     "org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
     "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data.js" dependsOn "min/moment.min.js",
     "org.webjars" % "jquery" % "2.1.4" / jqueryName minified "jquery/2.1.4/jquery.min.js",

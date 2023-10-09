@@ -26,9 +26,9 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   import participantTable._
 
   val Plots = Seq(
-    ParticipantPlotGenerator("chůze", "chůzi", "globe", generateWalkPlotData),
-    ParticipantPlotGenerator("rychlosti", "rychlost", "play", generateSpeedPlotData),
-    ParticipantPlotGenerator("pauz", "pauzy", "pause", generatePausesPlotData)
+    ParticipantPlotGenerator("chůze", "chůzi", Glyphs.Pedestrian, generateWalkPlotData),
+    ParticipantPlotGenerator("rychlosti", "rychlost", Glyphs.Play, generateSpeedPlotData),
+    ParticipantPlotGenerator("pauz", "pauzy", Glyphs.Pause, generatePausesPlotData)
   )
 
   val GlobalPlots = Seq(

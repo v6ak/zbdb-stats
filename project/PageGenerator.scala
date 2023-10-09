@@ -104,7 +104,7 @@ object PageGenerator{
     <html>
       <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.min.css"} />
+        <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.css"} />
         <script type="text/javascript" src={s"../../$publicDirName/main.min.js"}></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
         <link rel="prefetch" href={csvFile} />
@@ -123,16 +123,23 @@ object PageGenerator{
       >
         <div class="container">
           <h1>{title}</h1>
-          <p class="hidden-print">Alternativní podoby: {year.alternativeLinks.flatMap{case(name, link) =>
+          <p class="d-print-none">Alternativní podoby: {year.alternativeLinks.flatMap{case(name, link) =>
             Seq(Text(", "), <a href={link}>{name}</a>)
           }.tail}</p>
         </div>
         <div id="content"><div id="loading-indicator">
           <div class="progress progress-striped active">
-            <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Načítám výsledky…</div>
+            <div
+              class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar"
+              aria-valuenow="100"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              style="width: 100%"
+            >Načítám výsledky…</div>
           </div>
         </div></div>
-        <div class="container hidden-print">
+        <div class="container d-print-none">
           <h2>Když něco nefunguje…</h2>
           <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč.</p>
           <p>Zdrojové kódy jsou <a href="https://github.com/v6ak/zbdb-stats">na GitHubu</a>.</p>

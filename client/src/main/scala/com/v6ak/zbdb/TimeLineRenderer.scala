@@ -49,7 +49,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       if (el.nodeName.toUpperCase == name.toUpperCase()) el
       else findParent(name, el.parentNode.asInstanceOf[Element])
 
-    private def process(content: Frag, duration: TimeInterval, durationIcon: String, className: String = "") = tr(
+    private def process(content: Frag, duration: TimeInterval, durationIcon: Glyph, className: String = "") = tr(
       `class` := s"timeline-process $className",
       onmouseover := { (e: Event) =>
         val tr = findParent("tr", e.target.asInstanceOf[Element])
@@ -63,7 +63,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(`class` := "timeline-time"),
       td(`class` := "timeline-duration")(
         fseq(
-          glyphicon(durationIcon),
+          durationIcon.toHtml,
           " ",
           duration.toString
         )
@@ -79,10 +79,10 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
     )
 
     private def pause(content: Frag, duration: TimeInterval) =
-      process(content, duration = duration, durationIcon = "pause", className = "pause")
+      process(content, duration = duration, durationIcon = Glyphs.Pause, className = "pause")
 
     private def walk(content: Frag, duration: TimeInterval) =
-      process(content, duration = duration, durationIcon = "play", className = "walk")
+      process(content, duration = duration, durationIcon = Glyphs.Play, className = "walk")
 
     private def gaveUp(content: Frag) = end(content, className = "gave-up")
 
@@ -95,7 +95,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       peopleList((symbol, title, others))
     private def peopleList(items: (String, String, Seq[Participant])*): Frag =
       div(cls := "dropdown people-list-dropdown")(
-        btn(`class`:="btn-xs people-list-expand dropdown-toggle", toggle := "dropdown")(
+        btnLight(`class`:="btn-sm people-list-expand dropdown-toggle", toggle := "dropdown")(
           items.map{case (symbol, _, others) => s"$symbol${others.size}"}.mkString(""),
           span(cls:="caret"),
         ),
@@ -137,7 +137,8 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       val cumLenOption = events.collect { case p: WalkEvent.Arrival => p.checkpoint.cumLen }.lastOption
       val totalPausesTime = allPauses.foldLeft(TimeInterval(0))(_ + _)
       val totalTime = totalWalkTime + totalPausesTime
-      div(
+      val idPrefix = IdGenerator.newId()
+      val out = div(
         intro,
         table(`class` := "timeline timeline-real")(events.map(renderWalkEvent)),
         h2("Celkový čas a rychlost"),
@@ -162,10 +163,26 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         )(
           "with-overtaking", "without-overtaking"
         ),
-        h2("Vizualizace"),
-        chartButtons(row),
-      )
+        for((plot, i) <- Plots.zipWithIndex) yield fseq(
+          h2(s"Graf ${plot.nameGenitive}"),
+          div(id := s"$idPrefix-$i")
+        ),
+      ).render
+      (out, createRenderPlots(idPrefix))
     }
+
+    private def createRenderPlots(idPrefix: String) =
+      () => {
+        for ((plot, i) <- Plots.zipWithIndex) {
+          val data = plot.generator(Seq(row))
+          val id = s"$idPrefix-$i"
+          if (data.plotPoints.asInstanceOf[js.Array[js.Dynamic]](0).length == 0.asInstanceOf[js.Dynamic]) {
+            document.getElementById(id).appendChild("Žádná data".render)
+          } else {
+            initializePlot(id, data)
+          }
+        }
+      }
 
     private def intro = {
       fseq(
@@ -277,25 +294,5 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
   )
 
   def timeLine(row: Participant) = new ForPlayer(row).timeLine
-
-  private def chartButtons(row: Participant) = div(`class` := "chart-buttons")(
-    for {
-      plot <- Plots
-      name = s"Graf ${plot.nameGenitive}"
-    } yield chartButton(
-      name,
-      Seq(row),
-      plot.generator,
-      Seq(span(`class` := s"glyphicon glyphicon-${plot.glyphiconName}", aria.hidden := "true"))
-    )(title := name),
-  )
-
-  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) =
-    button(`class` := "btn btn-default btn-l")(description, " ", title)(onclick := { (_: Any) =>
-      val (dialog, jqModal, modalBodyId) = modal(title)
-      jqModal.on("shown.bs.modal", { () => initializePlot(modalBodyId, plotDataGenerator(rowsLoader)) })
-      dom.document.body.appendChild(dialog)
-      jqModal.modal(js.Dictionary("keyboard" -> true))
-    })
 
 }
