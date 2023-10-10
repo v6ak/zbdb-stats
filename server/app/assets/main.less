@@ -69,7 +69,7 @@
             // Prevents covering the dialog by the next row due to separate stacking context
             z-index: 102;
         }
-        tr+tr th {  // last row
+        tr+tr th, tr th[rowspan="2"] {  // last row
             border-bottom: 5px solid lightgray;
         }
     }
