@@ -65,6 +65,10 @@
         position: sticky;
         top: 0;
         z-index: 101;
+        tr:first-child th.participant-header {
+            // Prevents covering the dialog by the next row due to separate stacking context
+            z-index: 102;
+        }
         tr+tr th {  // last row
             border-bottom: 5px solid lightgray;
         }
