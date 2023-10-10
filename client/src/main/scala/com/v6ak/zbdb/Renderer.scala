@@ -294,35 +294,36 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private def initialize(): Unit = {
     showBar = false
     switches.values.foreach(dom.document.body.classList.add)
-    yearLinksOption match {
-      case Some(yearLinks) =>
-        if(!yearLinks.map(_._1).contains(year)){
-          content.appendChild(
-            div(cls:="alert alert-danger")("Výsledky pro tento ročník ještě nejsou finální.", br, "Pro adminy: pokud je to již hotovo, jdi do adresáře statistiky a přepiš soubor years.json souborem years.json.new. Tím schválíš všechny nové ročníky jako finální.").render
-          )
-        }
-      case None =>
-        content.appendChild(
-          div(cls:="alert alert-danger")("Neporařilo se načíst seznam starších ročníků. Takže vlastně ani nevím, jestli jsou toto finální výsledky.").render
-        )
-    }
-    if(processingErrors.nonEmpty){
-      content.appendChild(
-        div(cls:="alert alert-danger")(
-          s"Některé řádky (celkem ${processingErrors.size}) se nepodařilo zpracovat",
-          ul(
-            processingErrors.map{case (row, e) =>
-              li(
-                div(showCells(row)),
-                div(showThrowable(e))
-              )
-            }
-          )
-        ).render
-      )
-    }
     content.appendChild(
       div(`class` := "container")(
+        yearLinksOption match {
+          case Some(yearLinks) if !yearLinks.map(_._1).contains(year) => fseq(
+            div(cls := "alert alert-danger")(
+              "Výsledky pro tento ročník ještě nejsou finální.", br,
+              "Pro adminy: pokud je to již hotovo, jdi do adresáře statistiky a přepiš soubor years.json souborem " +
+                "years.json.new. Tím schválíš všechny nové ročníky jako finální."
+            )
+          )
+          case None => fseq(
+            div(cls := "alert alert-danger")(
+              "Neporařilo se načíst seznam ročníků. Takže vlastně ani nevím, jestli jsou toto finální výsledky."
+            )
+          )
+          case _ => fseq()
+        },
+        if (processingErrors.nonEmpty) fseq(
+          div(cls := "alert alert-danger")(
+            s"Některé řádky (celkem ${processingErrors.size}) se nepodařilo zpracovat",
+            ul(
+              processingErrors.map { case (row, e) =>
+                li(
+                  div(showCells(row)),
+                  div(showThrowable(e))
+                )
+              }
+            )
+          )
+        ) else fseq(),
         h2("Grafy"),
         globalStats,
         h2("Výsledky"),
