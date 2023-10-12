@@ -3,6 +3,7 @@ package com.v6ak.zbdb
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
+import com.example.RichMoment.toRichMoment
 
 final case class Participant(
   id: Int,

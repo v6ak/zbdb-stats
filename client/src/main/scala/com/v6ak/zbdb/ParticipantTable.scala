@@ -4,6 +4,7 @@ import com.example.moment.Moment
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.scalajs.time.TimeInterval.TimeIntervalOrdering
 import scala.language.implicitConversions
+import com.example.RichMoment.toRichMoment
 
 final case class FullPartInfo(
   previousPartMetaOption: Option[Part],

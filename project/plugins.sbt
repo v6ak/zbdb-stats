@@ -33,4 +33,6 @@ addSbtPlugin("org.github.ngbinh" % "sbt-simple-url-update" % "1.0.4")
 
 addSbtPlugin("org.scala-js" % "sbt-jsdependencies" % "1.0.2")
 
+addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "4.2.0")
+
 dependencyOverrides += "org.scala-lang.modules" %% "scala-xml" % "2.1.0"

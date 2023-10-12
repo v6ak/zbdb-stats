@@ -52,7 +52,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   implicit private class RichTime(moment: Moment){
     def timeOnlyDiv: Frag = div(title:=moment.toString)(humanReadable)
-    def humanReadable: String = f"${moment.hours()}:${moment.minutes()}%02d"
+    def humanReadable: String = moment.hoursAndMinutes
   }
 
   private object selection {

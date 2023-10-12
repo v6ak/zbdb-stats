@@ -1,6 +1,7 @@
 package com.v6ak.zbdb
 
 import com.example.moment._
+import com.example.RichMoment.toRichMoment
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
 import org.scalajs.dom
@@ -10,6 +11,8 @@ import scala.scalajs.js
 import scala.util.Try
 import com.v6ak.scalajs.regex.JsPattern._
 import EitherPartitioningRichSeq._
+
+import java.time.{LocalTime, ZonedDateTime}
 
 object Parser{
 
@@ -35,20 +38,16 @@ object Parser{
   final case class Time(h: Int, m: Int){
     private def timeString = s"$h:$m"
     def toMoment(prevTime: Moment, maxHourDelta: Int) = {
-      if(!prevTime.isValid()){
-        sys.error("invalid prevTime: "+prevTime)
-      }
-      val result = moment(prevTime)
-      result.hours(h)
-      result.minutes(m)
-      if(result isBefore prevTime){
-        result.date(result.date() + 1)
-      }
-      if(!result.isValid()){
-        sys.error(s"invalid date: $timeString")
-      }
+      val resultCandidate = ZonedDateTime.of(
+        prevTime.toLocalDate,
+        LocalTime.of(h, m),
+        prevTime.getZone
+      )
+      val result =
+        if(resultCandidate isBefore prevTime) resultCandidate.plusDays(1)
+        else resultCandidate
       strictCheck{
-        if((result.toDate().getTime() - prevTime.toDate().getTime()) > (maxHourDelta*3600*1000)){
+        if(result.minusHours(maxHourDelta) > prevTime){
           throw new MaxHourDeltaExceededException(maxHourDelta, prevTime, result)//) sys.error(s"following time specification overreaches time delta $maxHourDelta hours ($prevTime -> $result): $timeString")
         }
       }
@@ -84,7 +83,7 @@ object Parser{
         val startMoment = startTime.toMoment(prevMoment, maxHourDelta)
         val endMoment = endTime.toMoment(startMoment, maxHourDelta)
         val intervalTime = interval.toTimeInterval
-        assert( (endMoment.toDate().getTime() - startMoment.toDate().getTime()) == (intervalTime.totalMinutes*60*1000), "Computed duration does not match.")
+        assert(endMoment.minusMinutes(intervalTime.totalMinutes) == startMoment, "Computed duration does not match.")
         Some(PartTimeInfo.Finished(
           startTime = startMoment,
           endTime = endMoment,

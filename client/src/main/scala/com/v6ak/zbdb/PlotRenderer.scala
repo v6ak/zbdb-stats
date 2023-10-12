@@ -9,6 +9,7 @@ import scala.scalajs.js
 import scala.scalajs.js.Dictionary
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
+import com.example.RichMoment.toRichMoment
 
 @JSGlobal @js.native object `$` extends js.Object{
   @js.native object jqplot extends js.Object{
@@ -95,7 +96,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
           "xaxis" -> Dictionary(
             "renderer" -> DateAxisRenderer,
             "tickOptions" -> Dictionary("formatString" -> "%#H:%M"),
-            "min" -> moment(startTime).minutes(0).toString,
+            "min" -> startTime.withMinute(0).toString,
             "tickInterval" -> "1 hours"
           ),
           "yaxis" -> Dictionary(
@@ -132,7 +133,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         "xaxis" -> Dictionary(
           "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer,
           "tickOptions" -> Dictionary("formatString" -> "%#H:%M"),
-          "min" -> moment(startTime).minutes(0).toString,
+          "min" -> startTime.withMinute(0).toString,
           "tickInterval" -> "5 minutes"
         ),
         "yaxis" -> Dictionary(
@@ -150,7 +151,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         finishers.map{case ((moment, time), participants) =>
           js.Array(
             moment/*.hours()*60+moment.minutes()*/,
-            zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString,
+            zeroMoment.plusSeconds((time+1 / 1000)).toString,
             math.sqrt(participants.size.toDouble),
             participants.map(_.fullName).mkString(", ") + " ("+participants.size+")",
           )

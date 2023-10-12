@@ -21,8 +21,6 @@ object App {
       val formatVersionNumber = body.getAttribute("data-format-version").toInt
       val startTime = moment.tz(body.getAttribute("data-start-time"), body.getAttribute("data-timezone"))
       val endTime = moment.tz(body.getAttribute("data-end-time"), body.getAttribute("data-timezone"))
-      if(!startTime.isValid()) sys.error("startTime is invalid")
-      if(!endTime.isValid()) sys.error("endTime is invalid")
       dom.console.log("startTime", startTime.toString)
       dom.console.log("endTime", endTime.toString)
       dom.console.log("fileName", fileName)

@@ -128,6 +128,8 @@ lazy val client = (project in file("client")).settings(
   scalaJSUseMainModuleInitializer := true,
   Test / scalaJSUseMainModuleInitializer := false,
   libraryDependencies ++= Seq(
+    "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
+    "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.5.0",
     "org.scala-js" %%% "scalajs-dom" % "2.7.0",
     "com.lihaoyi" %%% "scalatags" % "0.12.0",
     "com.nrinaudo" %%% "kantan.csv" % "0.7.0",
@@ -139,8 +141,8 @@ lazy val client = (project in file("client")).settings(
 
   jsDependencies ++= Seq(
     bootstrap / "bootstrap.bundle.min.js",
-    "org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
-    "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data.js" dependsOn "min/moment.min.js",
+    //"org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
+    //"org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data.js" dependsOn "min/moment.min.js",
     "org.webjars" % "jquery" % "2.1.4" / jqueryName minified "jquery/2.1.4/jquery.min.js",
     jqPlot / "jquery.jqplot.min.js" dependsOn jqueryName,
     jqPlot / "jqplot.dateAxisRenderer.min.js" dependsOn "jquery.jqplot.min.js",
@@ -151,7 +153,8 @@ lazy val client = (project in file("client")).settings(
     jqPlot / "jqplot.pointLabels.min.js" dependsOn "jquery.jqplot.min.js",
     jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
   ),
-).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb)//.dependsOn(sharedJs)
+  zonesFilter := {(z: String) => z == "America/Santiago" || z == "Europe/Prague"},
+).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb, TzdbPlugin)//.dependsOn(sharedJs)
 
 /*lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(scalaVersion := scalaV).
