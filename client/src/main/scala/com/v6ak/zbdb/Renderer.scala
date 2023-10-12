@@ -90,7 +90,9 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private def yearSelection = dropdownGroup(Seq[Frag](year, " ", span(cls:="caret")))(
     yearLinksOption match{
-      case Some(yearLinks) => yearLinks.reverse.map{case (y, yearLink) => a(href:=yearLink)(y)}
+      case Some(yearLinks) => yearLinks.reverse.map{case (y, yearLink) =>
+        a(`class`:="dropdown-item", href:=yearLink)(y)
+      }
       case None => span(cls:="badge bg-danger")("Ročníky nejsou k dispozici.")
     }
   )
