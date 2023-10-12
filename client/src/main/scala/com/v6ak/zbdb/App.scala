@@ -2,7 +2,7 @@ package com.v6ak.zbdb
 
 import com.example.moment._
 import org.scalajs.dom
-import org.scalajs.dom.ext.Ajax
+import scala.scalajs.js.Thenable.Implicits._
 
 import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.JSExport
@@ -32,9 +32,9 @@ object App {
           case Array(name) => (name, "")
         }
       }.toMap
-      val resultsFuture = Ajax.get(fileName, responseType = "text")
-      val allYearsLinksFuture = Ajax.get("../../statistiky/years.json", responseType = "application/json").map{ayXhr =>
-        Some(JSON.parse(ayXhr.responseText).asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted)
+      val resultsFuture = dom.fetch(fileName).flatMap(_.text())
+      val allYearsLinksFuture = dom.fetch("../../statistiky/years.json").flatMap(_.json()).map{ ay =>
+        Some(ay.asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted)
       }.recover{case e =>
         e.printStackTrace()
         None
@@ -42,10 +42,10 @@ object App {
       resultsFuture onComplete {
         case Failure(e) =>
           dom.window.alert("Failed to load data")
-        case Success(xhr) =>
+        case Success(csvData) =>
           try{
             val formatVersion = FormatVersion.Versions(formatVersionNumber)
-            val result @ (parts, data, errors) = Parser.parse(xhr.responseText, startTime, endTime, maxHourDelta, formatVersion)
+            val result @ (parts, data, errors) = Parser.parse(csvData, startTime, endTime, maxHourDelta, formatVersion)
             val content = dom.document.getElementById("content")
             val participantTable = ParticipantTable(startTime, parts, data, formatVersion)
             val plots = JSON.parse(body.getAttribute("data-plots")).asInstanceOf[js.Array[js.Array[String]]].toIndexedSeq.map{a => (a(0), a(1))}
