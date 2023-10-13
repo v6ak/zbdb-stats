@@ -1,14 +1,18 @@
 package com.v6ak.zbdb
 
-import com.example.moment._
+import com.example.moment.{moment, _}
 import com.v6ak.zbdb.`$`.jqplot.DateAxisRenderer
 import org.scalajs.dom
+import org.scalajs.dom._
 
 import scala.collection.immutable
 import scala.scalajs.js
 import scala.scalajs.js.Dictionary
-import scala.scalajs.js
+import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation._
+import Bootstrap.DialogUtils
+import com.example.moment._
 
 @JSGlobal @js.native object `$` extends js.Object{
   @js.native object jqplot extends js.Object{
@@ -22,6 +26,7 @@ import scala.scalajs.js.annotation._
 }
 
 final class PlotRenderer(participantTable: ParticipantTable) {
+  import ChartJsUtils._
 
   import participantTable._
 
@@ -31,13 +36,11 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     ParticipantPlotGenerator("pauz", "pauzy", Glyphs.Pause, generatePausesPlotData)
   )
 
-  val GlobalPlots = Seq(
-    "Porovnání startu a času" -> startTimeToTotalDurationPlot _,
-    "Genderová struktura" -> genderStructurePlot _
-  ) ++
-    (if(participantTable.formatVersion.ageType == AgeType.BirthYear) Seq("Věková struktura" -> ageStructurePlot _) else Seq()) ++ Seq(
-    "Počet lidí" -> remainingParticipantsCountPlot _,
-    "Počet lidí v %" -> remainingRelativeCountPlot _
+  val GlobalPlots = Seq[(String, (Option[String], ((String, =>Seq[Participant], ParticipantTable) => Unit)))](
+    "Porovnání startu a času" -> startTimeToTotalDurationPlot,
+    "Genderová struktura" -> genderStructurePlot,
+    "Počet lidí" -> (None -> remainingParticipantsCountPlot _),
+    "Počet lidí v %" -> (None -> remainingRelativeCountPlot _)
   )
 
   private val GenderNames = Map[Gender, String](
@@ -45,28 +48,16 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     Gender.Female -> "žena"
   )
 
-  private def zeroMoment = moment("2000-01-01") // We don't want to mutate it
-
-  private val DurationRenderer: js.ThisFunction = (th: js.Dynamic) => {
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer.call(th)
-  }
-  DurationRenderer.asInstanceOf[js.Dynamic].prototype = new DateAxisRenderer()
-  DurationRenderer.asInstanceOf[js.Dynamic].prototype.init = ((th: js.Dynamic) => {
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer.prototype.init.call(th)
-    th.tickOptions.formatter = ((format: String, value: Moment) => {
-      val diff = value - zeroMoment
-      val hours = diff/1000/60/60
-      val minutes = diff/1000/60 - hours*60
-      f"$hours%02d:$minutes%02d"
-    }): js.Function
-  }): js.ThisFunction
+  private val GenderColors = Map[Gender, String](
+    Gender.Female -> "#FFC0CB",
+    Gender.Male -> "#008080",
+  )
 
   private val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
 
   private val DateAxisRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer
 
   def generateWalkPlotData(rowsLoader: Seq[Participant]) = {
-    import com.example.moment._
     val data = rowsLoader.map(processTimes)
     val series = js.Array(data.map(line =>
       line.seriesOptions
@@ -108,56 +99,73 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def startTimeToTotalDurationPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
-    val finishers = rowsLoader.filter(p => p.hasFinished).groupBy(p => (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime))
-    import com.example.moment._
-    val plotParams = js.Dictionary(
-      "title" -> "Porovnání startu a času chůze (pouze finalisti)",
-      "seriesDefaults" -> js.Dictionary(
-        "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.BubbleRenderer,
-        "rendererOptions" -> js.Dictionary(
-          "bubbleGradients" -> true
-        ),
-        "shadow" -> true
-      ),
-      /*"highlighter" -> js.Dictionary(
-        "show" -> true,
-        "showTooltip" -> true,
-        "formatString" -> "%s|%s|%s|%s",
-        "bringSeriesToFront" -> true
-      ),*/
-      "height" -> 500,
-      "legend" -> Dictionary("show" -> true),
-      "axes" -> Dictionary(
-        "xaxis" -> Dictionary(
-          "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer,
-          "tickOptions" -> Dictionary("formatString" -> "%#H:%M"),
-          "min" -> moment(startTime).minutes(0).toString,
-          "tickInterval" -> "5 minutes"
-        ),
-        "yaxis" -> Dictionary(
-          "renderer" -> DurationRenderer,
-          "tickOptions" -> Dictionary(
-            "formatString" -> "aaa %#H:%M",
-            "formatter" -> ((format: String, value: Moment) => value.toString)
-          ),
-          "tickInterval" -> "30 minutes"
-        )
+  private val startTimeToTotalDurationRadius = (context: js.Dynamic) => {
+    // It doesn't seem to be recalculated when resized, even though this function is called
+    val baseSize = math.max(
+      5, // minimal base size in px
+      math.min(
+        context.chart.height.asInstanceOf[Double] / 20,
+        context.chart.width.asInstanceOf[Double] / 20,
       )
     )
-    val plotPoints = js.Array(
-      js.Array(
-        finishers.map{case ((moment, time), participants) =>
-          js.Array(
-            moment/*.hours()*60+moment.minutes()*/,
-            zeroMoment.add({dom.console.log(time+" – "+participants); time+1}, "milliseconds").toString,
-            math.sqrt(participants.size.toDouble),
-            participants.map(_.fullName).mkString(", ") + " ("+participants.size+")",
-          )
-        }.toSeq
-      :_*)
+    val res = baseSize
+    // area should scale linearly, so we need sqrt for radius
+    res * math.sqrt(context.raw.participants.length.asInstanceOf[Int])
+  }
+
+  private def startTimeToTotalDurationTooltip = {
+    literal(
+      callbacks = literal(
+        label = (context: js.Dynamic) => {
+          val participants = context.raw.participants.asInstanceOf[js.Array[Participant]]
+          participants.map(_.fullName).mkString(", ") + " (" + participants.size + ")"
+        },
+      ),
     )
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
+  }
+
+  private def startTimeToTotalDurationPlot = showChartInModal(
+    title = "Porovnání startu a času (pouze finalisti)"
+  ) { rows =>
+    val finishers = rows.filter(p => p.hasFinished).groupBy(p =>
+      (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime)
+    )
+    literal(
+      `type` = "bubble",
+      data = literal(
+        datasets = js.Array(
+          literal(
+            radius = startTimeToTotalDurationRadius,
+            data = finishers.map { case ((_startTimeString, time), participants) =>
+              val startTime = participants(0).startTime
+              literal(
+                x = startTime,
+                y = zeroMoment.add(time, "milliseconds"),
+                participants = participants.toJSArray
+              )
+            }.toJSArray
+          )
+        )
+      ),
+      options = literal(
+        scales = literal(
+          x = timeAxis("Čas startu"),
+          y = durationAxis(
+            label="Celková doba",
+            min=zeroMoment.add(
+              finishers.values.flatten.map(p =>
+                (p.partTimes.last.endTimeOption.get - p.startTime) / 3600 / 1000
+              ).min - 1,
+              "hours"
+            )
+          ),
+        ),
+        plugins = literal(
+          legend = literal(display = false),
+          tooltip = startTimeToTotalDurationTooltip,
+        ),
+      ),
+    )
   }
 
   private def computeCumulativeMortality(rows: Seq[Participant]) = {
@@ -237,22 +245,15 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
-  def genderStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
-    val structure = rowsLoader.groupBy(_.gender)
-    val plotParams = js.Dictionary(
-      "title" -> "Genderová struktura startujících",
-      "seriesDefaults" -> js.Dictionary(
-        "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.PieRenderer,
-        "rendererOptions" -> js.Dictionary(
-          "showDataLabels" -> true
-        ),
-        "shadow" -> true
-      ),
-      "height" -> 500,
-      "legend" -> Dictionary("show" -> true)
+  def genderStructurePlot = showChartInModal() { rows =>
+    val structure = rows.groupBy(_.gender)
+    js.Dynamic.literal(
+      `type` = "pie",
+      data = dataFromTriples(structure.toSeq.map { case (gender, p) =>
+        (GenderNames(gender), p.size, GenderColors(gender))
+      }),
+      title = "Genderová struktura startujících",
     )
-    val plotPoints = js.Array(js.Array(structure.map{case (gender, p) => js.Array(GenderNames(gender), p.size)}.toSeq: _*))
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
   def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
