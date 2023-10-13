@@ -245,9 +245,9 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   ).render
 
   private val globalStats = div(id := "global-stats")(
-    GlobalPlots.map{case (plotName, plotFunction) =>
+    GlobalPlots.map { case (plotName, (detailedTitleOption, plotFunction)) =>
       button(plotName)(cls := "btn btn-secondary d-print-none")(onclick := {(e: Event) =>
-        val (dialog, modalBodyId, bsMod) = modal(plotName)
+        val (dialog, modalBodyId, bsMod) = modal(detailedTitleOption.getOrElse(plotName): String)
         dialog.onBsModalShown{ () => plotFunction(modalBodyId, data, participantTable) }
         dom.document.body.appendChild(dialog)
         bsMod.show()
