@@ -53,6 +53,7 @@ import scala.scalajs.js.Date
 @js.native
 trait Moment extends js.Any {
   def add(time: Int, units: String): Moment = js.native
+  def subtract(time: Int, units: String): Moment = js.native
   //def plus(time: Int, units: String): Moment = js.native
 
 
