@@ -6,11 +6,9 @@ import org.scalajs.dom._
 
 import scala.collection.immutable
 import scala.scalajs.js
-import scala.scalajs.js.Dictionary
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation._
-import Bootstrap.DialogUtils
 import com.example.moment._
 import com.example.RichMoment._
 import com.v6ak.zbdb.CollectionUtils.RichMap
