@@ -1,6 +1,18 @@
 @import "bootstrap-fragments";  // full Bootstrap: @import "lib/bootstrap/scss/bootstrap";
 @import "icons";
 
+.plot-bar, .plot-line, .plot-bubble {
+    --bs-aspect-ratio: 50%;
+}
+.plot-pie {
+    --bs-aspect-ratio: 100%;
+}
+.plot {
+    max-height: 100vh;
+    max-width: 80em;
+    margin: auto;
+}
+
 
 .participants-table {
     border-collapse: separate;
