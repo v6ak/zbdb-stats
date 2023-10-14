@@ -13,6 +13,7 @@ import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation._
 import Bootstrap.DialogUtils
 import com.example.moment._
+import com.v6ak.zbdb.TextUtils.formatLength
 
 @JSGlobal @js.native object `$` extends js.Object{
   @js.native object jqplot extends js.Object{
@@ -39,8 +40,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   val GlobalPlots = Seq[(String, (Option[String], ((String, =>Seq[Participant], ParticipantTable) => Unit)))](
     "Porovnání startu a času" -> startTimeToTotalDurationPlot,
     "Genderová struktura" -> genderStructurePlot,
-    "Počet lidí" -> (None -> remainingParticipantsCountPlot _),
-    "Počet lidí v %" -> (None -> remainingRelativeCountPlot _)
+    "Počet lidí" -> remainingParticipantsCountPlot,
+    "Počet lidí v %" -> remainingRelativeCountPlot,
   )
 
   private val GenderNames = Map[Gender, String](
@@ -174,75 +175,62 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     mortalitySeq.scan(0)(_ + _).tail
   }
 
-  def remainingParticipantsCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit = {
-    val rows = rowsLoader
+  def remainingParticipantsCountPlot = showChartInModal() { rows =>
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
-    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (participantTable.parts(i), cm, rows.size - cm, i)}
-    val ticks = js.Array(data.map { case (header, _, _, i) =>
-      s"${i+1}. (${header.cumulativeTrackLength} km)"
-    }: _*)
-    val plotParams = js.Dictionary(
-      "title" -> "Počet lidí",
-      "seriesDefaults" -> js.Dictionary(
-        "showMarker" -> true,
-        "markerOptions" -> Dictionary("style" -> "diamond")
-      ),
-      "highlighter" -> js.Dictionary(
-        "show" -> true,
-        "showTooltip" -> true,
-        "formatString" -> "%2$s",
-        "bringSeriesToFront" -> true
-      ),
-      "axes" -> js.Dictionary(
-        "xaxis" -> js.Dictionary(
-          "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.CategoryAxisRenderer,
-          "ticks" -> ticks
-        )
-      ),
-      "height" -> 500
-    )
-    val plotPoints = js.Array(
-      js.Array(data.map(_._2): _*),
-      js.Array(data.map(_._3): _*)
-    )
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
+    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) =>
+      (participantTable.parts(i), cm, rows.size - cm, i)
+    }
+    genericRemainingParticipantsCountPlot(data, "line")(_.toString)
   }
 
-  def remainingRelativeCountPlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit = {
-    val rows = rowsLoader
+  def remainingRelativeCountPlot = showChartInModal() { rows =>
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
     val size = rows.size
-    val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) => (i, 100.0*cm/size, 100.0*(size - cm)/size)}
-    val ticks = js.Array(data.map{case (i, _, _) =>
-      val header = participantTable.parts(i)
-      s"${i+1}. (${header.cumulativeTrackLength} km)"
-    }: _*)
-    val plotParams = js.Dictionary(
-      "title" -> "Počet lidí v %",
-      "seriesDefaults" -> js.Dictionary(
-        "showMarker" -> true,
-        "renderer" -> BarRenderer,
-        "markerOptions" -> Dictionary("style" -> "diamond")
-      ),
-      "highlighter" -> js.Dictionary(
-        "show" -> true,
-        "showTooltip" -> true,
-        "formatString" -> "%2$s",
-        "bringSeriesToFront" -> true
-      ),
-      "axes" -> js.Dictionary(
-        "xaxis" -> js.Dictionary(
-          "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.CategoryAxisRenderer,
-          "ticks" -> ticks
+    val data = cummulativeMortality.dropRight(1).zipWithIndex.map { case (cm, i) =>
+      (participantTable.parts(i), 100.0 * cm / size, 100.0 * (size - cm) / size, i)
+    }
+    genericRemainingParticipantsCountPlot[Double](data, "bar")(num => f"$num%.2f%%")
+  }
+
+
+  private def genericRemainingParticipantsCountPlot[T](data: immutable.IndexedSeq[(Part, T, T, Int)], chartType: String)(format: T => String) = {
+    def dataset(name: String, f: ((Part, T, T, Int)) => T): js.Dynamic = literal(
+      label = name,
+      data = data.map { case data@(part, _gaveUp, _remaining, _i) =>
+        literal(y = f(data).asInstanceOf[js.Any], x = part.cumulativeTrackLength.toDouble, part = part.asInstanceOf[js.Any])
+      }.toJSArray
+    )
+
+    literal(
+      `type` = chartType,
+      data = literal(
+        datasets = js.Array(
+          dataset("dorazilo", _._3),
+          dataset("skončilo", _._2),
         )
       ),
-      "height" -> 500
+      options = literal(
+        plugins = literal(
+          tooltip = literal(
+            callbacks = literal(
+              label = (context: js.Dynamic) => {
+                val part = context.raw.part.asInstanceOf[Part]
+                val index = context.dataIndex.asInstanceOf[Int] + 1
+                val pointName = if(participantTable.parts.size == index) "cíle" else s"$index. stanoviště"
+                s"Do $pointName ${context.dataset.label} ${format(context.parsed.y.asInstanceOf[T])} lidí " +
+                  s"(${formatLength(part.cumulativeTrackLength)}, ${part.place})"
+              },
+            )
+          )
+        ),
+        scales = literal(
+          x = literal(
+            `type` = "linear",
+            min = 0,
+          ),
+        ),
+      )
     )
-    val plotPoints = js.Array(
-      js.Array(data.map(_._2): _*),
-      js.Array(data.map(_._3): _*)
-    )
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
   }
 
   def genderStructurePlot = showChartInModal() { rows =>
