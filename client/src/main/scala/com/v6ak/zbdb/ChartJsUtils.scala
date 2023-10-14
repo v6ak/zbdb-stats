@@ -20,8 +20,9 @@ object ChartJsUtils {
 
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
-  def timeAxis(label: String) = literal(
+  def timeAxis(label: String, min: js.Any = js.undefined) = literal(
     `type` = "time",
+    min = min,
     time = literal(
       unit = "minute",
       displayFormats = literal(

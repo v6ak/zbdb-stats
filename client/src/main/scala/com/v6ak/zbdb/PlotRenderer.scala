@@ -14,6 +14,7 @@ import Bootstrap.DialogUtils
 import com.example.moment._
 import com.example.RichMoment._
 import com.v6ak.zbdb.TextUtils.{formatLength, formatSpeed}
+import com.v6ak.zbdb.RichGenderSeq._
 
 
 final class PlotRenderer(participantTable: ParticipantTable) {
@@ -63,14 +64,29 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       callbacks = literal(
         label = (context: js.Dynamic) => {
           val participants = context.raw.participants.asInstanceOf[js.Array[Participant]]
-          participants.map(_.fullName).mkString(", ") + " (" + participants.size + ")"
+          val names = participants.map(_.fullName).mkString(", ")
+          val started = participants.map(_.gender).inflectCzech(
+            feminineSingular = "Vyrazila",
+            femininePlural = "Vyrazily",
+            masculineSingular = "Vyrazil",
+            masculinePlural = "Vyrazili",
+          )
+          val finished = participants.map(_.gender).inflectCzech(
+            feminineSingular = "ušla",
+            femininePlural = "ušly",
+            masculineSingular = "ušel",
+            masculinePlural = "ušli",
+          )
+          val start = context.raw.x.asInstanceOf[Moment].hoursAndMinutes
+          val total = context.raw.y.asInstanceOf[Moment].hoursAndMinutes
+          s"$names (${participants.size}) – $started $start, celou trasu $finished za $total"
         },
       ),
     )
   }
 
   private def startTimeToTotalDurationPlot = showChartInModal(
-    title = "Porovnání startu a času (pouze finalisti)"
+    title = "Porovnání startu a celkového času (pouze finalisti)"
   ) { rows =>
     val finishers = rows.filter(p => p.hasFinished).groupBy(p =>
       (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime)
@@ -94,9 +110,12 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       ),
       options = literal(
         scales = literal(
-          x = timeAxis("Čas startu"),
+          x = timeAxis(
+            label = "čas startu",
+            min = participantTable.startTime.subtract(5, "minutes").unix().toLong * 1000,
+          ),
           y = durationAxis(
-            label="Celková doba",
+            label="celková doba",
             min=zeroMoment.add(
               finishers.values.flatten.map(p =>
                 (p.partTimes.last.endTimeOption.get - p.startTime) / 3600 / 1000
