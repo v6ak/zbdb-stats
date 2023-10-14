@@ -13,6 +13,7 @@ import scala.scalajs.js.annotation._
 import Bootstrap.DialogUtils
 import com.example.moment._
 import com.example.RichMoment._
+import com.v6ak.zbdb.CollectionUtils.RichMap
 import com.v6ak.zbdb.TextUtils.{formatLength, formatSpeed}
 import com.v6ak.zbdb.RichGenderSeq._
 
@@ -133,7 +134,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
   private def computeCumulativeMortality(rows: Seq[Participant]) = {
-    val mortalityMap = rows.map(_.partTimes.count(_.hasEndTime)).groupBy(identity).mapValues(_.size).map(identity).toMap
+    val mortalityMap = rows.map(_.partTimes.count(_.hasEndTime)).groupBy(identity).mapValuesStrict(_.size)
     val mortalitySeq = (0 to mortalityMap.keys.max).map(mortalityMap.getOrElse(_, 0))
     mortalitySeq.scan(0)(_ + _).tail
   }
@@ -289,7 +290,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       PlotLine(
         row = p,
         label = p.fullName,
-        points = (p.pauseTimes, parts).zipped.map((pause, part) =>
+        points = (p.pauseTimes lazyZip parts).map((pause, part) =>
           literal(x=part.cumulativeTrackLength.toDouble, y=pause/1000/60): js.Any
         ).toJSArray
       )
