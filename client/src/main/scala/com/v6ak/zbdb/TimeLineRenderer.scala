@@ -16,12 +16,12 @@ import org.scalajs.dom.html.TableRow
 import scala.annotation.tailrec
 
 import scala.scalajs.js.annotation._
-
+import ChartJsUtils._
 
 
 final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: PlotRenderer) {
   import participantTable._
-  import plotRenderer.{Plots, initializePlot}
+  import plotRenderer.IndividualPlots
 
   private val switches = new ClassSwitches(Map(
     "speed" -> "with-speed",
@@ -163,7 +163,7 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
         )(
           "with-overtaking", "without-overtaking"
         ),
-        for((plot, i) <- Plots.zipWithIndex) yield fseq(
+        for((plot, i) <- IndividualPlots.zipWithIndex) yield fseq(
           h2(s"Graf ${plot.nameGenitive}"),
           div(id := s"$idPrefix-$i")
         ),
@@ -172,14 +172,15 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
     }
 
     private def createRenderPlots(idPrefix: String) =
-      () => {
-        for ((plot, i) <- Plots.zipWithIndex) {
-          val data = plot.generator(Seq(row))
+      (dialog: HTMLElement) => {
+        for ((plot, i) <- IndividualPlots.zipWithIndex) {
+          val data = plot.generator(Seq(row)).asInstanceOf[js.Dynamic]
           val id = s"$idPrefix-$i"
-          if (data.plotPoints.asInstanceOf[js.Array[js.Dynamic]](0).length == 0.asInstanceOf[js.Dynamic]) {
-            document.getElementById(id).appendChild("Žádná data".render)
+          val element = document.getElementById(id).asInstanceOf[HTMLElement]
+          if (data.data.datasets.asInstanceOf[js.Array[js.Dynamic]](0).data.length == 0.asInstanceOf[js.Dynamic]) {
+            element.appendChild("Žádná data".render)
           } else {
-            initializePlot(id, data)
+            initializePlot(element, data, cb => dialog.onBsModalHidden(cb))
           }
         }
       }
