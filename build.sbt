@@ -5,10 +5,6 @@ val appVersion= "1.0"
 
 lazy val scalaV = "2.13.12"
 
-val jqueryName: String = "jquery/2.1.4/jquery.js"
-
-val jqPlot = "org.webjars" % "jqplot" % "1.0.8r1250"
-
 val bootstrap = "org.webjars" % "bootstrap" % "5.3.2"
 
 import com.typesafe.sbt.web.PathMapping
@@ -111,7 +107,6 @@ lazy val server = (project in file("server")).settings(
     "com.vmunier" %% "scalajs-scripts" % "1.2.0",
     guice,
     bootstrap,
-    jqPlot,
     specs2 % Test
   ),
 ).enablePlugins(PlayScala, JSDependenciesPlugin, SbtWeb)//.dependsOn(sharedJvm)
@@ -141,15 +136,8 @@ lazy val client = (project in file("client")).settings(
     bootstrap / "bootstrap.bundle.min.js",
     "org.webjars" % "momentjs" % "2.10.6" / "min/moment.min.js",
     "org.webjars" % "moment-timezone" % "0.4.0-1" / "moment-timezone-with-data.js" dependsOn "min/moment.min.js",
-    "org.webjars" % "jquery" % "2.1.4" / jqueryName minified "jquery/2.1.4/jquery.min.js",
     "org.webjars.npm" % "chart.js" % "4.4.0" / "chart.umd.js",
     "org.webjars.npm" % "chartjs-adapter-moment" % "1.0.0" / "chartjs-adapter-moment.min.js" dependsOn "chart.umd.js",
-    jqPlot / "jquery.jqplot.min.js" dependsOn jqueryName,
-    jqPlot / "jqplot.dateAxisRenderer.min.js" dependsOn "jquery.jqplot.min.js",
-    jqPlot / "jqplot.categoryAxisRenderer.min.js" dependsOn "jquery.jqplot.min.js",
-    jqPlot / "jqplot.barRenderer.min.js" dependsOn "jquery.jqplot.min.js",
-    jqPlot / "jqplot.pointLabels.min.js" dependsOn "jquery.jqplot.min.js",
-    jqPlot / "jqplot.highlighter.min.js" dependsOn "jquery.jqplot.min.js",
   ),
 ).enablePlugins(ScalaJSPlugin, JSDependenciesPlugin, ScalaJSWeb)//.dependsOn(sharedJs)
 

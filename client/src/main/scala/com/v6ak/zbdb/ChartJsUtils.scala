@@ -54,6 +54,35 @@ object ChartJsUtils {
       text = label,
     ),
   )
+  def minutesAxis(label: String) = literal(
+    min = 0,
+    title = literal(
+      display = true,
+      text = label,
+    ),
+  )
+
+  def distanceAxis = {
+    literal(
+      `type` = "linear",
+      min = 0,
+      title = literal(
+        display = true,
+        text = "vzdálenost (km)",
+      ),
+    )
+  }
+
+  def speedAxis = {
+    literal(
+      `type` = "linear",
+      min = 0,
+      title = literal(
+        display = true,
+        text = "rychlost (km/h)",
+      ),
+    )
+  }
 
   def dataFromPairs(seq: Seq[(Any, Any)]) = literal(
     labels = seq.map(_._1).toJSArray,
@@ -74,32 +103,47 @@ object ChartJsUtils {
     )
   )
 
-  def showChartInModal(title: String = null)(f: Seq[Participant] => js.Any): (Option[String], (String, => Seq[Participant], ParticipantTable) => Unit) =
-    Option(title) -> ((modalBodyId: String, rowsLoader, participantTable: Any) => {
-      val el = window.document.getElementById(modalBodyId).asInstanceOf[HTMLElement]
-      el.style.maxHeight = "90vh"
-      el.style.maxWidth = "90vw"
+  def initializePlot(el: HTMLElement, plotParams: js.Any, registerDestroy: (()=>Unit) => Unit): Unit = {
+    console.log("plotParams", plotParams)
+    el.style.maxHeight = "90vh"
+    el.style.maxWidth = "90vw"
 
-      val can = canvas().render
-      el.appendChild(can)
+    val can = canvas().render
+    el.appendChild(can)
 
+    val chart = new Chart(can, plotParams)
+    val resizeHandler: Event => Unit = _ => {
+      //chart.update()
+      chart.resize()
+    }
+
+    window.addEventListener("resize", resizeHandler)
+
+    def destroy(): Unit = {
+      window.removeEventListener("resize", resizeHandler)
+      chart.destroy()
+    }
+
+    registerDestroy(destroy)
+  }
+
+  def showChartInModal(title: String = null)(f: Seq[Participant] => js.Any): (Option[String], (HTMLElement, => Seq[Participant], ParticipantTable) => Unit) =
+    Option(title) -> ((el, rowsLoader, participantTable: Any) => {
       val plotParams = f(rowsLoader)
-      console.log("plotParams", plotParams)
-      val chart = new Chart(can, plotParams)
-      val resizeHandler: Event => Unit = _ => {
-        //chart.update()
-        chart.resize()
-      }
-      window.addEventListener("resize", resizeHandler)
-
-      def destroy(): Unit = {
-        window.removeEventListener("resize", resizeHandler)
-        chart.destroy()
-      }
-
       val modalElement = el.parentNode.parentNode.parentNode.asInstanceOf[Element]
-      modalElement.onBsModalHidden(() => destroy())
+      initializePlot(el, plotParams, destroy => modalElement.onBsModalHidden(destroy))
     }
   )
+
+  def plotLinesToData(data: Seq[PlotLine]) = {
+    literal(
+      datasets = data.map(ser =>
+        literal(
+          label = s"${ser.row.id}: ${ser.row.fullNameWithNick}",
+          data = ser.points,
+        )
+      ).toJSArray,
+    )
+  }
 
 }

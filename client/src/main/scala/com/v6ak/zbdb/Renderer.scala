@@ -40,6 +40,7 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
   private val switches = new ClassSwitches(Map("details" -> "with-details"))
 
+  import ChartJsUtils._
   import Renderer._
   import Bootstrap._
   import participantTable._
@@ -239,7 +240,13 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val barElement = div(id := "button-bar")(
     button(`class` := "btn-close")(onclick := {(e: Event) => selection.clear() }),
     dropdownGroup("Porovnat vybrané účastníky…", cls:="btn btn-primary dropdown-toggle")(
-      for(plot <- Plots) yield chartButton(s"Porovnat ${plot.nameAccusative}", selection().toSeq, plot.generator, s"Porovnat ${plot.nameAccusative}")
+      for(plot <- IndividualPlots) yield
+        chartButton(
+          s"Porovnat ${plot.nameAccusative}",
+          selection().toSeq,
+          plot.generator,
+          s"Porovnat ${plot.nameAccusative}"
+        )
     )(cls := "btn-group dropup"),
     selectedParticipantsElement
   ).render
@@ -247,8 +254,8 @@ final class Renderer private(participantTable: ParticipantTable, processingError
   private val globalStats = div(id := "global-stats")(
     GlobalPlots.map { case (plotName, (detailedTitleOption, plotFunction)) =>
       button(plotName)(cls := "btn btn-secondary d-print-none")(onclick := {(e: Event) =>
-        val (dialog, modalBodyId, bsMod) = modal(detailedTitleOption.getOrElse(plotName): String)
-        dialog.onBsModalShown{ () => plotFunction(modalBodyId, data, participantTable) }
+        val (dialog, modalBody, bsMod) = modal(detailedTitleOption.getOrElse(plotName): String)
+        dialog.onBsModalShown{ () => plotFunction(modalBody, data, participantTable) }
         dom.document.body.appendChild(dialog)
         bsMod.show()
       })
@@ -266,8 +273,10 @@ final class Renderer private(participantTable: ParticipantTable, processingError
 
   private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) =
     btnDefault(`class` := "btn-sm")(description)(onclick := {(_:Any) =>
-      val (dialog, modalBodyId, bsMod) = modal(title)
-      dialog.onBsModalShown({() => initializePlot(modalBodyId, plotDataGenerator(rowsLoader))})
+      val (dialog, modalBody, bsMod) = modal(title)
+      dialog.onBsModalShown({() =>
+        initializePlot(modalBody, plotDataGenerator(rowsLoader), cb => dialog.onBsModalHidden(cb))
+      })
       dom.document.body.appendChild(dialog)
       bsMod.show()
     })
@@ -280,13 +289,13 @@ final class Renderer private(participantTable: ParticipantTable, processingError
     btnPrimary(
       Glyphs.Timeline.toHtml,
       onclick := { (_: Any) =>
-        val (dialog, modalBodyId, bsMod) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
+        val (dialog, modalBody, bsMod) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
         val (timeLine, renderPlots) = timeLineRenderer.timeLine(row)
-        dom.document.getElementById(modalBodyId).appendChild(timeLine)
+        modalBody.appendChild(timeLine)
         timeLineRenderer.bodyClasses.foreach(dom.document.body.classList.add)
         bsMod.show()
-        dialog.onBsModalShown(renderPlots)
+        dialog.onBsModalShown(() => renderPlots(dialog))
       }
     )
 

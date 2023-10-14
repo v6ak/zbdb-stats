@@ -17,12 +17,11 @@ object HtmlUtils {
   )
 
   def modal(title: Frag, keyboard: Boolean = true) = {
-    val modalBodyId = IdGenerator.newId()
     val modalHeader = div(`class`:="modal-header")(
       h5(`class`:="modal-title")(title),
       button(`type`:="button", `class`:="btn-close", dismiss := "modal", aria.label := "Zavřít"),
     )
-    val modalBody = div(`class`:="modal-body", id := modalBodyId)
+    val modalBody = div(`class`:="modal-body").render
     val modalFooter = div(`class`:="modal-footer")
     val modalDialog = div(`class`:="modal-dialog modal-xxl")(
       div(`class`:="modal-content")(
@@ -32,7 +31,7 @@ object HtmlUtils {
     val dialog = div(`class`:="modal fade", attr("data-bs-keyboard") := keyboard.toString)(modalDialog).render
     dialog.onBsModalHidden({() => dialog.parentNode.removeChild(dialog)})
     val bsMod = new BsModal(dialog)
-    (dialog, modalBodyId, bsMod)
+    (dialog, modalBody, bsMod)
   }
 
   @inline def fseq(frags: Frag*): Seq[Frag] = frags

@@ -1,7 +1,6 @@
 package com.v6ak.zbdb
 
 import com.example.moment.{moment, _}
-import com.v6ak.zbdb.`$`.jqplot.DateAxisRenderer
 import org.scalajs.dom
 import org.scalajs.dom._
 
@@ -13,31 +12,22 @@ import scala.scalajs.js.Dynamic.literal
 import scala.scalajs.js.annotation._
 import Bootstrap.DialogUtils
 import com.example.moment._
-import com.v6ak.zbdb.TextUtils.formatLength
+import com.example.RichMoment._
+import com.v6ak.zbdb.TextUtils.{formatLength, formatSpeed}
 
-@JSGlobal @js.native object `$` extends js.Object{
-  @js.native object jqplot extends js.Object{
-    @js.native class LinearAxisRenderer extends js.Object{
-      def createTicks(plot: js.Dynamic): Unit = js.native
-    }
-    @js.native class DateAxisRenderer extends LinearAxisRenderer{
-      override def createTicks(plot: js.Dynamic): Unit = js.native
-    }
-  }
-}
 
 final class PlotRenderer(participantTable: ParticipantTable) {
   import ChartJsUtils._
 
   import participantTable._
 
-  val Plots = Seq(
+  val IndividualPlots = Seq(
     ParticipantPlotGenerator("chůze", "chůzi", Glyphs.Pedestrian, generateWalkPlotData),
     ParticipantPlotGenerator("rychlosti", "rychlost", Glyphs.Play, generateSpeedPlotData),
     ParticipantPlotGenerator("pauz", "pauzy", Glyphs.Pause, generatePausesPlotData)
   )
 
-  val GlobalPlots = Seq[(String, (Option[String], ((String, =>Seq[Participant], ParticipantTable) => Unit)))](
+  val GlobalPlots = Seq[(String, (Option[String], ((HTMLElement, =>Seq[Participant], ParticipantTable) => Unit)))](
     "Porovnání startu a času" -> startTimeToTotalDurationPlot,
     "Genderová struktura" -> genderStructurePlot,
     "Počet lidí" -> remainingParticipantsCountPlot,
@@ -53,52 +43,6 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     Gender.Female -> "#FFC0CB",
     Gender.Male -> "#008080",
   )
-
-  private val BarRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.BarRenderer
-
-  private val DateAxisRenderer = dom.window.asInstanceOf[js.Dynamic].$.jqplot.DateAxisRenderer
-
-  def generateWalkPlotData(rowsLoader: Seq[Participant]) = {
-    val data = rowsLoader.map(processTimes)
-    val series = js.Array(data.map(line =>
-      line.seriesOptions
-    ): _*)
-    val plotPoints = js.Array(data.map(_.points): _*)
-    PlotData(
-      plotPoints = plotPoints,
-      plotParams = js.Dictionary(
-        "title" -> "Chůze účastníka",
-        "seriesDefaults" -> js.Dictionary(
-          "linePattern" -> "dashed",
-          "showMarker" -> true,
-          "markerOptions" -> Dictionary("style" -> "diamond"),
-          "shadow" -> false
-        ),
-        "series" -> series,
-        "highlighter" -> js.Dictionary(
-          "show" -> true,
-          "showTooltip" -> true,
-          "formatString" -> "%s|%s|%s|%s",
-          "bringSeriesToFront" -> true
-        ),
-        "height" -> 500,
-        "legend" -> Dictionary("show" -> true),
-        "axes" -> Dictionary(
-          "xaxis" -> Dictionary(
-            "renderer" -> DateAxisRenderer,
-            "tickOptions" -> Dictionary("formatString" -> "%#H:%M"),
-            "min" -> moment(startTime).minutes(0).toString,
-            "tickInterval" -> "1 hours"
-          ),
-          "yaxis" -> Dictionary(
-            "min" -> 0,
-            "max" -> parts.last.cumulativeTrackLength.toDouble,
-            "tickInterval" -> 10
-          )
-        )
-      )
-    )
-  }
 
   private val startTimeToTotalDurationRadius = (context: js.Dynamic) => {
     // It doesn't seem to be recalculated when resized, even though this function is called
@@ -233,79 +177,126 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def genderStructurePlot = showChartInModal() { rows =>
+  def genderStructurePlot = showChartInModal(
+    title = "Genderová struktura startujících",
+  ) { rows =>
     val structure = rows.groupBy(_.gender)
     js.Dynamic.literal(
       `type` = "pie",
       data = dataFromTriples(structure.toSeq.map { case (gender, p) =>
         (GenderNames(gender), p.size, GenderColors(gender))
       }),
-      title = "Genderová struktura startujících",
+    )
+  }
+
+  def expectOneStr(contexts: js.Array[js.Dynamic])(f: js.Dynamic => js.Any): String = contexts.map(f).toSet.mkString("  |  ")
+  def expectOne[F, T](contexts: js.Array[F])(f: F => T): T = contexts.map(f).toSet.toSeq match {
+    case Seq(x) => x
+    case other => sys.error(s"Expected exactly one value, got: $other")
+  }
+
+  private def generateWalkPlotData(rowsLoader: Seq[Participant]) = {
+    val data = rowsLoader.map(processTimes)
+    literal(
+      `type` = "line",
+      data = plotLinesToData(data),
+      options = literal(
+        scales = literal(
+          x = timeAxis("čas"),
+          y = distanceAxis,
+        ),
+        plugins = literal(
+          tooltip = literal(
+            callbacks = literal(
+              label = (context: js.Dynamic) => context.dataset.label,
+              title = (context: js.Array[js.Dynamic]) => {
+                val len = expectOneStr(context)(c => formatLength(c.raw.y.asInstanceOf[BigDecimal]))
+                val t = expectOneStr(context)(_.raw.x.asInstanceOf[Moment].hoursAndMinutes)
+                s"$len v $t"
+              },
+            ),
+          ),
+        ),
+      ),
     )
   }
 
   private def generateSpeedPlotData(rows: Seq[Participant]) = {
     val data = rows.map{p =>
-      PlotLine(row = p, label = p.fullName, points = js.Array(
+      PlotLine(row = p, label = p.fullName, points =
         (p.partTimes lazyZip parts).flatMap((partTime, part) => partTime.durationOption.map { duration =>
-          js.Array(part.cumulativeTrackLength.toDouble, part.trackLength.toDouble / (duration.toDouble / 1000 / 3600))
-        }): _*)
+          literal(
+            x = part.cumulativeTrackLength.toDouble,
+            y = part.trackLength.toDouble / (duration.toDouble / 1000 / 3600),
+          ): js.Any
+        }).toJSArray
       )
     }
-    val series = js.Array(data.map(_.seriesOptions): _*)
-    val plotPoints = js.Array(data.map(_.points): _*)
-    dom.console.log("plotPoints", plotPoints)
-    PlotData(
-      plotPoints = plotPoints,
-      plotParams = js.Dictionary(
-        "title" -> "Rychlost účastníka",
-        "seriesDefaults" -> js.Dictionary(
-          "renderer" -> BarRenderer,
-          "rendererOptions" -> js.Dictionary(
-            "barWidth" -> 10
-          ),
-          "pointLabels" -> true,
-          "showMarker" -> true
+    literal(
+      `type` = "bar",
+      data = plotLinesToData(data),
+      options = literal(
+        scales = literal(
+          x = distanceAxis,
+          y = speedAxis,
         ),
-        "series" -> series,
-        "height" -> 500,
-        "legend" -> Dictionary("show" -> true)
-      )
+        plugins = literal(
+          tooltip = literal(
+            callbacks = literal(
+              label = (context: js.Dynamic) =>
+                s"${formatSpeed(context.raw.y.asInstanceOf[Double])} (${context.dataset.label})",
+              title = (context: js.Array[js.Dynamic]) => {
+                val i = expectOne(context)(_.dataIndex.asInstanceOf[Int])
+                val from = i match {
+                  case 0 => "Ze startu"
+                  case i => s"Z $i. stanoviště (${participantTable.parts(i-1).place})"
+                }
+                val finishCheckpoint = participantTable.parts.size
+                val to = i+1 match {
+                  case next if next == finishCheckpoint => "do cíle"
+                  case next => s"na $next. stanoviště (${participantTable.parts(next-1).place})"
+                }
+                s"$from $to"
+              },
+            ),
+          ),
+        ),
+      ),
     )
   }
 
   private def generatePausesPlotData(rows: Seq[Participant]) = {
     val data = rows.map{p =>
-      PlotLine(row = p, label = p.fullName, points = js.Array((p.pauseTimes, parts).zipped.map((pause, part) => js.Array(part.cumulativeTrackLength.toDouble, pause/1000/60)): _*))
+      PlotLine(
+        row = p,
+        label = p.fullName,
+        points = (p.pauseTimes, parts).zipped.map((pause, part) =>
+          literal(x=part.cumulativeTrackLength.toDouble, y=pause/1000/60): js.Any
+        ).toJSArray
+      )
     }
-    dom.console.log("rows.head.pauses = " + rows.head.pauses.toIndexedSeq.toString)
-    val series = js.Array(data.map(_.seriesOptions): _*)
-    val plotPoints = js.Array(data.map(_.points): _*)
-    dom.console.log("plotPoints", plotPoints)
-    PlotData(
-      plotPoints = plotPoints,
-      plotParams = js.Dictionary(
-        "title" -> "Pauzy účastníka",
-        "seriesDefaults" -> js.Dictionary(
-          "renderer" -> BarRenderer,
-          "rendererOptions" -> js.Dictionary(
-            "barWidth" -> 10
-          ),
-          "pointLabels" -> true,
-          "showMarker" -> true
+    literal(
+      `type` = "bar",
+      data = plotLinesToData(data),
+      options = literal(
+        scales = literal(
+          x = distanceAxis,
+          y = minutesAxis("trvání pauzy (min)"),
         ),
-        "series" -> series,
-        "height" -> 500,
-        "legend" -> Dictionary("show" -> true)
+        plugins = literal(
+          tooltip = literal(
+            callbacks = literal(
+              label = (context: js.Dynamic) =>
+                s"${context.raw.y.asInstanceOf[Int]} min (${context.dataset.label})",
+              title = (context: js.Array[js.Dynamic]) => {
+                val i = expectOne(context)(_.dataIndex.asInstanceOf[Int])
+                s"${i+1}. stanoviště (${participantTable.parts(i).place})"
+              },
+            ),
+          ),
+        )
       )
     )
-  }
-
-  def initializePlot(modalBodyId: String, data: PlotData): Unit ={
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, data.plotPoints, data.plotParams)
-    dom.window.asInstanceOf[js.Dynamic].$("#"+modalBodyId).on("jqplotDataClick", {(ev: js.Any, seriesIndex: js.Any, pointIndex: js.Any, data: js.Any) =>
-      dom.console.log("click", ev, seriesIndex, pointIndex, data)
-    })
   }
 
   private def processTimes(participant: Participant): PlotLine = {
@@ -319,7 +310,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     PlotLine(
       row = participant,
       label = s"${participant.id}: ${participant.fullName}",
-      points = js.Array(data.map{case (x, y) => js.Array(x.toString, y.toDouble)}: _*)
+      points = data.map[js.Any]{case (x, y) => literal(x=x, y=y.asInstanceOf[js.Any])}.toJSArray
     )
   }
 
