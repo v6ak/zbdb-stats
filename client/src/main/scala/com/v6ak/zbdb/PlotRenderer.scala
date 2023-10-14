@@ -244,37 +244,6 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def ageStructurePlot(modalBodyId: String, rowsLoader: => Seq[Participant], participantTable: ParticipantTable): Unit ={
-    val structure = rowsLoader.groupBy(_.birthYear).toIndexedSeq.sortBy(_._1)
-    val ticks = js.Array(structure.map(_._1.get): _*)
-    val plotParams = js.Dictionary(
-      "title" -> "Věková struktura",
-      "seriesDefaults" -> js.Dictionary(
-        "renderer" -> BarRenderer,
-        "pointLabels" -> js.Dictionary(
-          "show" -> true
-        ),
-        "shadow" -> true
-      ),
-      "axes" -> js.Dictionary(
-        "xaxis" -> js.Dictionary(
-          "renderer" -> dom.window.asInstanceOf[js.Dynamic].$.jqplot.CategoryAxisRenderer,
-          "ticks" -> ticks
-        ),
-        "yaxis" -> js.Dictionary(
-          "tickOptions" -> js.Dictionary(
-            "formatString"-> "%.0f"
-          )
-        )
-      ),
-      "height" -> 500,
-      "legend" -> Dictionary("show" -> true)
-    )
-    val plotPoints = js.Array(js.Array(structure.map{_._2.size}: _*))
-    dom.window.console.log("plotPoints", ticks, plotPoints)
-    dom.window.asInstanceOf[js.Dynamic].$.jqplot(modalBodyId, plotPoints, plotParams)
-  }
-
   private def generateSpeedPlotData(rows: Seq[Participant]) = {
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points = js.Array(
