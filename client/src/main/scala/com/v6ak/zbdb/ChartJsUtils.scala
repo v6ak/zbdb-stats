@@ -104,13 +104,15 @@ object ChartJsUtils {
     )
   )
 
-  def initializePlot(el: HTMLElement, plotParams: js.Any, registerDestroy: (()=>Unit) => Unit): Unit = {
+  def initializePlot(plotRoot: HTMLElement, plotParams: js.Any, registerDestroy: (()=>Unit) => Unit): Unit = {
     console.log("plotParams", plotParams)
-    el.style.maxHeight = "90vh"
-    el.style.maxWidth = "90vw"
 
     val can = canvas().render
-    el.appendChild(can)
+    plotRoot.appendChild(
+      div(`class` := s"ratio plot plot-${plotParams.asInstanceOf[js.Dynamic].`type`}")(
+        div(can)
+      ).render
+    )
 
     val chart = new Chart(can, plotParams)
     val resizeHandler: Event => Unit = _ => {
