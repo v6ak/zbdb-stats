@@ -116,8 +116,9 @@ object ChartJsUtils {
 
     val chart = new Chart(can, plotParams)
     val resizeHandler: Event => Unit = _ => {
+      // seems no longer needed
       //chart.update()
-      chart.resize()
+      //chart.resize()
     }
 
     window.addEventListener("resize", resizeHandler)
