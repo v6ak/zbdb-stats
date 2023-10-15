@@ -3,13 +3,14 @@
 
 .plot-bar, .plot-line, .plot-bubble {
     --bs-aspect-ratio: 50%;
+    max-width: 80em;
 }
 .plot-pie {
     --bs-aspect-ratio: 100%;
+    max-width: 40em;
 }
 .plot {
     max-height: 100vh;
-    max-width: 80em;
     margin: auto;
 }
 
