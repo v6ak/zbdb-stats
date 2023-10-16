@@ -27,7 +27,7 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
     }
     val finishedParticipantsInContext = finishedParticipantsGroups.flatten
     val bestTotalTimeOption = finishedParticipantsInContext.headOption.map(_.totalTime)
-    val unfinishedParticipantsInContext = unfinishedParticipants.map(ParticipantInContext.Failed)
+    val unfinishedParticipantsInContext = unfinishedParticipants.map(ParticipantInContext.Failed.apply)
     val allParticipantsInContext = finishedParticipantsInContext ++ unfinishedParticipantsInContext
     (allParticipantsInContext.map(pic => pic.participant -> pic).toMap, bestTotalTimeOption)
   }
@@ -144,7 +144,7 @@ final case class ParticipantTable (startTime: Moment, parts: Seq[Part], data: Se
         row.partTimes lazyZip
         nextPartInfos
     )
-      .map(FullPartInfo)
+      .map(FullPartInfo.apply)
       .zipWithIndex
       .flatMap((partWalkEvents(row) _).tupled)
   }

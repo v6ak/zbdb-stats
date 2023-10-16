@@ -3,7 +3,9 @@ import java.io.IOException
 
 val appVersion= "1.0"
 
-lazy val scalaV = "2.13.12"
+lazy val scalaV2 = "2.13.12"
+
+lazy val scalaV3 = "3.3.1"
 
 val bootstrapVersion = "5.3.2"
 
@@ -54,7 +56,7 @@ lazy val server = (project in file("server")).settings(
   version := appVersion,
   name := "zbdb-stats-server",
   scalacOptions ++= Seq("-deprecation", "-feature"),
-  scalaVersion := scalaV,
+  scalaVersion := scalaV2,
   scalaJSProjects := Seq(client),
   scalaJSStage := FullOptStage,
   Assets / pipelineStages := Seq(scalaJSPipeline),
@@ -115,7 +117,7 @@ lazy val client = (project in file("client")).settings(
   version := appVersion,
   scalacOptions ++= Seq("-deprecation", "-feature"),
   scalaJSStage := FullOptStage,
-  scalaVersion := scalaV,
+  scalaVersion := scalaV3,
   scalaJSUseMainModuleInitializer := true,
   Test / scalaJSUseMainModuleInitializer := false,
   webpack / version := "5.88.2", // https://github.com/ScalablyTyped/Converter/issues/546
