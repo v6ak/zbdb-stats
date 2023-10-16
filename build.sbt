@@ -124,16 +124,17 @@ lazy val client = (project in file("client")).settings(
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "2.7.0",
     "com.lihaoyi" %%% "scalatags" % "0.12.0",
-    "com.nrinaudo" %%% "kantan.csv" % "0.7.0",
   ),
   Compile / npmDependencies ++= Seq(
+    "comma-separated-values" -> "3.6.4",
     "bootstrap" -> bootstrapVersion,
     "moment" -> "2.10.6",
     "moment-timezone" -> "0.4.0",
     "chart.js" -> "4.4.0",
     "chartjs-adapter-moment" -> "1.0.1",
   ),
-  stIgnore ++= List("moment", "moment-timezone", "bootstrap", "chart.js", "chartjs-adapter-moment"),
+  stIgnore ++= List("moment", "moment-timezone", "bootstrap", "chart.js", "chartjs-adapter-moment",
+    "comma-separated-values"),
 ).enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, ScalablyTypedConverterPlugin)//.dependsOn(sharedJs)
 
 /*lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).

@@ -95,9 +95,7 @@ object Parser{
   }
 
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
-    import kantan.csv._
-    import kantan.csv.ops._
-    val fullDataTable: IndexedSeq[IndexedSeq[String]] = csvData.trim.unsafeReadCsv[IndexedSeq, IndexedSeq[String]](rfc)
+    val fullDataTable: IndexedSeq[IndexedSeq[String]] = CsvParser.parse(csvData)
     val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize)
     val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>
