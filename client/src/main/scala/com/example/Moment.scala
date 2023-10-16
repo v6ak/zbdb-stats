@@ -5,43 +5,24 @@ import com.example.moment.Moment
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 import scala.language.implicitConversions
+import scala.scalajs.js.annotation._
 
-@js.native trait MomentSingleton extends js.Any {
-  //def moment(): Moment = js.native
-  def utc(): Moment = js.native
-  def utc(x: Number): Moment = js.native
-  //def utc(xNumber[]): Moment = js.native
-  def utc(time: String): Moment = js.native
-  /*def moment.utc(String, String): Moment = js.native
-  def moment.utc(String, String[]): Moment = js.native
-  def moment.utc(String, String, String): Moment = js.native
-  def moment.utc(Moment): Moment = js.native
-  def moment.utc(Date): Moment = js.native*/
+@js.native
+@JSImport("moment-timezone", JSImport.Namespace)
+object MomentTimezone extends js.Any{
   def tz(time: String, tz: String): Moment = js.native
 }
 
 @js.native
-@JSGlobalScope
+@JSImport("moment", JSImport.Namespace)
 object MomentJsGlobal extends js.Any {
-  def moment(moment: Moment): Moment = js.native
-  def moment(dateString: String): Moment = js.native
-  def moment(dateString: String, format: String): Moment = js.native
-  def moment(dateString: String, format: String, locale: String): Moment = js.native
-  def moment(dateString: String, format: String, strict: Boolean): Moment = js.native
-  def moment(dateString: String, format: String, locale: String, strict: Boolean): Moment = js.native
-
-  def moment: MomentSingleton = js.native
-
+  def apply(moment: Moment): Moment = js.native
+  def apply(dateString: String): Moment = js.native
 }
 
 package object moment {
-  @inline def moment(moment: Moment): Moment = MomentJsGlobal.moment(moment: Moment)
-  @inline def moment(dateString: String): Moment = MomentJsGlobal.moment(dateString: String)
-  @inline def moment(dateString: String, format: String): Moment = MomentJsGlobal.moment(dateString: String, format: String)
-  @inline def moment(dateString: String, format: String, locale: String): Moment = MomentJsGlobal.moment(dateString: String, format: String, locale: String)
-  @inline def moment(dateString: String, format: String, strict: Boolean): Moment = MomentJsGlobal.moment(dateString: String, format: String, strict: Boolean)
-  @inline def moment(dateString: String, format: String, locale: String, strict: Boolean): Moment = MomentJsGlobal.moment(dateString: String, format: String, locale: String, strict: Boolean)
-  @inline def moment: MomentSingleton = MomentJsGlobal.moment
+  @inline def moment(moment: Moment): Moment = MomentJsGlobal(moment: Moment)
+  @inline def moment(dateString: String): Moment = MomentJsGlobal(dateString: String)
 }
 
 package moment{

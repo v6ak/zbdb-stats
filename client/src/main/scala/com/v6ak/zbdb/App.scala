@@ -1,26 +1,35 @@
 package com.v6ak.zbdb
 
 import com.example.moment._
+import com.example.MomentTimezone.tz
 import org.scalajs.dom
+import org.scalajs.dom._
 import scala.scalajs.js.Thenable.Implicits._
 
 import scala.scalajs.js.JSON
-import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.annotation._
 import scala.util.{Failure, Success}
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
 
 object App {
 
+  private def init(): Unit = {
+    // Modules with side effects
+    Require.require("bootstrap/js/dist/dropdown")
+    Require.require("chartjs-adapter-moment")
+  }
+
   @JSExport
   def main(args: Array[String]): Unit = {
+    init()
     dom.window.onload = { (_: Any) =>
       val body = dom.window.document.body
       val fileName = body.getAttribute("data-file")
       val maxHourDelta = body.getAttribute("data-max-hour-delta").toInt
       val formatVersionNumber = body.getAttribute("data-format-version").toInt
-      val startTime = moment.tz(body.getAttribute("data-start-time"), body.getAttribute("data-timezone"))
-      val endTime = moment.tz(body.getAttribute("data-end-time"), body.getAttribute("data-timezone"))
+      val startTime = tz(body.getAttribute("data-start-time"), body.getAttribute("data-timezone"))
+      val endTime = tz(body.getAttribute("data-end-time"), body.getAttribute("data-timezone"))
       if(!startTime.isValid()) sys.error("startTime is invalid")
       if(!endTime.isValid()) sys.error("endTime is invalid")
       dom.console.log("startTime", startTime.toString)

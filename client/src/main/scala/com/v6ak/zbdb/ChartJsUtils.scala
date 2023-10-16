@@ -9,14 +9,21 @@ import scalatags.JsDom.all._
 import Bootstrap.DialogUtils
 import com.example.moment.{Moment, moment}
 
-@JSGlobal @js.native class Chart(el: Element, data: js.Any) extends js.Object {
+@JSImport("chart.js", "Chart")
+@js.native
+class Chart(el: Element, data: js.Any) extends js.Object {
   def resize(): Unit = js.native
   def update(): Unit = js.native
   def destroy(): Unit = js.native
 }
 
+@JSImport("chart.js", "Chart")
+@js.native
+object Chart extends js.Any {
+  def register(module: js.Any*): Unit = js.native
+}
+
 object ChartJsUtils {
-  // Chart.register(…)
 
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
