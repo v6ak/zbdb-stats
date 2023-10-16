@@ -96,7 +96,7 @@ object Parser{
 
   def parse(csvData: String, startTime: Moment, totalEndTime: Moment, maxHourDelta: Int, formatVersion: FormatVersion) = {
     val fullDataTable: IndexedSeq[IndexedSeq[String]] = CsvParser.parse(csvData)
-    val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize)
+    val Seq(header1, header2, header3, dataWithTail @ _*) = fullDataTable.drop(formatVersion.headSize) : @unchecked
     val (dataTable, footer) = formatVersion.tail.split(dataWithTail.dropWhile(_.head == "").toIndexedSeq)
     footer.foreach{fl =>
       assertEmpty(fl.toSet.filterNot(_.forall(c => c.isDigit || c==':')) -- Set("", "nejdříve na stanovišti", "nejrychleji projitý úsek", "Na trati"))
@@ -150,9 +150,9 @@ object Parser{
   private def isUsefulCell(cell: String): Boolean = cell != "" && cell != "X" && cell != "0:00"
 
   private def parseParticipant(participantData: immutable.IndexedSeq[String], parts: immutable.IndexedSeq[Part], startTime: Moment, maxHourDelta: Int, totalEndTime: Moment, formatVersion: FormatVersion): Participant = {
-    val Seq(num, participantDataAfterNum@_*) = participantData
+    val Seq(num, participantDataAfterNum@_*) = participantData : @unchecked
     val (firstName, lastName, nick, participantDataAfterName) = formatVersion.nameFormat.parse(participantDataAfterNum)
-    val Seq(genderString, ageString, other@_*) = participantDataAfterName
+    val Seq(genderString, ageString, other@_*) = participantDataAfterName : @unchecked
     if ((formatVersion.ageType == AgeType.No) && (ageString != "")) {
       sys.error("You seem to have left some data in age column. Clean it first, please.")
     }
