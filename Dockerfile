@@ -22,7 +22,7 @@ RUN \
   rm sbt-$(cat /sbt-version).rpm && \
   mkdir /project
 WORKDIR /project
-ENV SBT_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=2G -Xmx2G -Xms1G"
+ENV SBT_OPTS="-XX:+CMSClassUnloadingEnabled -Xmx2G -Xms1G"
 
 # This stage can be used for testing whether the build is compatible with fresh versions of JDK and NodeJS/NPM
 FROM fedora:latest AS sbt-version-bleeding-edge
