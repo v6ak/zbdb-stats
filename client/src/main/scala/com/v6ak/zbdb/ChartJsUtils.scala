@@ -25,6 +25,33 @@ object Chart extends js.Any {
 
 object ChartJsUtils {
 
+  @js.native @JSImport("chart.js", "BarController") val BarController: js.Any = js.native
+  @js.native @JSImport("chart.js", "BarElement") val BarElement: js.Any = js.native
+  @js.native @JSImport("chart.js", "BubbleController") val BubbleController: js.Any = js.native
+  @js.native @JSImport("chart.js", "PointElement") val PointElement: js.Any = js.native
+  @js.native @JSImport("chart.js", "LinearScale") val LinearScale: js.Any = js.native
+  @js.native @JSImport("chart.js", "TimeScale") val TimeScale: js.Any = js.native
+  @js.native @JSImport("chart.js", "PieController") val PieController: js.Any = js.native
+  @js.native @JSImport("chart.js", "ArcElement") val ArcElement: js.Any = js.native
+  @js.native @JSImport("chart.js", "LineController") val LineController: js.Any = js.native
+  @js.native @JSImport("chart.js", "LineElement") val LineElement: js.Any = js.native
+  @js.native @JSImport("chart.js", "Colors") val Colors: js.Any = js.native
+  @js.native @JSImport("chart.js", "Tooltip") val Tooltip: js.Any = js.native
+  @js.native @JSImport("chart.js", "Legend") val Legend: js.Any = js.native
+
+  def init(): Unit =
+    Chart.register(
+      BarController, BarElement,
+      LinearScale,
+      BubbleController, PointElement,
+      TimeScale,
+      PieController, ArcElement,
+      LineController, LineElement,
+      Colors,
+      Tooltip,
+      Legend,
+    )
+
   def zeroMoment = moment("2000-01-01") // We don't want to mutate it
 
   def timeAxis(label: String, min: js.Any = js.undefined) = literal(

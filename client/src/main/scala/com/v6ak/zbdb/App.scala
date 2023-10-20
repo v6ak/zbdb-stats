@@ -14,15 +14,9 @@ import scala.scalajs.js
 
 object App {
 
-  private def init(): Unit = {
-    // Modules with side effects
-    Require.require("bootstrap/js/dist/dropdown")
-    Require.require("chartjs-adapter-moment")
-  }
-
   @JSExport
   def main(args: Array[String]): Unit = {
-    init()
+    ChartJsUtils.init()
     dom.window.onload = { (_: Any) =>
       val body = dom.window.document.body
       val fileName = body.getAttribute("data-file")

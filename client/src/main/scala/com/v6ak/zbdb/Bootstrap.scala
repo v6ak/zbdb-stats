@@ -6,7 +6,7 @@ import scala.scalajs.js.annotation._
 import scalatags.JsDom.all._
 
 @js.native
-@JSImport("bootstrap/js/dist/modal", JSImport.Namespace)
+@JSImport("bootstrap/js/dist/modal", "default")
 class BsModal (el: Element) extends js.Any {
   def show(): Unit = js.native
 }
