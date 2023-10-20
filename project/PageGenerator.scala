@@ -1,6 +1,8 @@
 import spray.json.{CompactPrinter, JsArray, JsObject, JsString, JsonPrinter}
 
-import scala.xml.Text
+import scalatags.Text.all.{ html => htmlTag, _ }
+import scalatags.Text.tags2.{ title => titleTag }
+
 
 object PageGenerator{
 
@@ -96,55 +98,73 @@ object PageGenerator{
 
   def allYearsJsonString = CompactPrinter.apply(JsObject(YearLinks.map{case (y, link) => s"$y"->JsString(link)}.toMap))
 
-  def forYear(year: Year, publicDirName: String) = {
-    val title = s"Výsledky Z Brna do Brna ${year.year}"
+  def forYear(year: Year, publicDirName: String): String = {
+    val pageTitle = s"Výsledky Z Brna do Brna ${year.year}"
     val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
     val csvFile = s"${year.year}.csv"
     "<!DOCTYPE html>"+
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" type="text/css" href={s"../../$publicDirName/main.css"} />
-        <script type="text/javascript" src={s"../../$publicDirName/main.min.js"}></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
-        <link rel="prefetch" href={csvFile} />
-        <meta http-equiv="X-UA-Compatible" content="IE=10; IE=9; IE=8; IE=7; IE=EDGE" />
-        <title>{title}</title>
-      </head>
-      <body
-        data-plots={plots}
-        data-file={csvFile}
-        data-start-time={year.startTime}
-        data-end-time={year.endTime}
-        data-timezone="Europe/Prague"
-        data-max-hour-delta={year.maxHoursDelta.toString}
-        data-format-version={year.formatVersion.toString}
-        data-year={year.year.toString}
-      >
-        <div class="container">
-          <h1>{title}</h1>
-          <p class="d-print-none">Alternativní podoby: {year.alternativeLinks.flatMap{case(name, link) =>
-            Seq(Text(", "), <a href={link}>{name}</a>)
-          }.tail}</p>
-        </div>
-        <div id="content"><div id="loading-indicator">
-          <div class="progress progress-striped active">
-            <div
-              class="progress-bar progress-bar-striped progress-bar-animated"
-              role="progressbar"
-              aria-valuenow="100"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              style="width: 100%"
-            >Načítám výsledky…</div>
-          </div>
-        </div></div>
-        <div class="container d-print-none">
-          <h2>Když něco nefunguje…</h2>
-          <p>Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, <a href="https://contact.v6ak.com/">napiš mi</a> a uveď použitý webový prohlížeč.</p>
-          <p>Zdrojové kódy jsou <a href="https://github.com/v6ak/zbdb-stats">na GitHubu</a>.</p>
-        </div>
-      </body>
-    </html>
+    htmlTag(
+      head(
+        meta(charset := "utf-8"),
+        link(rel := "stylesheet", `type`:="text/css", href:=s"../../$publicDirName/main.css"),
+        script(`type` := "text/javascript", src := s"../../$publicDirName/main.min.js"),
+        meta(name := "viewport", content := "width=device-width, initial-scale=1.0, minimum-scale=1.0"),
+        link(rel := "prefetch", href := csvFile),
+        meta(attr("http-equiv") := "X-UA-Compatible", content := "IE=10; IE=9; IE=8; IE=7; IE=EDGE"),
+        titleTag(pageTitle),
+      ),
+      body(
+        data.plots := plots,
+        data.file := csvFile,
+        data.`start-time` := year.startTime,
+        data.`end-time` := year.endTime,
+        data.timezone := "Europe/Prague",
+        data.`max-hour-delta` := year.maxHoursDelta.toString,
+        data.`format-version` := year.formatVersion.toString,
+        data.year := year.year.toString,
+      )(
+        div(cls := "container",
+          h1(pageTitle),
+          p(cls := "d-print-none")(
+            "Alternativní podoby: ",
+            year.alternativeLinks.flatMap{case(name, link) =>
+              Seq(
+                ", ": Frag,
+                a(href := link, name),
+              )
+            }.tail,
+          ),
+        ),
+        div(id := "content")(
+          div(id := "loading-indicator")(
+            div(cls := "progress progress-striped active")(
+              div(
+                cls := "progress-bar progress-bar-striped progress-bar-animated",
+                role := "progressbar",
+                aria.valuenow := "100",
+                aria.valuemin := "0",
+                aria.valuemax := "100",
+                style := "width: 100%",
+              )(
+                "Načítám výsledky…",
+              ),
+            ),
+          ),
+        ),
+        div(cls := "container d-print-none")(
+          h2("Když něco nefunguje…"),
+          p(
+            "Mělo by to fungovat v moderních prohlížečích. Pokud bude nějaký problém, ",
+            a(href := "https://contact.v6ak.com/", "napiš mi"),
+            " a uveď použitý webový prohlížeč.",
+          ),
+          p(
+            "Zdrojové kódy jsou ",
+            a(href := "https://github.com/v6ak/zbdb-stats", "na GitHubu"),
+            ".",
+          ),
+        ),
+      ),
+    )
   }
 }
