@@ -11,6 +11,7 @@ val bootstrapVersion = "5.3.2"
 
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
+import org.scalajs.linker.interface.ModuleSplitStyle
 
 val removeLibs = taskKey[Pipeline.Stage]("Removes libraries")
 
@@ -114,6 +115,12 @@ lazy val client = (project in file("client")).settings(
   Test / scalaJSUseMainModuleInitializer := false,
   webpack / version := "5.88.2", // https://github.com/ScalablyTyped/Converter/issues/546
   webpackConfigFile := Some(baseDirectory.value / "custom.webpack.config.js"),
+  scalaJSLinkerConfig ~= {
+    _.withModuleKind(ModuleKind.ESModule)
+      .withModuleSplitStyle(
+        ModuleSplitStyle.FewestModules
+    )
+  },
 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "2.7.0",

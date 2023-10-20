@@ -16,13 +16,13 @@ object MomentTimezone extends js.Any{
 @js.native
 @JSImport("moment", JSImport.Namespace)
 object MomentJsGlobal extends js.Any {
-  def apply(moment: Moment): Moment = js.native
-  def apply(dateString: String): Moment = js.native
+  def default(moment: Moment): Moment = js.native
+  def default(dateString: String): Moment = js.native
 }
 
 package object moment {
-  @inline def moment(moment: Moment): Moment = MomentJsGlobal(moment: Moment)
-  @inline def moment(dateString: String): Moment = MomentJsGlobal(dateString: String)
+  @inline def moment(moment: Moment): Moment = MomentJsGlobal.default(moment: Moment)
+  @inline def moment(dateString: String): Moment = MomentJsGlobal.default(dateString: String)
 }
 
 package moment{
