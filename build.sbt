@@ -37,11 +37,13 @@ lazy val client = (project in file("client")).settings(
   Test / scalaJSUseMainModuleInitializer := false,
   webpack / version := "5.88.2", // https://github.com/ScalablyTyped/Converter/issues/546
   webpackConfigFile := Some(baseDirectory.value / "custom.webpack.config.js"),
-  scalaJSLinkerConfig ~= {
+  fastOptJS / scalaJSLinkerConfig ~= {
     _.withModuleKind(ModuleKind.ESModule)
-      .withModuleSplitStyle(
-        ModuleSplitStyle.SmallestModules
-    )
+      .withModuleSplitStyle(ModuleSplitStyle.SmallestModules)
+  },
+  fullOptJS / scalaJSLinkerConfig ~= {
+    _.withModuleKind(ModuleKind.ESModule)
+      .withModuleSplitStyle(ModuleSplitStyle.FewestModules)
   },
 
   libraryDependencies ++= Seq(
