@@ -1,9 +1,8 @@
 package com.v6ak.zbdb
 
-import com.v6ak.zbdb.Bootstrap.btn
 import org.scalajs.dom
 import org.scalajs.dom.*
-import scalatags.JsDom.all.*
+import scalatags.JsDom.all.{button as buttonTag, *}
 
 
 final class ClassSwitches(initialSwitchesState: Map[String, String]) {
@@ -42,7 +41,7 @@ final class ClassSwitches(initialSwitchesState: Map[String, String]) {
     description,
   )
 
-  def button(switchName: String, to: String, allValues: Set[String]) = btn(
+  def button(switchName: String, to: String, allValues: Set[String]) = buttonTag(
     onclick := { (e: Event) =>
       update(switchName, to, allValues)
     }
