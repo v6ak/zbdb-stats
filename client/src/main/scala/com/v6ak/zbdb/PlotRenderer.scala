@@ -1,25 +1,23 @@
 package com.v6ak.zbdb
 
-import com.example.moment.{moment, _}
+import com.example.RichMoment.*
+import com.example.moment.*
+import com.v6ak.zbdb.ChartJsUtils.*
+import com.v6ak.zbdb.CollectionUtils.RichMap
+import com.v6ak.zbdb.RichGenderSeq.*
+import com.v6ak.zbdb.TextUtils.{formatLength, formatSpeed}
 import org.scalajs.dom
-import org.scalajs.dom._
+import org.scalajs.dom.*
 
 import scala.collection.immutable
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.Dynamic.literal
-import scala.scalajs.js.annotation._
-import com.example.moment._
-import com.example.RichMoment._
-import com.v6ak.zbdb.CollectionUtils.RichMap
-import com.v6ak.zbdb.TextUtils.{formatLength, formatSpeed}
-import com.v6ak.zbdb.RichGenderSeq._
+import scala.scalajs.js.JSConverters.*
 
 
-final class PlotRenderer(participantTable: ParticipantTable) {
-  import ChartJsUtils._
+final class PlotRenderer(participantTable: ParticipantTable):
 
-  import participantTable._
+  import participantTable.*
 
   val IndividualPlots = Seq(
     ParticipantPlotGenerator("chůze", "chůzi", Glyphs.Pedestrian, generateWalkPlotData),
@@ -44,7 +42,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     Gender.Male -> "#008080",
   )
 
-  private val startTimeToTotalDurationRadius = (context: js.Dynamic) => {
+  private val startTimeToTotalDurationRadius = (context: js.Dynamic) =>
     // It doesn't seem to be recalculated when resized, even though this function is called
     val baseSize = math.max(
       5, // minimal base size in px
@@ -56,9 +54,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     val res = baseSize
     // area should scale linearly, so we need sqrt for radius
     res * math.sqrt(context.raw.participants.length.asInstanceOf[Int])
-  }
 
-  private def startTimeToTotalDurationTooltip = {
+  private def startTimeToTotalDurationTooltip =
     literal(
       callbacks = literal(
         label = (context: js.Dynamic) => {
@@ -82,7 +79,6 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         },
       ),
     )
-  }
 
   private def startTimeToTotalDurationPlot = showChartInModal(
     title = "Porovnání startu a celkového času (pouze finalisti)"
@@ -131,11 +127,10 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  private def computeCumulativeMortality(rows: Seq[Participant]) = {
+  private def computeCumulativeMortality(rows: Seq[Participant]) =
     val mortalityMap = rows.map(_.partTimes.count(_.hasEndTime)).groupBy(identity).mapValuesStrict(_.size)
     val mortalitySeq = (0 to mortalityMap.keys.max).map(mortalityMap.getOrElse(_, 0))
     mortalitySeq.scan(0)(_ + _).tail
-  }
 
   def remainingParticipantsCountPlot = showChartInModal() { rows =>
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
@@ -155,11 +150,18 @@ final class PlotRenderer(participantTable: ParticipantTable) {
   }
 
 
-  private def genericRemainingParticipantsCountPlot[T](data: immutable.IndexedSeq[(Part, T, T, Int)], chartType: String)(format: T => String) = {
+  private def genericRemainingParticipantsCountPlot[T](
+    data: immutable.IndexedSeq[(Part, T, T, Int)],
+    chartType: String,
+  )(format: T => String) =
     def dataset(name: String, f: ((Part, T, T, Int)) => T): js.Dynamic = literal(
       label = name,
       data = data.map { case data@(part, _gaveUp, _remaining, _i) =>
-        literal(y = f(data).asInstanceOf[js.Any], x = part.cumulativeTrackLength.toDouble, part = part.asInstanceOf[js.Any])
+        literal(
+          y = f(data).asInstanceOf[js.Any],
+          x = part.cumulativeTrackLength.toDouble,
+          part = part.asInstanceOf[js.Any],
+        )
       }.toJSArray
     )
 
@@ -193,7 +195,6 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         ),
       )
     )
-  }
 
   def genderStructurePlot = showChartInModal(
     title = "Genderová struktura startujících",
@@ -207,13 +208,13 @@ final class PlotRenderer(participantTable: ParticipantTable) {
     )
   }
 
-  def expectOneStr(contexts: js.Array[js.Dynamic])(f: js.Dynamic => js.Any): String = contexts.map(f).toSet.mkString("  |  ")
-  def expectOne[F, T](contexts: js.Array[F])(f: F => T): T = contexts.map(f).toSet.toSeq match {
+  def expectOneStr(contexts: js.Array[js.Dynamic])(f: js.Dynamic => js.Any): String =
+    contexts.map(f).toSet.mkString("  |  ")
+  def expectOne[F, T](contexts: js.Array[F])(f: F => T): T = contexts.map(f).toSet.toSeq match
     case Seq(x) => x
     case other => sys.error(s"Expected exactly one value, got: $other")
-  }
 
-  private def generateWalkPlotData(rowsLoader: Seq[Participant]) = {
+  private def generateWalkPlotData(rowsLoader: Seq[Participant]) =
     val data = rowsLoader.map(processTimes)
     literal(
       `type` = "line",
@@ -237,9 +238,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         ),
       ),
     )
-  }
 
-  private def generateSpeedPlotData(rows: Seq[Participant]) = {
+  private def generateSpeedPlotData(rows: Seq[Participant]) =
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points =
         (p.partTimes lazyZip parts).flatMap((partTime, part) => partTime.durationOption.map { duration =>
@@ -281,9 +281,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         ),
       ),
     )
-  }
 
-  private def generatePausesPlotData(rows: Seq[Participant]) = {
+  private def generatePausesPlotData(rows: Seq[Participant]) =
     val data = rows.map{p =>
       PlotLine(
         row = p,
@@ -315,9 +314,8 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         )
       )
     )
-  }
 
-  private def processTimes(participant: Participant): PlotLine = {
+  private def processTimes(participant: Participant): PlotLine =
     val data: Seq[(Moment, BigDecimal)] = (participant.partTimes lazyZip parts lazyZip previousPartCummulativeLengths)
       .flatMap{(ti, pi, prev) =>
         Seq(
@@ -330,6 +328,3 @@ final class PlotRenderer(participantTable: ParticipantTable) {
       label = s"${participant.id}: ${participant.fullName}",
       points = data.map[js.Any]{case (x, y) => literal(x=x, y=y.asInstanceOf[js.Any])}.toJSArray
     )
-  }
-
-}
