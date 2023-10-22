@@ -1,7 +1,10 @@
-import spray.json.{CompactPrinter, JsArray, JsObject, JsString, JsonPrinter}
+package com.v6ak.zbdb.assetGenerators
 
 import scalatags.Text.all.{ html => htmlTag, _ }
 import scalatags.Text.tags2.{ title => titleTag }
+
+import scala.scalajs.js
+import scala.scalajs.js.JSConverters.*
 
 
 object PageGenerator{
@@ -10,6 +13,7 @@ object PageGenerator{
     def csvDownloadUrl: String
     def originalLink: String
     def plots: Seq[(String, String)]
+    def csvNeedsDownload: Boolean = csvDownloadUrl.startsWith("https://")
   }
   final case class GoogleSpreadsheetDataSource(key: String, gid: Int = 0, plotIds: Seq[(String, Int)]) extends DataSource {
     private def pubhtml(sheetId: Int): String = s"https://docs.google.com/spreadsheets/d/$key/pubhtml?gid=$sheetId"
@@ -94,13 +98,25 @@ object PageGenerator{
     ),
   )
 
+  val YearsByNumber = Years.map(y => y.year -> y).toMap
+
   val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
 
-  def allYearsJsonString = CompactPrinter.apply(JsObject(YearLinks.map{case (y, link) => s"$y"->JsString(link)}.toMap))
+  def allYearsJsonString = js.JSON.stringify(
+    YearLinks.map{case (y, link) =>
+      s"$y" -> link
+    }.toMap.toJSDictionary
+  )
+
+  def forYear(year: Int, publicDirName: String): String = forYear(YearsByNumber(year), publicDirName)
 
   def forYear(year: Year, publicDirName: String): String = {
     val pageTitle = s"Výsledky Z Brna do Brna ${year.year}"
-    val plots = CompactPrinter.apply(JsArray(year.dataSource.plots.map{case (x, y) => JsArray(JsString(x), JsString(y))}: _*))
+    val plots: String = js.JSON.stringify(
+      year.dataSource.plots.map { case (x, y) =>
+        js.Array(x, y)
+      }.toJSArray
+    )
     val csvFile = s"${year.year}.csv"
     "<!DOCTYPE html>"+
     htmlTag(
@@ -163,7 +179,7 @@ object PageGenerator{
             ".",
           ),
         ),
-        script(`type` := "text/javascript", src := s"../../$publicDirName/main.min.js"),
+        script(`type` := "module"/*"text/javascript"*/, src := s"../../$publicDirName/main.js"),
       ),
     )
   }
