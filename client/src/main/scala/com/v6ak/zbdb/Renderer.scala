@@ -52,7 +52,7 @@ final class Renderer private(
 
   private val plotRenderer = new PlotRenderer(participantTable)
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
-  private val switches = new ClassSwitches(Map("details" -> "with-details"))
+  private val switches = new ClassSwitches(Map("details" -> "without-details"))
 
   import ChartJsUtils._
   import Renderer._
@@ -112,6 +112,11 @@ final class Renderer private(
     }
   )
 
+  val detailsValues = Set("with-details", "without-details")
+  val expandCollapseStyle = Seq(`class`:="btn-secondary")
+  val expandButton = switches.button("details", "with-details", detailsValues)(expandCollapseStyle)("…")
+  val collapseButton = switches.button("details", "without-details", detailsValues)(expandCollapseStyle)("«")
+
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-sm table-hover participants-table"),
@@ -122,6 +127,9 @@ final class Renderer private(
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
+    Column[Participant](TableHeadCell(expandButton, rowCount = 2))(_ => expandButton)(
+      className = "without-details-only"
+    )
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
@@ -141,7 +149,10 @@ final class Renderer private(
       "Čistý čas chůze"
     ){(p: Participant) =>
       TimeInterval.fromMilliseconds(p.partTimes.flatMap(_.durationOption).sum).toString
-    }
+    },
+    Column[Participant](TableHeadCell(collapseButton, rowCount = 2))(_ => collapseButton)(
+      className = "detailed-only"
+    ),
   ))
 
   def createTrackPartColumns(part: Part, i: Int): Seq[Column[Participant]] = {
@@ -356,9 +367,6 @@ final class Renderer private(
         h2("Grafy"),
         globalStats,
         h2("Výsledky"),
-        switches.checkbox("details", "Ukázat stručnou tabulku")(
-          "without-details", "with-details"
-        ),
       ).render
     )
     content.appendChild(tableElement)
