@@ -60,7 +60,7 @@ lazy val server = (project in file("server")).settings(
   scalaJSProjects := Seq(client),
   scalaJSStage := FullOptStage,
   Assets / pipelineStages := Seq(scalaJSPipeline),
-  pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, gzip, moveLibs),
+  pipelineStages := Seq(concat, removeLibs, filter, digest, simpleUrlUpdate/*, digest*/, removeUnversionedAssets, moveLibs),
   digest / includeFilter := "*",
   digest / excludeFilter := "*.html" || "*.csv" || "*.json" || "*.json.new" ||
     // When sbt-simple-url-update updates path for glyphicons-halflings-regular.woff, it garbles the path for glyphicons-halflings-regular.woff2.

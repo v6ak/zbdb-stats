@@ -16,8 +16,6 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.2")
 
 addSbtPlugin("com.vmunier" % "sbt-web-scalajs" % "1.2.0")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.2")
-
 addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.4")
 
 addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.5.1")
