@@ -37,7 +37,7 @@ lazy val client = (project in file("client")).settings(
   Test / scalaJSUseMainModuleInitializer := false,
   fastOptJS / scalaJSLinkerConfig ~= {
     _.withModuleKind(ModuleKind.ESModule)
-      .withModuleSplitStyle(ModuleSplitStyle.SmallestModules)
+      .withModuleSplitStyle(ModuleSplitStyle.SmallModulesFor(List("com.v6ak.zbdb")))
   },
   fullOptJS / scalaJSLinkerConfig ~= {
     _.withModuleKind(ModuleKind.ESModule)
