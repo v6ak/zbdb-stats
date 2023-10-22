@@ -33,13 +33,13 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
 
   final private class ForPlayer(row: Participant) {
     import row.gender
-    private def timePoint(time: Moment)(content: Frag*): TypedTag[TableRow] = tr(
+    private def timePoint(time: Moment, startTime: Moment = row.startTime)(content: Frag*): TypedTag[TableRow] = tr(
       `class` := s"timeline-point",
       td(
         `class` := "timeline-time",
         span(`class` := "clock-time", time.hoursAndMinutes),
         " ",
-        span(`class` := "relative-time", "+" + TimeInterval((time - row.startTime) / 60 / 1000)),
+        span(`class` := "relative-time", "+" + TimeInterval((time - startTime) / 60 / 1000)),
       ),
       td(),
       td(`class` := "timeline-content", content),
@@ -209,14 +209,15 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
     }
 
     private def legendTable = {
+      val startTime = moment("2016-01-20 5:00")
       table(
         `class` := "timeline timeline-legend",
-        timePoint(moment("2016-01-20 10:55"))("odchod v 10:55")(`class` := "departure"),
+        timePoint(moment("2016-01-20 10:55"), startTime)("odchod v 10:55")(`class` := "departure"),
         walk("chůze trvající 4:20", TimeInterval(260)),
-        timePoint(moment("2016-01-20 15:15"))("příchod v 15:15")(`class` := "arrival"),
+        timePoint(moment("2016-01-20 15:15"), startTime)("příchod v 15:15")(`class` := "arrival"),
         pause("pauza trvající 10 minut", TimeInterval(10)),
         gaveUp("konec před dosažením cíle"),
-        timePoint(moment("2016-01-20 16:20"))("Dosažení cíle v 16:20")(`class` := "finish"),
+        timePoint(moment("2016-01-20 16:20"), startTime)("Dosažení cíle v 16:20")(`class` := "finish"),
       )
     }
 
