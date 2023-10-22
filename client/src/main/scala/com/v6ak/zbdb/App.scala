@@ -14,9 +14,13 @@ import scala.scalajs.js
 
 object App {
 
+  def init(): Unit = {
+    ChartJsUtils.init()
+  }
+
   @JSExport
   def main(args: Array[String]): Unit = {
-    ChartJsUtils.init()
+    init()
     dom.window.onload = { (_: Any) =>
       val body = dom.window.document.body
       val fileName = body.getAttribute("data-file")
