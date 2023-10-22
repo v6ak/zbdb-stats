@@ -10,3 +10,7 @@ trash
 .idea
 upload*.config
 dockerenv.sh
+dist
+node_modules
+tmp
+.bsp
