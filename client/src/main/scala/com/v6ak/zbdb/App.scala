@@ -35,12 +35,6 @@ object App {
       dom.console.log("startTime", startTime.toString)
       dom.console.log("endTime", endTime.toString)
       dom.console.log("fileName", fileName)
-      val params = dom.window.location.search.drop(1).split("&").map{paramString =>
-        paramString.split("=", 2) match {
-          case Array(name, value) => (name, value)
-          case Array(name) => (name, "")
-        }
-      }.toMap
       val resultsFuture = dom.fetch(fileName).flatMap(_.text())
       val allYearsLinksFuture = dom.fetch("../../statistiky/years.json").flatMap(_.json()).map{ ay =>
         Some(ay.asInstanceOf[js.Dictionary[String]].toIndexedSeq.sorted)
@@ -61,7 +55,7 @@ object App {
             val year = body.getAttribute("data-year")
             allYearsLinksFuture onComplete {
               case Success(yearLinksOption) =>
-                Renderer.initialize(participantTable, errors, content, plots, params.contains("horizontalStickyness"), year, yearLinksOption)
+                Renderer.initialize(participantTable, errors, content, plots, year, yearLinksOption)
               case Failure(exception) =>
                 exception.printStackTrace()
                 dom.window.alert("Jste svědkem/svědkyní chyby, která neměla nastat!")

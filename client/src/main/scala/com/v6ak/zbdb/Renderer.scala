@@ -27,14 +27,28 @@ object Renderer{
 
   private val FirstBadge = div(cls := "badge bg-success first-badge")("1.")
 
-  def initialize(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, plots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) = {
-    val r = new Renderer(participantTable, processingErrors, content, plots, enableHorizontalStickyness, year, yearLinksOption)
+  def initialize(
+    participantTable: ParticipantTable,
+    processingErrors: Seq[(Seq[String], Throwable)],
+    content: Node,
+    plots: Seq[(String, String)],
+    year: String,
+    yearLinksOption: Option[Seq[(String, String)]],
+  ): Renderer = {
+    val r = new Renderer(participantTable, processingErrors, content, plots, year, yearLinksOption)
     r.initialize()
     r
   }
 }
 
-final class Renderer private(participantTable: ParticipantTable, processingErrors: Seq[(Seq[String], Throwable)], content: Node, additionalPlots: Seq[(String, String)], enableHorizontalStickyness: Boolean, year: String, yearLinksOption: Option[Seq[(String, String)]]) {
+final class Renderer private(
+  participantTable: ParticipantTable,
+  processingErrors: Seq[(Seq[String], Throwable)],
+  content: Node,
+  additionalPlots: Seq[(String, String)],
+  year: String,
+  yearLinksOption: Option[Seq[(String, String)]],
+) {
 
   private val plotRenderer = new PlotRenderer(participantTable)
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
