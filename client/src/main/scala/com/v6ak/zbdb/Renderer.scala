@@ -113,9 +113,11 @@ final class Renderer private(
   )
 
   val detailsValues = Set("with-details", "without-details")
-  val expandCollapseStyle = Seq(`class`:="btn-secondary")
-  val expandButton = switches.button("details", "with-details", detailsValues)(expandCollapseStyle)("…")
-  val collapseButton = switches.button("details", "without-details", detailsValues)(expandCollapseStyle)("«")
+  val expandCollapseStyle = Seq(`class`:="switch")
+  val expandButton = switches.button("details", "with-details", detailsValues)(expandCollapseStyle)("")
+  val collapseButton = switches.button("details", "without-details", detailsValues)(
+    expandCollapseStyle, `class`:="btn btn-secondary"
+  )("«")
 
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
@@ -128,8 +130,11 @@ final class Renderer private(
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
     Column[Participant](TableHeadCell(expandButton, rowCount = 2))(_ => expandButton)(
-      className = "without-details-only"
-    )
+      className = "without-details-only expand-columns"
+    ),
+    Column[Participant](TableHeadCell(collapseButton, rowCount = 2))(_ => collapseButton)(
+      className = "detailed-only"
+    ),
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
@@ -150,9 +155,6 @@ final class Renderer private(
     ){(p: Participant) =>
       TimeInterval.fromMilliseconds(p.partTimes.flatMap(_.durationOption).sum).toString
     },
-    Column[Participant](TableHeadCell(collapseButton, rowCount = 2))(_ => collapseButton)(
-      className = "detailed-only"
-    ),
   ))
 
   def createTrackPartColumns(part: Part, i: Int): Seq[Column[Participant]] = {
