@@ -67,4 +67,4 @@ jobs:
         run: find
 
       - name: Compare artifacts
-        run: diff --exclude="*.gz" -r build/unpacked verification/unpacked
+        run: diff -r build/unpacked verification/unpacked
