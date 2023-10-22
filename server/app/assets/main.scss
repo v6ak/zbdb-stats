@@ -35,7 +35,7 @@
         }
     }
     th.participant-header {
-        border-right-width: 0;
+        border-right-style: none;
     }
     .participant-header {
         z-index: 100;
@@ -89,12 +89,12 @@ td.col-end{
     border-right-style: solid;
 }
 
-.participant-header{
+.participants-table .participant-header{
     background-color: white;
     background-clip: padding-box;
     padding-right: 0;
     &.scrolled-horizontally{
-        box-shadow: 3px 0 1.5px -1px rgb(0,0,0);
+        border-right: 1px solid lightgray;
     }
     label{
         font-weight: normal !important;
