@@ -26,24 +26,3 @@
     border-top-width: 0;
     border-bottom-width: 0;
 }
-
-.icon-timeline {
-    $size: 15px;
-    $thickness: 2px;
-    width: $size;
-    height: $size;
-    display: inline-block;
-    border: $thickness solid white;
-    border-right-width: 0;
-    border-left-width: 0;
-    position: relative;
-    &:after{
-        content: "";
-        display: inline-block;
-        width: $size;
-        border-top: $thickness solid white;
-        position: absolute;
-        left: 0;
-        top: ($size - 3*$thickness)/2;
-    }
-}

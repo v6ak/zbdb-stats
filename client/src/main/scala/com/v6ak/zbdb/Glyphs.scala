@@ -13,6 +13,5 @@ object Glyphs {
   val Globe = Glyph("\uD83C\uDF10")
   val Play = css("play")
   val Pause = css("pause")
-  val Timeline = css("timeline")
 
 }

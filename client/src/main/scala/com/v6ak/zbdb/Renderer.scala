@@ -122,9 +122,6 @@ final class Renderer private(
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
-    Column.rich(TableHeadCell("", rowCount = 2))( (p: Participant) =>
-      fseq(timelineButton(p)(`class` := "btn-xl"))
-    )(className = "without-details-only")
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
@@ -295,13 +292,13 @@ final class Renderer private(
       bsMod.show()
     })
 
-  private def chartButtons(row: Participant) = span(cls := "detailed-only")(
-    timelineButton(row)(`class` := "btn-sm")
-  )
+  private def chartButtons(row: Participant) = //span(cls := "detailed-only")(
+    timelineButton(row)(`class` := "btn-sm btn-timeline")
+  //)
 
   private def timelineButton(row: Participant) =
     btnPrimary(
-      Glyphs.Timeline.toHtml,
+      "Detaily",
       onclick := { (_: Any) =>
         val (dialog, modalBody, bsMod) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
         dom.document.body.appendChild(dialog)
