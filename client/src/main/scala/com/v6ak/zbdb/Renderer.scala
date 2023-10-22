@@ -366,6 +366,7 @@ final class Renderer private(
     )
     content.appendChild(tableElement)
     content.appendChild(barElement)
+    HorizontalStickiness.addHorizontalStickiness(tableElement)
   }
 
 }
