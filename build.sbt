@@ -35,8 +35,6 @@ lazy val client = (project in file("client")).settings(
   sharedSettings("client"),
   scalaJSUseMainModuleInitializer := true,
   Test / scalaJSUseMainModuleInitializer := false,
-  webpack / version := "5.88.2", // https://github.com/ScalablyTyped/Converter/issues/546
-  webpackConfigFile := Some(baseDirectory.value / "custom.webpack.config.js"),
   fastOptJS / scalaJSLinkerConfig ~= {
     _.withModuleKind(ModuleKind.ESModule)
       .withModuleSplitStyle(ModuleSplitStyle.SmallestModules)
