@@ -111,7 +111,7 @@ final class PlotRenderer(participantTable: ParticipantTable) {
         scales = literal(
           x = timeAxis(
             label = "čas startu",
-            min = participantTable.startTime.subtract(5, "minutes").unix().toLong * 1000,
+            min = participantTable.startTime.subtract(5, "minutes").unix().toDouble * 1000,
           ),
           y = durationAxis(
             label="celková doba",
