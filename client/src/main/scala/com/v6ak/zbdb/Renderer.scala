@@ -52,7 +52,10 @@ final class Renderer private(
 
   private val plotRenderer = new PlotRenderer(participantTable)
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
-  private val switches = new ClassSwitches(Map("details" -> "without-details"))
+  private val switches = new ClassSwitches(
+    Map("details" -> "without-details"),
+    Map("details" -> "details-switched"),
+  )
 
   import ChartJsUtils._
   import Renderer._
@@ -117,29 +120,32 @@ final class Renderer private(
   val expandButton = switches.button("details", "with-details", detailsValues)(expandCollapseStyle)("")
   val collapseButton = switches.button("details", "without-details", detailsValues)(
     expandCollapseStyle, `class`:="btn btn-secondary"
-  )("«")
+  )("Zobrazit stručně")
 
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
     tableModifiers = Seq(`class` := "table table-sm table-hover participants-table"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
-    Column(TableHeadCell(yearSelection), TableHeadCell("id, jméno"))(renderParticipantColumn)(className = "participant-header"),
+    Column(
+      TableHeadCell(fseq(
+        collapseButton(`class` := "detailed-only"),
+        yearSelection,
+      )),
+      TableHeadCell("id, jméno")
+    )(renderParticipantColumn)(className = "participant-header"),
     Column[Participant](TableHeadCell(""), TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
-    Column[Participant](TableHeadCell(expandButton, rowCount = 2))(_ => expandButton)(
+    Column.singleCell[Participant](TableHeadCell(fseq(expandButton), rowCount = 2))(expandButton)(
       className = "without-details-only expand-columns"
-    ),
-    Column[Participant](TableHeadCell(collapseButton, rowCount = 2))(_ => collapseButton)(
-      className = "detailed-only"
     ),
   ) ++ parts.zipWithIndex.flatMap{case (part, i) =>
     createTrackPartColumns(part, i)
   } ++ Seq[Column[Participant]](
     Column(
-      TableHeadCell("", additionalClass = "without-details-only"),
+      TableHeadCell("", additionalClass = "without-details-only dont-highlight"),
       TableHeadCell(span(title := "Celkový čas")("Celk."))
     ){(p: Participant) =>
       if(p.hasFinished) p.totalTime.toString else ""

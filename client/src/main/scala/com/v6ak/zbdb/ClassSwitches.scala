@@ -5,7 +5,10 @@ import org.scalajs.dom.*
 import scalatags.JsDom.all.{button as buttonTag, *}
 
 
-final class ClassSwitches(initialSwitchesState: Map[String, String]) {
+final class ClassSwitches(
+  initialSwitchesState: Map[String, String],
+  alreadySwitchedClasses: Map[String, String] = Map(),
+) {
   private val switchesState = collection.mutable.Map(initialSwitchesState.toSeq: _*)
 
   def values = switchesState.values
@@ -16,6 +19,7 @@ final class ClassSwitches(initialSwitchesState: Map[String, String]) {
     classList.add(newClass)
     oldClasses.foreach(classList.remove)
     switchesState(switchName) = newClass
+    alreadySwitchedClasses.get(switchName).foreach(classList.add)
   }
 
   def classSelect(switchName: String)(items: (String, String)*) = select(
