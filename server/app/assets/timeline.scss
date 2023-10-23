@@ -1,0 +1,126 @@
+.timeline {
+    margin-bottom: 20px;
+
+    // We recommend even numbers. Otherwise, the centering looks quite odd.
+    $thin-line: 2px;
+    $thick-line: 6px;
+
+    @mixin just-line($color, $thickness, $style) {
+        .timeline-time {
+            border-right: $thickness $style $color;
+            // padding should be adjusted according to the border
+            padding-right: 10px - $thickness / 2;
+        }
+        .timeline-duration {
+            padding-left: 7px - $thickness / 2;
+        }
+    }
+    @mixin with-bullet($color, $lineColor, $thickness, $style, $top: 0px) {
+        @include just-line($lineColor, $thickness, $style);
+        .timeline-time {
+            $radius: 7px;
+            &:after {
+                content: "";
+                display: block;
+                position: absolute;
+                top: $top;
+                right: -$radius - $thickness/2;
+                width: 2*$radius;
+                height: 2*$radius;
+                background-color: $color;
+                border-radius: $radius;
+            }
+        }
+    }
+    .timeline-time {
+        position: relative;
+    }
+    &, td {
+        border-width: 0;
+    }
+
+    .timeline-point {
+        &.arrival {
+            @include with-bullet(blue, gray, $thin-line, solid);
+        }
+        &.departure {
+            @include with-bullet(blue, blue, $thick-line, solid);
+        }
+        .timeline-time {
+            text-align: right;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    }
+    .timeline-process:hover, .timeline-process:hover+tr, .before-hover {
+        background-color: yellow;
+    }
+    .timeline-process {
+        @include just-line(blue, $thick-line, solid);
+    }
+    .timeline-process.pause {
+        @include just-line(gray, $thin-line, solid);
+    }
+    .timeline-end.gave-up {
+        @include with-bullet(red, red, 0, solid);
+    }
+    .timeline-point.finish {
+        @include with-bullet(green, green, 0, solid);
+    }
+    .timeline-content {
+        padding-left: 10px;
+    }
+    &.timeline-legend {
+        .relative-time {
+            display: none;
+        }
+    }
+
+    .without-overtaking & .people-list-expand {
+        display: none;
+    }
+
+    .people-list-expand {
+        min-width: 43px;
+    }
+
+    .checkpoint {
+        $size: 25px;
+        background-color: black;
+        color: white;
+        min-width: $size;
+        min-height: $size;
+        border-radius: $size/2;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        padding-top: 2px;
+        font-weight: bold;
+        .dot {
+            display: none;
+        }
+    }
+
+    .finish .checkpoint {
+        border-radius: 0;
+        $size: 3px;
+    }
+    .start .checkpoint {
+        border-radius: 0;
+        border: 18px solid transparent;
+        border-top-color: black;
+        background-color: transparent;
+        border-bottom-width: 0;
+        margin-top: 5px;
+        min-height: auto;
+    }
+
+    .people-list-dropdown {
+        display: inline-block;
+    }
+
+}
+
+.timeline-switches {
+    margin-bottom: 20px;
+}
