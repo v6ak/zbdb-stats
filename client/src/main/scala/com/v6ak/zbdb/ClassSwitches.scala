@@ -8,19 +8,21 @@ import scalatags.JsDom.all.{button as buttonTag, *}
 final class ClassSwitches(
   initialSwitchesState: Map[String, String],
   alreadySwitchedClasses: Map[String, String] = Map(),
+  handler: (String, String, () => Unit) => Unit = (_: String, _: String, f: () => Unit) => f(),
 ) {
   private val switchesState = collection.mutable.Map(initialSwitchesState.toSeq: _*)
 
   def values = switchesState.values
 
-  private def update(switchName: String, newClass: String, allValues: Set[String]) = {
+  private def update(switchName: String, newClass: String, allValues: Set[String]): Unit =
     val oldClasses = allValues - newClass
     val classList = dom.document.body.classList
-    classList.add(newClass)
-    oldClasses.foreach(classList.remove)
-    switchesState(switchName) = newClass
-    alreadySwitchedClasses.get(switchName).foreach(classList.add)
-  }
+    handler(switchName, newClass, () => {
+      classList.add(newClass)
+      oldClasses.foreach(classList.remove)
+      switchesState(switchName) = newClass
+      alreadySwitchedClasses.get(switchName).foreach(classList.add)
+    })
 
   def classSelect(switchName: String)(items: (String, String)*) = select(
     onchange := { (e: Event) =>
