@@ -2,7 +2,6 @@ package com.v6ak.zbdb
 
 import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.PartTimeInfo.Finished
-import org.scalajs.dom
 
 final case class Participant(
   id: Int,
@@ -14,7 +13,7 @@ final case class Participant(
   birthYear: Option[Int],
   last3: Seq[String], // TODO: parse
   partTimes: Seq[PartTimeInfo]
-) {
+):
 
   def totalTime: TimeInterval = partTimes.headOption.fold(TimeInterval(0))(head=>
     TimeInterval.fromMilliseconds(partTimes.last.lastTime - head.startTime)
@@ -41,4 +40,5 @@ final case class Participant(
 
   def pauseTimes = pauses.map(p => p.endTime - p.startTime)
 
-}
+  def briefIdentification: String = s"$id: $fullNameWithNick"
+  def identification: String = s"#$briefIdentification"

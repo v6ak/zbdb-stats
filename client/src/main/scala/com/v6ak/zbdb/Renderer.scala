@@ -1,25 +1,25 @@
 package com.v6ak.zbdb
 
 import com.example.RichMoment.toRichMoment
-import com.example.moment._
+import com.example.moment.*
+import com.v6ak.scalajs.scalatags.ScalaTagsBootstrapDomModifiers.*
 import com.v6ak.scalajs.tables.{Column, TableHeadCell, TableRenderer}
 import com.v6ak.scalajs.time.TimeInterval
-import com.v6ak.zbdb.CollectionUtils._
-import com.v6ak.zbdb.HtmlUtils._
+import com.v6ak.zbdb.Bootstrap.*
+import com.v6ak.zbdb.ChartJsUtils.*
+import com.v6ak.zbdb.CollectionUtils.*
+import com.v6ak.zbdb.HtmlUtils.*
 import com.v6ak.zbdb.PartTimeInfo.Finished
-import com.v6ak.zbdb.TextUtils._
+import com.v6ak.zbdb.Renderer.*
+import com.v6ak.zbdb.TextUtils.*
 import org.scalajs.dom
-import org.scalajs.dom.Node
-import org.scalajs.dom._
+import org.scalajs.dom.*
+import scalatags.JsDom.all.{i as iTag, name as _, *}
 
 import scala.collection.mutable
 import scala.scalajs.js
-import scala.scalajs.js.Dictionary
-import scalatags.JsDom.all.{i => iTag, name => _, _}
-import com.v6ak.scalajs.scalatags.ScalaTagsDomModifiers._
-import com.v6ak.scalajs.scalatags.ScalaTagsBootstrapDomModifiers._
 
-object Renderer{
+object Renderer:
   def renderPositionBadge(position: Option[Int]) =
     position.fold(span(cls := "badge bg-danger badge-result")("DNF"))(order =>
       span(cls := "badge bg-success badge-result")(s"$order.")
@@ -34,12 +34,10 @@ object Renderer{
     plots: Seq[(String, String)],
     year: String,
     yearLinksOption: Option[Seq[(String, String)]],
-  ): Renderer = {
+  ): Renderer =
     val r = new Renderer(participantTable, processingErrors, content, plots, year, yearLinksOption)
     r.initialize()
     r
-  }
-}
 
 final class Renderer private(
   participantTable: ParticipantTable,
@@ -48,7 +46,7 @@ final class Renderer private(
   additionalPlots: Seq[(String, String)],
   year: String,
   yearLinksOption: Option[Seq[(String, String)]],
-) {
+):
 
   private val plotRenderer = new PlotRenderer(participantTable)
   private val timeLineRenderer = new TimeLineRenderer(participantTable, plotRenderer)
@@ -57,21 +55,16 @@ final class Renderer private(
     Map("details" -> "details-switched"),
   )
 
-  import ChartJsUtils._
-  import Renderer._
-  import Bootstrap._
-  import participantTable._
-  import plotRenderer._
+  import participantTable.*
+  import plotRenderer.*
 
-  private final implicit class RichParticipant(row: Participant){
+  private final implicit class RichParticipant(row: Participant):
     def checkboxId = s"part-${row.id}-checkbox"
     def trId = s"part-${row.id}-tr"
-  }
 
-  implicit private class RichTime(moment: Moment){
+  implicit private class RichTime(moment: Moment):
     def timeOnlyDiv: Frag = div(title:=moment.toString)(humanReadable)
     def humanReadable: String = f"${moment.hours()}:${moment.minutes()}%02d"
-  }
 
   private object selection {
     private val selectedParticipants = mutable.Set[Participant]()
@@ -101,18 +94,19 @@ final class Renderer private(
         selectedParticipantsElement.removeChild(selectedParticipantsElement.firstChild)
       }
       if(selectedParticipants.nonEmpty){
-        selectedParticipantsElement.appendChild((s"K porovnání (${selectedParticipants.size}): "+selectedNames.toSeq.sorted.mkString(", ")).render)
+        selectedParticipantsElement.appendChild(
+          (s"K porovnání (${selectedParticipants.size}): "+selectedNames.toSeq.sorted.mkString(", ")).render
+        )
       }
     }
   }
 
   private def yearSelection = dropdownGroup(Seq[Frag](year, " ", span(cls:="caret")))(
-    yearLinksOption match{
+    yearLinksOption match
       case Some(yearLinks) => yearLinks.reverse.map{case (y, yearLink) =>
         a(`class`:="dropdown-item", href:=yearLink)(y)
       }
       case None => span(cls:="badge bg-danger")("Ročníky nejsou k dispozici.")
-    }
   )
 
   val detailsValues = Set("with-details", "without-details")
@@ -134,7 +128,10 @@ final class Renderer private(
       )),
       TableHeadCell("id, jméno")
     )(renderParticipantColumn)(className = "participant-header"),
-    Column[Participant](TableHeadCell(""), TableHeadCell("Kat."))(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
+    Column[Participant](
+      TableHeadCell(""),
+      TableHeadCell("Kat.")
+    )(p => Seq[Frag](span(cls:="gender")(Genders(p.gender)), " ", span(cls:="age")(p.age)))(className = "category")
   ) ++ Seq[Option[Column[Participant]]](
     if(formatVersion.ageType == AgeType.BirthYear) Some(Column[Participant]("Roč.")(p => Seq[Frag](p.birthYear.get))) else None
   ).flatten ++ Seq(
@@ -150,10 +147,8 @@ final class Renderer private(
     ){(p: Participant) =>
       if(p.hasFinished) p.totalTime.toString else ""
     }(),
-    Column(
-      "Čas od prvního"
-    )((p: Participant) =>
-      if(p.hasFinished) participantTable.bestTotalTimeOption.fold[Frag]("–")(fastest => (p.totalTime - fastest).toString)
+    Column("Čas od prvního")((p: Participant) =>
+      if(p.hasFinished) participantTable.bestTotalTimeOption.fold[Frag]("–")(fastest => s"${p.totalTime - fastest}")
       else "–"
     ),
     Column(
@@ -200,20 +195,21 @@ final class Renderer private(
                 popup
               )(onBsShown({ (_: js.Dynamic) =>
                 if (!popup.hasAttribute("data-loaded")) {
-                  def select(f: (Finished, Finished) => Boolean) = participantTable.data.filter(p => (p!=r) && finishedPartData(p).exists(f(pti, _)))
+                  def select(f: (Finished, Finished) => Boolean) =
+                    participantTable.data.filter(p => (p!=r) && finishedPartData(p).exists(f(pti, _)))
                   def compList(heading: Frag, participants: Seq[Participant]): Frag =
                     Seq[Frag](
                       h3(heading),
-                      participants match {
+                      participants match
                         case Seq() => "(nikdo)": Frag
                         case _ =>
                           ul(
                             participants.map{p =>
                               val pd = partData(p).get
-                              li(s"${p.id}: ${p.fullNameWithNick} (${pd.startTime.humanReadable} – ${pd.endTimeOption.fold("×")(_.humanReadable)})")
+                              li(s"${p.identification} (${pd.startTime.humanReadable} – " +
+                                s"${pd.endTimeOption.fold("×")(_.humanReadable)})")
                             }
                           )
-                      }
                     )
                   val details: Frag = Seq(
                     compList("Startoval(a) zároveň s", select((me, other) => me.startTime isSame other.startTime)),
@@ -235,7 +231,10 @@ final class Renderer private(
         })
       )(className = "col-time detailed-only"),
       Column.rich(
-        TableHeadCell(Seq[Frag](part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))), colCount = 2),
+        TableHeadCell(
+          fseq(part.place, br, span(`class` := "track-length", formatLength(part.cumulativeTrackLength))),
+          colCount = 2
+        ),
         TableHeadCell(span(title := s"Čas příchodu na stanoviště č. ${i + 1} – ${part.place}", "=>|"))
       ) { (r: Participant) =>
         partData(r).collect { case f: Finished => f }.fold[Seq[Modifier]](Seq("–")) { pti =>
@@ -245,20 +244,18 @@ final class Renderer private(
     )
   }
 
-  private def conditionalFirstBadge(first: Boolean) = if (first) Seq[Modifier](FirstBadge, addClass("first")) else Seq()
+  private def conditionalFirstBadge(first: Boolean) = if (first) Seq[Modifier](FirstBadge, `class`:="first") else Seq()
 
   def renderParticipantColumn(r: Participant): Frag = Seq(
     label(`for` := r.checkboxId, cls := "participant-header-label")(
       renderPositionBadge(r.orderOption),
       input(`type`:="checkbox", `class`:="participant-checkbox d-print-none", id:=r.checkboxId, onChange { e =>
         val el = e.currentTarget.asInstanceOf[HTMLInputElement]
-        el.checked match {
-          case true => selection.addRow(r)
-          case false => selection.removeRow(r)
-        }
+        if el.checked then selection.addRow(r)
+        else selection.removeRow(r)
       }),
       " ",
-      s"${r.id}: ${r.fullNameWithNick}",
+      s"${r.briefIdentification}",
     ),
     div(`class` := "actions d-print-none")(chartButtons(r))
   )
@@ -295,14 +292,17 @@ final class Renderer private(
     }
   ).render
 
-  private def showBar(implicit x: Nothing): Nothing = ???
+  private def showBar(implicit x: Nothing): Nothing = ??? // needed in order to behave like a property
 
-  private def showBar_=(shown: Boolean): Unit ={
-    barElement.style.visibility = if(shown) "" else "hidden"
-  }
+  private def showBar_=(shown: Boolean): Unit = barElement.style.visibility = if(shown) "" else "hidden"
 
-  private def chartButton(title: String, rowsLoader: => Seq[Participant], plotDataGenerator: Seq[Participant] => PlotData, description: Frag) =
-    btnDefault(`class` := "btn-sm")(description)(onclick := {(_:Any) =>
+  private def chartButton(
+    title: String,
+    rowsLoader: => Seq[Participant],
+    plotDataGenerator: Seq[Participant] => PlotData,
+    description: Frag
+   ) =
+    btnDefault(`class` := "btn-sm")(description)(onclick := { (_:Any) =>
       val (dialog, modalBody, bsMod) = modal(title)
       dialog.onBsModalShown({() =>
         initializePlot(modalBody, plotDataGenerator(rowsLoader), cb => dialog.onBsModalHidden(cb))
@@ -311,15 +311,13 @@ final class Renderer private(
       bsMod.show()
     })
 
-  private def chartButtons(row: Participant) = //span(cls := "detailed-only")(
-    timelineButton(row)(`class` := "btn-sm btn-timeline")
-  //)
+  private def chartButtons(row: Participant) = timelineButton(row)(`class` := "btn-sm btn-timeline")
 
   private def timelineButton(row: Participant) =
     btnPrimary(
       "Detaily",
       onclick := { (_: Any) =>
-        val (dialog, modalBody, bsMod) = modal(s"Časová osa pro #${row.id}: ${row.fullNameWithNick}")
+        val (dialog, modalBody, bsMod) = modal(s"Časová osa pro ${row.identification}")
         dom.document.body.appendChild(dialog)
         val (timeLine, renderPlots) = timeLineRenderer.timeLine(row)
         modalBody.appendChild(timeLine)
@@ -333,13 +331,15 @@ final class Renderer private(
 
   private def showThrowable(rootThrowable: Throwable) = ul(causeStream(rootThrowable).map {
     case CellsParsingException(cells, _) => li("K chybě došlo při zpracování následujících buňek: ", showCells(cells))
-    case BadTimeInfoFormatException() => li("Očekáváné varianty: a) nevyplněno, b) pouze čas startu, c) všechny tři časy (start, doba, cíl). Pokud je některý čas nevyplněn, očekává se prázdné políčko nebo \"X\".")
-    case MaxHourDeltaExceededException(maxHourDelta, prevTime, currentTime) => li(f"Od ${prevTime.hoursAndMinutes} do ${currentTime.hoursAndMinutes} to trvá více než $maxHourDelta hodin, což je nějaké divné, asi to bude chyba.")
+    case BadTimeInfoFormatException() => li("Očekáváné varianty: a) nevyplněno, b) pouze čas startu, " +
+      "c) všechny tři časy (start, doba, cíl). Pokud je některý čas nevyplněn, očekává se prázdné políčko nebo \"X\".")
+    case MaxHourDeltaExceededException(maxHourDelta, prevTime, currentTime) => li(f"Od ${prevTime.hoursAndMinutes} do" +
+      f" ${currentTime.hoursAndMinutes} to trvá více než $maxHourDelta hodin, což je nějaké divné, asi to bude chyba.")
     case e: DeadlineExceededException => li("Tento účastník došel až po konci pochodu.")
     case e => li(iTag(e.getClass.getName), ": ", e.getMessage)
   })
 
-  private def initialize(): Unit = {
+  private def initialize(): Unit =
     showBar = false
     switches.values.foreach(dom.document.body.classList.add)
     content.appendChild(
@@ -380,6 +380,3 @@ final class Renderer private(
     content.appendChild(tableElement)
     content.appendChild(barElement)
     HorizontalStickiness.addHorizontalStickiness(tableElement)
-  }
-
-}
