@@ -133,7 +133,7 @@ final class Renderer private(
 
   private val renderer = new TableRenderer[Participant](
     headRows = 2,
-    tableModifiers = Seq(`class` := "table table-sm table-hover participants-table"),
+    tableModifiers = Seq(`class` := "table table-sm participants-table"),
     trWrapper = {(tableRow, row) => tableRow(id := row.trId)}
   )(Seq[Column[Participant]](
     Column(
