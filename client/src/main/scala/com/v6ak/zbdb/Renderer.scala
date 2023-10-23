@@ -53,6 +53,21 @@ final class Renderer private(
   private val switches = new ClassSwitches(
     Map("details" -> "without-details"),
     Map("details" -> "details-switched"),
+    (name, cls, f) => {
+      document.body.style.opacity = "0.5"
+      window.setTimeout(
+        () => {
+          f()
+          window.setTimeout(
+            () => {
+              document.body.style.opacity = "1"
+            },
+            0
+          )
+        },
+        0
+      )
+    }
   )
 
   import participantTable.*
