@@ -1,0 +1,175 @@
+.with-details .participants-table {
+    // For non-detailed table, it is 1. not needed and 2. troublesome (especially in the column with expand button)
+    // Highlighting is based on https://stackoverflow.com/a/54206778
+    $highlight-color: #ececec;
+    tr:hover td{
+        background-color: $highlight-color;
+    }
+    td:not(.participant-header):hover {
+        &::before {
+            background-color: $highlight-color;
+            content: '\00a0';
+            position: absolute;
+            z-index: -1;
+            height: 300vh;   // 200 should be enough in most of the cases, but the cell can be partially out of the viewport
+            left: 0;
+            top: -100vh;
+            width: 100%;
+        }
+    }
+}
+
+.participants-table {
+    border-collapse: separate;
+    border-spacing: 0;
+
+    tbody {
+        // because of the row/col highlighting
+        // It can't be directly on the table, as it interferes with position: sticky in Chrome.
+        overflow: hidden;
+    }
+
+    td, th {
+        border-left-width: 0;
+        background-color: transparent;
+        position: relative;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 101;
+        tr:first-child th.participant-header {
+            // Prevents covering the dialog by the next row due to separate stacking context
+            z-index: 102;
+        }
+        tr+tr th, tr th[rowspan="2"] {  // last row
+            border-bottom: 5px solid lightgray;
+        }
+    }
+    th.participant-header {
+        border-right: 1px solid transparent;
+    }
+    .participant-header {
+        z-index: 100;
+        position: sticky;
+        left: 0;
+    }
+
+    .expand-columns {
+        position: relative;
+        width: 2em;
+        .switch {
+            $color1: lightgray;
+            $color2: transparent;
+            background-color: transparent;
+            background-image:
+                url("other-columns.svg?inline"),
+                linear-gradient(
+                    90deg,
+                    $color1 8.33%,
+                    $color2 8.33%,
+                    $color2 50%,
+                    $color1 50%,
+                    $color1 58.33%,
+                    $color2 58.33%,
+                    $color2 100%,
+                ),
+                ;
+            background-size:
+                40% auto,
+                12px 12px,
+                ;
+            background-repeat:
+                repeat-y,
+                repeat;
+                background-position:
+                    center 10px,
+                    left;
+            position: absolute;
+            width: 100%;
+            top: -1px;  // over border
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 0;
+            border: 0px none;
+        }
+    }
+}
+
+
+table{
+    border-bottom: 5px solid lightgray;
+    border-top: 5px solid lightgray;
+    font-size: smaller;
+}
+
+table thead{
+    background-color: white;
+}
+/*table td, table th{
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid black;
+}*/
+.table-condensed > thead > tr > th{
+    padding: 2px;
+}
+td, th{
+    border-left: 1px dashed lightgray;
+    border-right: 1px dashed lightgray;
+}
+th.col-start, th.col-end, th.col-time{
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+th[colspan="2"].col-end{
+    text-align: center;
+}
+th.col-end{
+    text-align: right;
+}
+
+td.col-start, td.col-end, td.col-time{
+    text-align: right;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+}
+.col-start{
+    border-left-style: solid;
+    /*border-left-width: ;*/
+}
+td.col-end{
+    border-right-style: solid;
+}
+
+.participants-table .participant-header{
+    background-color: white;
+    background-clip: padding-box;
+    padding-right: 0;
+    &.scrolled-horizontally{
+        border-right: 1px solid lightgray;
+    }
+    label{
+        font-weight: normal !important;
+        &:hover{
+            input[type="checkbox"]{
+                box-shadow: 0 0 14px 5px rgba(0, 0, 0, 0.75);
+            }
+        }
+    }
+}
+
+.participant-checkbox{
+    float: left;
+}
+
+.badge-result{
+    float: right;
+}
+
+.participant-header-label {
+    display: block;
+    text-align: center;
+}
