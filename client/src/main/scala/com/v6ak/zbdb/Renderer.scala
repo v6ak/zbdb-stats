@@ -14,7 +14,7 @@ import com.v6ak.zbdb.Renderer.*
 import com.v6ak.zbdb.TextUtils.*
 import org.scalajs.dom
 import org.scalajs.dom.*
-import scalatags.JsDom.all.{i as iTag, name as _, *}
+import scalatags.JsDom.all.{i as iTag, html as _, name as _, *}
 
 import scala.collection.mutable
 import scala.scalajs.js
@@ -393,5 +393,26 @@ final class Renderer private(
       ).render
     )
     content.appendChild(tableElement)
+    watchMouseOver(tableElement)
     content.appendChild(barElement)
     HorizontalStickiness.addHorizontalStickiness(tableElement)
+
+  val EmptyNodeList = document.createElement("div").getElementsByClassName(".foo")
+
+  def watchMouseOver(table: html.Table): Unit =
+    var highlighted: Set[String] = Set()
+    table.addEventListener("mouseover", (e: MouseEvent) => {
+      findParent(Set("td", "th"), e.target.asInstanceOf[Element]) match
+        case None =>
+          console.log("no parent cell for", e.target)
+        case Some(cell) =>
+          val cols = Option(cell.getAttribute("data-cols")).getOrElse("").split(' ').toSet
+          val colsToHighlight = cols -- highlighted
+          val colsToUnhighlight = highlighted -- cols
+          def findCols(set: Set[String]) =
+            if set.isEmpty then EmptyNodeList
+            else table.querySelectorAll(set.map(s=> s".col-$s").mkString(","))
+          findCols(colsToUnhighlight).foreach(_.classList.remove("highlighted"))
+          findCols(colsToHighlight).foreach(_.classList.add("highlighted"))
+          highlighted = cols
+    })

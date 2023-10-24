@@ -45,10 +45,6 @@ final class TimeLineRenderer(participantTable: ParticipantTable, plotRenderer: P
       td(`class` := "timeline-content", content),
     )
 
-    @tailrec def findParent(name: String, el: Element): Element =
-      if (el.nodeName.toUpperCase == name.toUpperCase()) el
-      else findParent(name, el.parentNode.asInstanceOf[Element])
-
     private def process(content: Frag, duration: TimeInterval, durationIcon: Glyph, className: String = "") = tr(
       `class` := s"timeline-process $className",
       onmouseover := { (e: Event) =>

@@ -1,13 +1,15 @@
 package com.v6ak.zbdb
 
 import org.scalajs.dom
-import org.scalajs.dom._
+import org.scalajs.dom.*
 
 import scala.scalajs.js
-import scalatags.JsDom.all._
-import Bootstrap._
+import scalatags.JsDom.all.*
+import Bootstrap.*
 
-object HtmlUtils {
+import scala.annotation.tailrec
+
+object HtmlUtils:
 
   val EmptyHtml: Frag = ""
 
@@ -40,4 +42,12 @@ object HtmlUtils {
 
   def onChange(e: js.Function1[Event, Unit]) = onchange := e
 
-}
+  @tailrec def findParent(name: String, el: Element): Element =
+    if el.nodeName.toLowerCase == name then el
+    else findParent(name, el.parentNode.asInstanceOf[Element])
+
+  @tailrec def findParent(names: Set[String], el: Element): Option[Element] =
+    if el == null then None
+    else
+      if names contains el.nodeName.toLowerCase then Some(el)
+      else findParent(names, el.parentNode.asInstanceOf[Element])
