@@ -137,7 +137,7 @@ final class PlotRenderer(participantTable: ParticipantTable):
     val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) =>
       (participantTable.parts(i), cm, rows.size - cm, i)
     }
-    genericRemainingParticipantsCountPlot(data, "line")(_.toString)
+    genericRemainingParticipantsCountPlot(data, "line", "lidi")(_.toString)
   }
 
   def remainingRelativeCountPlot = showChartInModal() { rows =>
@@ -146,13 +146,14 @@ final class PlotRenderer(participantTable: ParticipantTable):
     val data = cummulativeMortality.dropRight(1).zipWithIndex.map { case (cm, i) =>
       (participantTable.parts(i), 100.0 * cm / size, 100.0 * (size - cm) / size, i)
     }
-    genericRemainingParticipantsCountPlot[Double](data, "bar")(num => f"$num%.2f%%")
+    genericRemainingParticipantsCountPlot[Double](data, "bar", "lidi (%)")(num => f"$num%.2f%%")
   }
 
 
   private def genericRemainingParticipantsCountPlot[T](
     data: immutable.IndexedSeq[(Part, T, T, Int)],
     chartType: String,
+    yLabel: String,
   )(format: T => String) =
     def dataset(name: String, f: ((Part, T, T, Int)) => T): js.Dynamic = literal(
       label = name,
@@ -191,7 +192,17 @@ final class PlotRenderer(participantTable: ParticipantTable):
           x = literal(
             `type` = "linear",
             min = 0,
+            title = literal(
+              display = true,
+              text = "vzdálenost (km)",
+            ),
           ),
+          y = literal(
+            title = literal(
+              display = true,
+              text = yLabel,
+            ),
+          )
         ),
       )
     )
