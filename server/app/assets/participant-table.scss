@@ -2,20 +2,8 @@
     // For non-detailed table, it is 1. not needed and 2. troublesome (especially in the column with expand button)
     // Highlighting is based on https://stackoverflow.com/a/54206778
     $highlight-color: #ececec;
-    tr:hover td{
+    tr:hover td, td.highlighted, th.highlighted {
         background-color: $highlight-color;
-    }
-    td:not(.participant-header):hover {
-        &::before {
-            background-color: $highlight-color;
-            content: '\00a0';
-            position: absolute;
-            z-index: -1;
-            height: 300vh;   // 200 should be enough in most of the cases, but the cell can be partially out of the viewport
-            left: 0;
-            top: -100vh;
-            width: 100%;
-        }
     }
 }
 
@@ -23,16 +11,8 @@
     border-collapse: separate;
     border-spacing: 0;
 
-    tbody {
-        // because of the row/col highlighting
-        // It can't be directly on the table, as it interferes with position: sticky in Chrome.
-        overflow: hidden;
-    }
-
     td, th {
         border-left-width: 0;
-        background-color: transparent;
-        position: relative;
     }
 
     thead {

@@ -14,20 +14,26 @@ final class TableRenderer[T](
     if(c.rowCount > headRows)  // TODO: consider !=; however, I am not sure about multiple-row cells
       sys.error(s"bad rowCount ${c.rowCount} for $c")
 
+  private def colMarkers(pos: Int, count: Int) =
+    val range = pos until (pos + count)
+    range.map{ i => `class` := s"col-$i" } :+ (data.cols := range.mkString(" "))
+
   def renderTableHead = thead(0 until headRows map { headRowIndex =>
-    tr(columns.map{col =>
+    tr(columns.zipWithIndex.map{ (col, colPos) =>
       col.renderHeader(headRowIndex).map{ tableHeadColumn =>
-        tableHeadColumn.create(headRows)
+        tableHeadColumn.create(headRows)(colMarkers(colPos, tableHeadColumn.colCount))
       }
     })
   })
 
   def renderTableBody(data: Seq[T]) = tbody(
-    data.zipWithIndex.map( (row, i) =>
+    data.zipWithIndex.map( (row, rowPos) =>
       trWrapper(
         tr(
-          columns.map(col =>
-            col.createContentCell(row, i, data.size)
+          columns.zipWithIndex.map( (col, colPos) =>
+            col.createContentCell(row, rowPos, data.size) match
+              case tag: TypedTag[_] => tag(colMarkers(colPos, 1))
+              case other => other
           )
         ),
         row
