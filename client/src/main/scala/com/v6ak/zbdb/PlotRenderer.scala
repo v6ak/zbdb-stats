@@ -82,7 +82,7 @@ final class PlotRenderer(participantTable: ParticipantTable):
 
   private def startTimeToTotalDurationPlot = showChartInModal(
     title = "Porovnání startu a celkového času (pouze finalisti)"
-  ) { rows =>
+  ): rows =>
     val finishers = rows.filter(p => p.hasFinished).groupBy(p =>
       (p.startTime.toString, p.partTimes.last.endTimeOption.get - p.startTime)
     )
@@ -125,30 +125,26 @@ final class PlotRenderer(participantTable: ParticipantTable):
         ),
       ),
     )
-  }
 
   private def computeCumulativeMortality(rows: Seq[Participant]) =
     val mortalityMap = rows.map(_.partTimes.count(_.hasEndTime)).groupBy(identity).mapValuesStrict(_.size)
     val mortalitySeq = (0 to mortalityMap.keys.max).map(mortalityMap.getOrElse(_, 0))
     mortalitySeq.scan(0)(_ + _).tail
 
-  def remainingParticipantsCountPlot = showChartInModal() { rows =>
+  def remainingParticipantsCountPlot = showChartInModal(): rows =>
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
     val data = cummulativeMortality.dropRight(1).zipWithIndex.map{case (cm, i) =>
       (participantTable.parts(i), cm, rows.size - cm, i)
     }
     genericRemainingParticipantsCountPlot(data, "line", "lidi")(_.toString)
-  }
 
-  def remainingRelativeCountPlot = showChartInModal() { rows =>
+  def remainingRelativeCountPlot = showChartInModal(): rows =>
     val cummulativeMortality: immutable.IndexedSeq[Int] = computeCumulativeMortality(rows)
     val size = rows.size
     val data = cummulativeMortality.dropRight(1).zipWithIndex.map { case (cm, i) =>
       (participantTable.parts(i), 100.0 * cm / size, 100.0 * (size - cm) / size, i)
     }
     genericRemainingParticipantsCountPlot[Double](data, "bar", "lidi (%)")(num => f"$num%.2f%%")
-  }
-
 
   private def genericRemainingParticipantsCountPlot[T](
     data: immutable.IndexedSeq[(Part, T, T, Int)],
@@ -209,7 +205,7 @@ final class PlotRenderer(participantTable: ParticipantTable):
 
   def genderStructurePlot = showChartInModal(
     title = "Genderová struktura startujících",
-  ) { rows =>
+  ): rows =>
     val structure = rows.groupBy(_.gender)
     js.Dynamic.literal(
       `type` = "pie",
@@ -217,7 +213,6 @@ final class PlotRenderer(participantTable: ParticipantTable):
         (GenderNames(gender), p.size, GenderColors(gender))
       }),
     )
-  }
 
   def expectOneStr(contexts: js.Array[js.Dynamic])(f: js.Dynamic => js.Any): String =
     contexts.map(f).toSet.mkString("  |  ")
