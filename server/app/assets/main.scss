@@ -76,7 +76,7 @@ body.without-details {
 }
 body.details-switched {
     .detailed-only:not(.dont-highlight), .without-details-only:not(.dont-highlight) {
-        animation: 1s linear highlight-background;
+        animation: 3s linear highlight-background;
     }
 }
 
