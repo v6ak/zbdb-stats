@@ -8,10 +8,10 @@ set -o pipefail
 sbt "project server" dist
 
 version=$(
-    sbt version | tail -n1 | sed 's/^.* //' | grep -oE '[0-9.A-Z-]+' | head -n2 | tail -n1
+    sbt --no-colors version | tail -n1 | sed 's/^.* //' | grep -oE '[0-9.A-Z-]+' | head -n2 | tail -n1
 )
 scalaVersion=$(
-    sbt server/scalaVersion | tail -n1 | sed 's/^.* //' | grep -oE '[0-9.A-Z-]+' | head -n2 | tail -n1 | sed 's/^\([^.]*.[^.]*\).*/\1/'
+    sbt --no-colors "print server/scalaVersion" | tail -n1 | sed 's/^.* //' | grep -oE '[0-9.A-Z-]+' | head -n2 | tail -n1 | sed 's/^\([^.]*.[^.]*\).*/\1/'
 )
 
 if [ -e target/assets ]; then
