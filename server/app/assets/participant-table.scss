@@ -1,7 +1,7 @@
 .with-details .participants-table {
     // For non-detailed table, it is 1. not needed and 2. troublesome (especially in the column with expand button)
     // Highlighting is based on https://stackoverflow.com/a/54206778
-    $highlight-color: #ececec;
+    $highlight-color: #c8f9c8;
     tr:hover td, td.highlighted, th.highlighted {
         background-color: $highlight-color;
     }
