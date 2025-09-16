@@ -92,6 +92,11 @@ object PageGenerator{
       startTime = "2023-09-15 17:30", endTime = "2023-09-16 18:10",
       dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vTzrUrHEarwmtqap2WZQRMJvO7UVy6rGln2xuZv5kWa_slIM6c_-p7BasSUkipAJs86iIOwWDtJlrlb")
     ),
+    Year(
+      year = 2025, formatVersion = 2021,
+      startTime = "2025-09-12 17:30", endTime = "2025-09-13 20:00",
+      dataSource= NewGoogleSpreadsheetDataSource("2PACX-1vQCGArcec5pYm6Pt3XIesXrr0blMu8I-UcDA82pm8CdzUpmfL_ProD2x7Qou2L-Igy79s5zfVNXnlDp")
+    ),
   )
 
   val YearLinks = LegacyYears ++ Years.map(y => y.year -> s"../../${y.year}/statistiky/")
