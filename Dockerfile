@@ -10,7 +10,7 @@ RUN sed -n -e 's/^sbt\.version=//p' /build.properties > /version
 
 # Second stage creates final image with the right SBT version
 FROM amazoncorretto:${OPENJDK_TAG} AS conservative
-RUN yum install -y rsync lftp zip unzip which
+RUN yum install -y rsync lftp zip unzip which findutils
 ARG NODE_VERSION=16
 RUN yum install https://rpm.nodesource.com/pub_${NODE_VERSION}.x/nodistro/repo/nodesource-release-nodistro-1.noarch.rpm -y
 RUN yum install nodejs npm -y --setopt=nodesource-nodejs.module_hotfixes=1
@@ -30,7 +30,7 @@ COPY project/build.properties /
 RUN sed -n -e 's/^sbt\.version=//p' /build.properties > /version
 
 FROM fedora:latest AS bleeding-edge
-RUN dnf install -y rsync lftp zip unzip which nodejs npm java-latest-openjdk-devel
+RUN dnf install -y rsync lftp zip unzip which nodejs npm java-latest-openjdk-devel findutils
 COPY --from=sbt-version-bleeding-edge /version /sbt-version
 RUN \
   curl -L -o sbt-$(cat /sbt-version).rpm https://scala.jfrog.io/ui/api/v1/download\?repoKey=rpm\&path=%252Fsbt-$(cat /sbt-version).rpm && \
