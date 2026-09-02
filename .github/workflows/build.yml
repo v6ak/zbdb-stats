@@ -84,8 +84,7 @@ jobs:
           script: |
             const marker = "<!-- ci-keepalive -->";
             const issue_number = 78;
-            const body = `${marker}
-            CI keepalive: automaticka mesicni kontrola probehla (${new Date().toISOString()}).`;
+            const body = `${marker}\nCI keepalive: automaticka mesicni kontrola probehla (${new Date().toISOString()}).`;
 
             const { owner, repo } = context.repo;
             const comments = await github.paginate(github.rest.issues.listComments, {
