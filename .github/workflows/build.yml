@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
   schedule:
     - cron: "5 4 2 * *"
 permissions:
@@ -73,7 +74,7 @@ jobs:
         run: diff -r build/unpacked verification/unpacked
 
   keepalive-activity:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       issues: write
