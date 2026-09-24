@@ -2,6 +2,7 @@ package com.v6ak.zbdb
 
 import com.example.RichMoment.*
 import com.example.moment.*
+import com.v6ak.scalajs.time.TimeInterval
 import com.v6ak.zbdb.ChartJsUtils.*
 import com.v6ak.zbdb.CollectionUtils.RichMap
 import com.v6ak.zbdb.RichGenderSeq.*
@@ -74,7 +75,7 @@ final class PlotRenderer(participantTable: ParticipantTable):
             masculinePlural = "ušli",
           )
           val start = context.raw.x.asInstanceOf[Moment].hoursAndMinutes
-          val total = context.raw.y.asInstanceOf[Moment].hoursAndMinutes
+          val total = TimeInterval.fromMilliseconds(context.raw.y.asInstanceOf[Moment] - zeroMoment).toString
           s"$names (${participants.size}) – $started $start, celou trasu $finished za $total"
         },
       ),
