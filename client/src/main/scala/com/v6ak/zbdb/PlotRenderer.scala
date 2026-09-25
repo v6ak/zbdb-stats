@@ -248,18 +248,32 @@ final class PlotRenderer(participantTable: ParticipantTable):
   private def generateSpeedPlotData(rows: Seq[Participant]) =
     val data = rows.map{p =>
       PlotLine(row = p, label = p.fullName, points =
-        (p.partTimes lazyZip parts).flatMap((partTime, part) => partTime.durationOption.map { duration =>
-          literal(
-            x = part.cumulativeTrackLength.toDouble,
-            y = part.trackLength.toDouble / (duration.toDouble / 1000 / 3600),
-          ): js.Any
-        }).toJSArray
+        (p.partTimes lazyZip parts lazyZip previousPartCummulativeLengths).flatMap((partTime, part, previousLength) =>
+          partTime.durationOption.map { duration =>
+            val speed = part.trackLength.toDouble / (duration.toDouble / 1000 / 3600)
+            Seq(
+              literal(
+                x = previousLength.toDouble,
+                y = speed,
+              ): js.Any,
+              literal(
+                x = part.cumulativeTrackLength.toDouble,
+                y = speed,
+              ): js.Any,
+            )
+          }.getOrElse(Seq.empty)
+        ).toJSArray
       )
     }
     literal(
-      `type` = "bar",
+      `type` = "line",
       data = plotLinesToData(data),
       options = literal(
+        datasets = literal(
+          line = literal(
+            stepped = true,
+          ),
+        ),
         scales = literal(
           x = distanceAxis,
           y = speedAxis,
@@ -270,7 +284,7 @@ final class PlotRenderer(participantTable: ParticipantTable):
               label = (context: js.Dynamic) =>
                 s"${formatSpeed(context.raw.y.asInstanceOf[Double])} (${context.dataset.label})",
               title = (context: js.Array[js.Dynamic]) => {
-                val i = expectOne(context)(_.dataIndex.asInstanceOf[Int])
+                val i = expectOne(context)(_.dataIndex.asInstanceOf[Int] / 2)
                 val from = i match {
                   case 0 => "Ze startu"
                   case i => s"Z $i. stanoviště (${participantTable.parts(i-1).place})"
